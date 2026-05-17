@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Clock — Icon Generator</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#0b0a14; color:#f5efe0; padding: 24px; }
+  h1 { margin-top: 0; }
+  .row { display:flex; gap:24px; flex-wrap:wrap; margin-top: 16px; }
+  .card { background: rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; text-align:center; }
+  .card canvas { display:block; margin: 0 auto 12px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  .card a { display:inline-block; margin-top: 6px; padding: 8px 14px; background:#e8c587; color:#1a1428; border-radius: 8px; text-decoration:none; font-weight: 600; }
+  p { color: rgba(245,239,224,0.65); }
+  code { background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>Clock — Icon Generator</h1>
+<p>Generates PWA icons. Click each link to download, then save into <code>../icons/</code> with the filenames shown.</p>
+
+<div class="row">
+  <div class="card">
+    <canvas id="c192" width="192" height="192"></canvas>
+    <div>icon-192.png</div>
+    <a id="dl192" download="icon-192.png">Download</a>
+  </div>
+  <div class="card">
+    <canvas id="c512" width="512" height="512"></canvas>
+    <div>icon-512.png</div>
+    <a id="dl512" download="icon-512.png">Download</a>
+  </div>
+  <div class="card">
+    <canvas id="cApple" width="180" height="180"></canvas>
+    <div>apple-touch-icon.png</div>
+    <a id="dlApple" download="apple-touch-icon.png">Download</a>
+  </div>
+</div>
+
+<script>
+function drawClockIcon(canvas, size) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Background — rounded square (canvas-level rounding is done by CSS, but for PNG we paint full bg)
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, '#1a1428');
+  grad.addColorStop(1, '#0a0a1a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+  const r = Math.min(w, h) * 0.36;
+
+  // Clock face — cream radial
+  const face = ctx.createRadialGradient(cx, cy - r*0.15, r*0.1, cx, cy, r);
+  face.addColorStop(0, '#f5e6c5');
+  face.addColorStop(1, '#d4af73');
+  ctx.fillStyle = face;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer gold ring
+  ctx.strokeStyle = '#c9a35a';
+  ctx.lineWidth = r * 0.045;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Tick marks
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    const x1 = cx + Math.cos(a) * r * 0.86;
+    const y1 = cy + Math.sin(a) * r * 0.86;
+    const x2 = cx + Math.cos(a) * r * 0.95;
+    const y2 = cy + Math.sin(a) * r * 0.95;
+    ctx.strokeStyle = '#3d2817';
+    ctx.lineWidth = r * 0.06;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  // Hour hand — pointing roughly 10
+  const hourA = (10 / 12) * Math.PI * 2 - Math.PI / 2;
+  ctx.strokeStyle = '#3d2817';
+  ctx.lineWidth = r * 0.085;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + Math.cos(hourA) * r * 0.5, cy + Math.sin(hourA) * r * 0.5);
+  ctx.stroke();
+
+  // Minute hand — pointing roughly 2
+  const minA = (2 / 12) * Math.PI * 2 - Math.PI / 2;
+  ctx.lineWidth = r * 0.06;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + Math.cos(minA) * r * 0.75, cy + Math.sin(minA) * r * 0.75);
+  ctx.stroke();
+
+  // Second hand — accent
+  const secA = (45 / 60) * Math.PI * 2 - Math.PI / 2;
+  ctx.strokeStyle = '#e25b4a';
+  ctx.lineWidth = r * 0.03;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + Math.cos(secA) * r * 0.82, cy + Math.sin(secA) * r * 0.82);
+  ctx.stroke();
+
+  // Center cap
+  ctx.fillStyle = '#3d2817';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function wire(id, dlId) {
+  const canvas = document.getElementById(id);
+  drawClockIcon(canvas, canvas.width);
+  const a = document.getElementById(dlId);
+  a.href = canvas.toDataURL('image/png');
+}
+
+wire('c192', 'dl192');
+wire('c512', 'dl512');
+wire('cApple', 'dlApple');
+</script>
+</body>
+</html>

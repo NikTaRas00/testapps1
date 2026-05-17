@@ -1,0 +1,3172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Clock</title>
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0b0a14" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Clock" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" href="icons/icon-192.png" type="image/png" />
+
+<style>
+/* ========================================================================
+   THEME — Midnight Brass
+   ======================================================================== */
+:root {
+  --bg-deep: #0b0a14;
+  --bg-grad-a: #1a1428;
+  --bg-grad-b: #0a0a1a;
+  --surface: rgba(255,255,255,0.05);
+  --surface-2: rgba(255,255,255,0.09);
+  --surface-3: rgba(255,255,255,0.14);
+  --border: rgba(212,175,115,0.18);
+  --border-strong: rgba(212,175,115,0.35);
+  --text: #f5efe0;
+  --text-dim: rgba(245,239,224,0.6);
+  --text-faint: rgba(245,239,224,0.35);
+  --gold: #e8c587;
+  --gold-deep: #c9a35a;
+  --gold-soft: #f5e6c5;
+  --gold-glow: rgba(232,197,135,0.25);
+  --accent: #f4b860;
+  --danger: #ef6b6b;
+  --good: #7ed3a1;
+  --red: #e25b4a;
+  --shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0;
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  font-feature-settings: "tnum";
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  overflow: hidden; overscroll-behavior: none;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+input, select { font: inherit; color: inherit; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; outline: none; }
+input:focus, select:focus { border-color: var(--gold); }
+
+/* Background gradient + subtle vignette */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgba(232,197,135,0.06), transparent 70%),
+    linear-gradient(180deg, var(--bg-grad-a) 0%, var(--bg-grad-b) 100%);
+  z-index: -1;
+}
+
+/* ========================================================================
+   APP SHELL
+   ======================================================================== */
+#app {
+  display: flex; flex-direction: column;
+  height: 100dvh; max-width: 480px; margin: 0 auto;
+  position: relative;
+}
+main {
+  flex: 1; position: relative; overflow: hidden;
+}
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: max(env(safe-area-inset-top), 14px) 16px 88px;
+  overflow-y: auto;
+  opacity: 0; pointer-events: none; transform: translateY(6px);
+  transition: opacity 220ms ease, transform 260ms cubic-bezier(.2,.7,.2,1);
+}
+.screen.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.screen-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 6px 4px 18px;
+}
+.screen-title {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
+  color: var(--text);
+}
+.screen-sub { color: var(--text-dim); font-size: 13px; }
+
+/* Bottom nav */
+#bottom-nav {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: rgba(15,12,24,0.85);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-top: 1px solid var(--border);
+  padding: 8px 4px calc(env(safe-area-inset-bottom) + 8px);
+  z-index: 10;
+}
+.nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 4px;
+  color: var(--text-dim);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: color 180ms ease;
+  border-radius: 10px;
+  min-height: 52px;
+}
+.nav-btn .nav-ico { font-size: 20px; line-height: 1; opacity: 0.85; transition: transform 200ms ease; }
+.nav-btn.active { color: var(--gold); }
+.nav-btn.active .nav-ico { transform: translateY(-1px); filter: drop-shadow(0 0 6px var(--gold-glow)); }
+.nav-btn:active .nav-ico { transform: scale(0.92); }
+
+/* ========================================================================
+   HOME — Analog + Digital clock
+   ======================================================================== */
+.home-wrap {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 28px;
+  padding-top: 8px;
+}
+.analog {
+  width: min(82vw, 320px); aspect-ratio: 1;
+  filter: drop-shadow(0 16px 32px rgba(0,0,0,0.5)) drop-shadow(0 0 32px var(--gold-glow));
+}
+.analog .face-bg { fill: url(#faceGrad); }
+.analog .face-ring { stroke: var(--gold-deep); stroke-width: 2; fill: none; opacity: 0.85; }
+.analog .face-ring-outer { stroke: rgba(212,175,115,0.25); stroke-width: 1; fill: none; }
+.analog .tick-major { stroke: #3d2817; stroke-width: 2.8; stroke-linecap: round; }
+.analog .tick-minor { stroke: rgba(61,40,23,0.5); stroke-width: 0.9; stroke-linecap: round; }
+.analog .numeral { fill: #3d2817; font-family: "Times New Roman", "Georgia", serif; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
+.analog .hand-hour, .analog .hand-min { fill: #2a1808; stroke: none; }
+.analog .hand-sec { fill: var(--red); stroke: none; }
+.analog .center-cap { fill: #2a1808; }
+.analog .center-cap-inner { fill: var(--red); }
+
+.digital-readout {
+  text-align: center;
+}
+.digital-time {
+  font-size: 44px; font-weight: 300; letter-spacing: -1px;
+  line-height: 1;
+  color: var(--text);
+}
+.digital-time .secs { font-size: 28px; color: var(--text-dim); margin-left: 2px; }
+.digital-time .ampm { font-size: 16px; color: var(--text-dim); margin-left: 6px; font-weight: 500; vertical-align: 5px; }
+.digital-date {
+  margin-top: 8px;
+  font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim);
+}
+.format-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px; letter-spacing: 0.5px; color: var(--text-dim);
+  transition: all 180ms ease;
+}
+.format-toggle:active { transform: scale(0.96); }
+.format-toggle .pill-active { color: var(--gold); font-weight: 600; }
+
+/* ========================================================================
+   WORLD CLOCK
+   ======================================================================== */
+.world-list {
+  display: flex; flex-direction: column; gap: 10px;
+  padding-bottom: 80px;
+}
+.world-empty {
+  text-align: center; padding: 40px 20px; color: var(--text-dim);
+}
+.world-empty .hero-emoji { font-size: 48px; margin-bottom: 10px; }
+.city-card {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 12px; align-items: center;
+  padding: 14px 32px 14px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: background 160ms ease, transform 180ms ease, box-shadow 180ms ease;
+  position: relative;
+  touch-action: pan-y;
+}
+.city-card.dragging { background: var(--surface-2); transform: scale(1.02); box-shadow: var(--shadow); z-index: 5; }
+.city-card .city-name {
+  font-size: 17px; font-weight: 600; color: var(--text);
+  display: flex; align-items: baseline; gap: 8px;
+}
+.city-card .city-name .tz-abbr {
+  font-size: 11px; color: var(--gold); background: rgba(232,197,135,0.1); padding: 2px 6px; border-radius: 4px; font-weight: 600;
+}
+.city-card .city-meta {
+  font-size: 11px; color: var(--text-dim);
+  margin-top: 3px;
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap;
+}
+.city-card .city-meta .delta { color: var(--gold); font-weight: 500; }
+.city-card .sun-moon {
+  font-size: 10px; color: var(--text-dim);
+  text-align: right; line-height: 1.5;
+  white-space: nowrap;
+}
+.city-card .sun-moon .moon-glyph { font-size: 18px; display: block; margin-top: 2px; }
+.city-card .city-time {
+  font-size: 30px; font-weight: 300; letter-spacing: -0.5px;
+  color: var(--text);
+}
+.city-card .city-time .secs { font-size: 18px; color: var(--text-dim); }
+.city-card .drag-handle {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 28px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); opacity: 0.3;
+  cursor: grab; touch-action: none;
+}
+
+/* ── Swipe-to-delete ─────────────────────────────────────── */
+.swipe-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.swipe-delete-bg {
+  position: absolute; inset: 0;
+  background: var(--danger);
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 22px;
+  color: #fff;
+  opacity: 0;
+  user-select: none;
+}
+
+/* Floating add button */
+.fab {
+  position: absolute;
+  right: 18px;
+  bottom: calc(env(safe-area-inset-bottom) + 76px);
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #1a1208;
+  font-size: 28px; font-weight: 300; line-height: 1;
+  padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 28px rgba(232,197,135,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 8;
+  transition: transform 180ms ease;
+}
+.fab:active { transform: scale(0.92); }
+
+/* Plus-icon add button (no circle) */
+.add-btn {
+  position: absolute;
+  right: 20px;
+  bottom: calc(env(safe-area-inset-bottom) + 80px);
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; background: none; border: none;
+  color: var(--gold);
+  z-index: 8;
+  transition: transform 160ms ease, opacity 160ms ease;
+  filter: drop-shadow(0 2px 8px rgba(232,197,135,0.4));
+}
+.add-btn:active { transform: scale(0.88); opacity: 0.7; }
+
+/* ========================================================================
+   ALARM
+   ======================================================================== */
+.alarm-list {
+  display: flex; flex-direction: column; gap: 10px;
+  padding-bottom: 80px;
+}
+.alarm-empty {
+  text-align: center; padding: 40px 20px; color: var(--text-dim);
+}
+.alarm-empty .hero-emoji { font-size: 48px; margin-bottom: 10px; }
+.alarm-card {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 12px; align-items: center;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+}
+.alarm-card.disabled { opacity: 0.5; }
+.alarm-card .alarm-info {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.alarm-time-large {
+  font-size: 30px; font-weight: 300; letter-spacing: -0.5px;
+  color: var(--text);
+}
+.alarm-time-large .ampm { font-size: 14px; color: var(--text-dim); margin-left: 4px; }
+.alarm-label {
+  font-size: 13px; color: var(--text-dim);
+}
+.alarm-days {
+  display: flex; gap: 4px; margin-top: 4px;
+}
+.alarm-day-chip {
+  font-size: 9.5px; padding: 3px 6px; border-radius: 4px;
+  color: var(--text-faint); background: rgba(255,255,255,0.04);
+  letter-spacing: 0.5px; font-weight: 600;
+}
+.alarm-day-chip.active { color: var(--gold); background: rgba(232,197,135,0.15); }
+
+/* Toggle switch */
+.switch {
+  position: relative; width: 50px; height: 30px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  transition: background 200ms ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.switch.on { background: var(--good); }
+.switch .knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 24px; height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: left 200ms cubic-bezier(.4,1.4,.6,1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.switch.on .knob { left: 23px; }
+
+/* ========================================================================
+   STOPWATCH
+   ======================================================================== */
+.stopwatch-wrap {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+}
+.stopwatch-display {
+  font-size: 64px; font-weight: 200; letter-spacing: -2px;
+  color: var(--text);
+  margin: 30px 0 10px;
+  line-height: 1;
+  text-align: center;
+}
+.stopwatch-display .centis { font-size: 36px; color: var(--text-dim); }
+.stopwatch-controls {
+  display: flex; gap: 30px; margin: 20px 0 18px;
+}
+.sw-btn {
+  width: 84px; height: 84px; border-radius: 50%;
+  font-size: 15px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 120ms ease, background 200ms ease;
+  border: 2px solid;
+  letter-spacing: 0.3px;
+}
+.sw-btn:active { transform: scale(0.92); }
+.sw-btn.start { background: rgba(126,211,161,0.15); border-color: rgba(126,211,161,0.4); color: var(--good); }
+.sw-btn.pause { background: rgba(239,107,107,0.15); border-color: rgba(239,107,107,0.4); color: var(--danger); }
+.sw-btn.lap   { background: var(--surface); border-color: var(--border); color: var(--text); }
+.sw-btn.reset { background: var(--surface); border-color: var(--border); color: var(--text-dim); }
+.sw-btn:disabled { opacity: 0.35; pointer-events: none; }
+
+.lap-list {
+  width: 100%;
+  max-width: 420px;
+  display: flex; flex-direction: column;
+  margin-top: 16px;
+  padding: 0 4px;
+  flex: 1; overflow-y: auto;
+}
+.lap-row {
+  display: grid; grid-template-columns: 50px 1fr 1fr;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 15px;
+  border-left: 3px solid transparent;
+  transition: background 160ms ease;
+}
+.lap-row.fastest { border-left-color: var(--good); color: var(--good); }
+.lap-row.slowest { border-left-color: var(--danger); color: var(--danger); }
+.lap-row .lap-num { color: var(--text-dim); }
+.lap-row .lap-split { font-feature-settings: "tnum"; }
+.lap-row .lap-total { text-align: right; color: var(--text-dim); font-feature-settings: "tnum"; }
+.lap-row.expanded { background: var(--surface); }
+.lap-row .deltas {
+  grid-column: 1 / -1; margin-top: 6px;
+  font-size: 11px; color: var(--text-dim);
+  display: none;
+  display: flex; gap: 14px;
+}
+.lap-row:not(.expanded) .deltas { display: none; }
+
+/* ========================================================================
+   TIMER
+   ======================================================================== */
+.timer-list {
+  display: flex; flex-direction: column; gap: 14px;
+  padding-bottom: 80px;
+}
+.timer-empty {
+  text-align: center; padding: 40px 20px; color: var(--text-dim);
+}
+.timer-empty .hero-emoji { font-size: 48px; margin-bottom: 10px; }
+.timer-card {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 18px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  position: relative;
+}
+.timer-card.finished { animation: ringPulse 1.5s ease-in-out infinite; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+.input-error {
+  border-color: var(--danger) !important;
+  animation: shake 300ms ease;
+}
+@keyframes ringPulse {
+  0%, 100% { background: var(--surface); }
+  50% { background: rgba(232,197,135,0.15); }
+}
+.timer-ring-wrap {
+  position: relative;
+  width: 180px; height: 180px;
+}
+.timer-ring {
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+}
+.timer-ring .ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5; }
+.timer-ring .ring-fg { fill: none; stroke: var(--gold); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 220ms linear, stroke 220ms ease; }
+.timer-card.finished .timer-ring .ring-fg { stroke: var(--accent); }
+.timer-ring-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.timer-time {
+  font-size: 32px; font-weight: 300; letter-spacing: -1px;
+  color: var(--text);
+}
+.timer-label {
+  margin-top: 12px;
+  font-size: 14px; color: var(--text-dim);
+  text-align: center;
+}
+.timer-controls {
+  display: flex; gap: 12px;
+  margin-top: 14px;
+}
+.timer-btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.2px;
+  transition: transform 120ms ease;
+}
+.timer-btn:active { transform: scale(0.94); }
+.timer-btn.primary { background: var(--gold); color: #1a1208; border-color: var(--gold); }
+.timer-btn.danger { color: var(--danger); border-color: rgba(239,107,107,0.3); }
+
+/* ========================================================================
+   MODALS / OVERLAYS
+   ======================================================================== */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  z-index: 50;
+  opacity: 0; pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  max-width: 480px; margin: 0 auto;
+  background: linear-gradient(180deg, #1a1428 0%, #100c1c 100%);
+  border-top: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  padding: 18px 16px calc(env(safe-area-inset-bottom) + 18px);
+  z-index: 51;
+  max-height: 90vh; overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 300ms cubic-bezier(.2,.7,.2,1);
+}
+.sheet.open { transform: translateY(0); }
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  margin: 0 auto 14px;
+}
+.sheet-title {
+  font-size: 20px; font-weight: 600;
+  margin: 4px 0 16px;
+}
+.sheet-field {
+  margin: 14px 0;
+}
+.sheet-field label {
+  display: block;
+  font-size: 12px; color: var(--text-dim);
+  letter-spacing: 0.5px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.sheet-field input, .sheet-field select {
+  width: 100%;
+}
+
+.sheet-actions {
+  display: flex; gap: 10px; margin-top: 18px;
+}
+.sheet-actions button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px; font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.sheet-actions .save { background: var(--gold); color: #1a1208; }
+.sheet-actions .continue { background: var(--accent); color: #1a1208; padding: 18px; font-size: 16px; }
+.sheet-actions .delete { background: rgba(239,107,107,0.15); color: var(--danger); border: 1px solid rgba(239,107,107,0.3); }
+
+/* Day picker */
+.day-chips {
+  display: flex; gap: 6px; flex-wrap: nowrap;
+}
+.day-chip {
+  flex: 1; padding: 12px 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 12px; font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  min-width: 32px;
+}
+.day-chip.active { background: rgba(232,197,135,0.18); color: var(--gold); border-color: var(--border-strong); }
+.day-presets {
+  display: flex; gap: 6px; margin-top: 8px;
+}
+.once-chip {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+.once-chip.active {
+  background: rgba(232,197,135,0.18);
+  color: var(--gold);
+  border-color: var(--border-strong);
+}
+
+/* Segmented control */
+.segmented {
+  display: grid; gap: 4px;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+.segmented button {
+  padding: 10px 6px;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-dim);
+}
+.segmented button.active { background: var(--gold); color: #1a1208; font-weight: 700; }
+
+/* City search modal */
+.search-input-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.search-input {
+  width: 100%; padding-left: 40px;
+  font-size: 16px;
+}
+.search-input-wrap::before {
+  content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 15px; opacity: 0.6;
+}
+.search-results {
+  max-height: 60vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.search-result {
+  padding: 12px 14px;
+  border-radius: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: background 120ms ease;
+}
+.search-result:active { background: var(--surface-2); }
+.search-result .city-info {
+  display: flex; flex-direction: column;
+}
+.search-result .city-info .name { font-size: 15px; font-weight: 500; }
+.search-result .city-info .country { font-size: 11px; color: var(--text-dim); }
+.search-result .tz-pill {
+  font-size: 10px; color: var(--gold); background: rgba(232,197,135,0.1);
+  padding: 3px 7px; border-radius: 4px;
+  font-weight: 600; letter-spacing: 0.3px;
+}
+.search-loading { padding: 20px; text-align: center; color: var(--text-dim); }
+
+/* Ringer overlay */
+.ringer {
+  position: fixed; inset: 0;
+  background: radial-gradient(circle at 50% 30%, #2a1f3a 0%, #0b0a14 80%);
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 20px;
+}
+.ringer.open { display: flex; animation: pulseBg 1s ease-in-out infinite; }
+@keyframes pulseBg {
+  0%, 100% { background: radial-gradient(circle at 50% 30%, #2a1f3a 0%, #0b0a14 80%); }
+  50% { background: radial-gradient(circle at 50% 30%, #5e3a1d 0%, #1a1208 80%); }
+}
+.ringer-icon { font-size: 80px; margin-bottom: 20px; animation: bellShake 0.6s ease-in-out infinite; }
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+.ringer-label { font-size: 26px; font-weight: 600; margin-bottom: 10px; text-align: center; }
+.ringer-time { font-size: 56px; font-weight: 200; letter-spacing: -2px; margin-bottom: 50px; color: var(--gold); }
+.ringer-actions {
+  display: flex; gap: 18px;
+  width: 100%; max-width: 360px;
+}
+.ringer-btn {
+  flex: 1; padding: 18px;
+  border-radius: 18px;
+  font-size: 16px; font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.ringer-btn.snooze { background: var(--surface-2); color: var(--gold); border: 1px solid var(--border-strong); }
+.ringer-btn.stop { background: var(--danger); color: white; }
+
+/* Timer done overlay */
+.timer-done-flash {
+  position: fixed; inset: 0;
+  background: var(--gold);
+  z-index: 99;
+  display: none;
+  animation: flashFade 1.6s ease-out;
+  pointer-events: none;
+}
+.timer-done-flash.show { display: block; }
+@keyframes flashFade {
+  0% { opacity: 0.8; }
+  20% { opacity: 0.0; }
+  40% { opacity: 0.7; }
+  60% { opacity: 0.0; }
+  80% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* Info chip */
+.info-chip {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: rgba(244,184,96,0.08);
+  border: 1px solid rgba(244,184,96,0.2);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.info-chip::before { content: 'ℹ'; color: var(--gold); }
+
+/* Drum-roll picker */
+.drum-row {
+  display: flex; align-items: flex-end; gap: 2px;
+}
+.drum-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.drum-col-label {
+  font-size: 10px; color: var(--text-faint); letter-spacing: 1px; font-weight: 600; text-transform: uppercase;
+}
+.drum-wrap {
+  position: relative; width: 100%; height: 200px;
+  overflow: hidden; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.drum-wrap::before, .drum-wrap::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 80px;
+  pointer-events: none; z-index: 2;
+}
+.drum-wrap::before { top: 0; background: linear-gradient(to bottom, rgba(16,12,28,0.96) 0%, transparent 100%); }
+.drum-wrap::after  { bottom: 0; background: linear-gradient(to top,   rgba(16,12,28,0.96) 0%, transparent 100%); }
+.drum-highlight {
+  position: absolute; top: 80px; left: 0; right: 0; height: 40px;
+  border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-strong);
+  background: rgba(232,197,135,0.06); z-index: 1; pointer-events: none;
+}
+.drum-picker {
+  height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.drum-picker::-webkit-scrollbar { display: none; }
+.drum-pad { height: 80px; flex-shrink: 0; }
+.drum-item {
+  height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  scroll-snap-align: center;
+  font-size: 26px; font-weight: 200; letter-spacing: 1px;
+  color: var(--text-dim); font-feature-settings: "tnum";
+}
+.drum-sep {
+  font-size: 28px; color: var(--text-dim); padding-bottom: 12px; line-height: 200px;
+  flex-shrink: 0;
+}
+
+/* Scrollbars (minimal) */
+::-webkit-scrollbar { width: 0; height: 0; }
+
+/* Vibrate hint on alarm save */
+.permission-line { margin-top: 10px; font-size: 11px; color: var(--text-faint); }
+.permission-line.granted { color: var(--good); }
+
+/* Helpers */
+.flex-row { display: flex; gap: 8px; align-items: center; }
+.spacer { flex: 1; }
+.hidden { display: none !important; }
+
+@media (max-height: 700px) {
+  .analog { width: min(65vw, 240px); }
+  .digital-time { font-size: 36px; }
+  .stopwatch-display { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <main>
+    <!-- HOME -->
+    <section class="screen active" id="screen-home">
+      <div class="home-wrap">
+        <svg class="analog" viewBox="0 0 200 200" id="analog-clock">
+          <defs>
+            <radialGradient id="faceGrad" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#f5e6c5"/>
+              <stop offset="100%" stop-color="#d4af73"/>
+            </radialGradient>
+            <filter id="handShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="0.7"/>
+              <feOffset dx="0" dy="0.7" result="off"/>
+              <feMerge><feMergeNode in="off"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Face -->
+          <circle class="face-ring-outer" cx="100" cy="100" r="98"/>
+          <circle class="face-bg" cx="100" cy="100" r="94"/>
+          <circle class="face-ring" cx="100" cy="100" r="94"/>
+
+          <!-- Tick marks -->
+          <g id="ticks"></g>
+          <!-- Numerals (Roman) -->
+          <g id="numerals"></g>
+
+          <!-- Hands -->
+          <g filter="url(#handShadow)">
+            <g id="hand-hour-group">
+              <rect class="hand-hour" x="98.5" y="48" width="3" height="55" rx="1.5"/>
+            </g>
+            <g id="hand-min-group">
+              <rect class="hand-min" x="99" y="28" width="2" height="75" rx="1"/>
+            </g>
+            <g id="hand-sec-group">
+              <rect class="hand-sec" x="99.5" y="22" width="1" height="82" rx="0.5"/>
+            </g>
+          </g>
+
+          <circle class="center-cap" cx="100" cy="100" r="3.6"/>
+        </svg>
+
+        <div class="digital-readout">
+          <div class="digital-time" id="digital-time">--:--<span class="secs">:--</span></div>
+          <div class="digital-date" id="digital-date">—</div>
+          <button class="format-toggle" id="format-toggle">
+            <span id="format-pill-12">12</span> / <span id="format-pill-24">24</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORLD CLOCK -->
+    <section class="screen" id="screen-world">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">World Clock</div>
+          <div class="screen-sub">Times around the world</div>
+        </div>
+      </div>
+      <div class="world-list" id="world-list"></div>
+      <button class="add-btn" id="world-add" aria-label="Add city">
+        <svg width="46" height="46" viewBox="0 0 36 36" fill="none">
+          <line x1="18" y1="5" x2="18" y2="31" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+          <line x1="5" y1="18" x2="31" y2="18" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </section>
+
+    <!-- ALARM -->
+    <section class="screen" id="screen-alarm">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Alarm</div>
+          <div class="screen-sub" id="alarm-permission-status">—</div>
+        </div>
+      </div>
+      <div class="alarm-list" id="alarm-list"></div>
+      <button class="add-btn" id="alarm-add" aria-label="Add alarm">
+        <svg width="46" height="46" viewBox="0 0 36 36" fill="none">
+          <line x1="18" y1="5" x2="18" y2="31" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+          <line x1="5" y1="18" x2="31" y2="18" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </section>
+
+    <!-- STOPWATCH -->
+    <section class="screen" id="screen-stopwatch">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Stopwatch</div>
+        </div>
+      </div>
+      <div class="stopwatch-wrap">
+        <div class="stopwatch-display" id="sw-display">00:00<span class="centis">.00</span></div>
+        <div class="stopwatch-controls">
+          <button class="sw-btn lap" id="sw-lap-btn" disabled>Lap</button>
+          <button class="sw-btn start" id="sw-start-btn">Start</button>
+        </div>
+        <div class="lap-list" id="lap-list"></div>
+      </div>
+    </section>
+
+    <!-- TIMER -->
+    <section class="screen" id="screen-timer">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Timer</div>
+          <div class="screen-sub">Multiple timers</div>
+        </div>
+      </div>
+      <div class="timer-list" id="timer-list"></div>
+      <button class="add-btn" id="timer-add" aria-label="Add timer">
+        <svg width="46" height="46" viewBox="0 0 36 36" fill="none">
+          <line x1="18" y1="5" x2="18" y2="31" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+          <line x1="5" y1="18" x2="31" y2="18" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </section>
+  </main>
+
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-tab="home"><span class="nav-ico">◴</span><span>Clock</span></button>
+    <button class="nav-btn" data-tab="world"><span class="nav-ico">🌐</span><span>World</span></button>
+    <button class="nav-btn" data-tab="alarm"><span class="nav-ico">⏰</span><span>Alarm</span></button>
+    <button class="nav-btn" data-tab="stopwatch"><span class="nav-ico">⏱</span><span>Stopwatch</span></button>
+    <button class="nav-btn" data-tab="timer"><span class="nav-ico">⏳</span><span>Timer</span></button>
+  </nav>
+</div>
+
+<!-- Overlays -->
+<div class="modal-backdrop" id="backdrop"></div>
+
+<div class="sheet" id="city-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Add a city</div>
+  <div class="search-input-wrap">
+    <input class="search-input" id="city-search" type="search" placeholder="Search cities..." autocomplete="off" />
+  </div>
+  <div class="search-results" id="search-results">
+    <div class="search-loading">Type to search 530+ cities</div>
+  </div>
+</div>
+
+<div class="sheet" id="alarm-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="alarm-sheet-title">New Alarm</div>
+  <div class="sheet-field">
+    <label>Label</label>
+    <input id="alarm-label" type="text" placeholder="Alarm" maxlength="40" />
+  </div>
+  <div class="sheet-field">
+    <label>Time</label>
+    <input id="alarm-time" type="time" value="07:00" />
+  </div>
+  <div class="sheet-field">
+    <label>Repeat</label>
+    <div class="day-chips" id="alarm-day-chips">
+      <div class="day-chip" data-d="1">M</div>
+      <div class="day-chip" data-d="2">T</div>
+      <div class="day-chip" data-d="3">W</div>
+      <div class="day-chip" data-d="4">T</div>
+      <div class="day-chip" data-d="5">F</div>
+      <div class="day-chip" data-d="6">S</div>
+      <div class="day-chip" data-d="0">S</div>
+    </div>
+    <div class="day-presets">
+      <button class="once-chip" data-preset="once">Once</button>
+    </div>
+  </div>
+  <div class="sheet-field">
+    <label>Snooze (minutes)</label>
+    <div class="segmented" id="alarm-snooze" style="grid-template-columns: repeat(5, 1fr);">
+      <button data-v="1">1</button>
+      <button data-v="5" class="active">5</button>
+      <button data-v="10">10</button>
+      <button data-v="15">15</button>
+      <button data-v="20">20</button>
+    </div>
+  </div>
+  <div class="sheet-field">
+    <label>Vibration</label>
+    <div class="segmented" id="alarm-vibration" style="grid-template-columns: repeat(4, 1fr);">
+      <button data-v="off">Off</button>
+      <button data-v="single" class="active">Single</button>
+      <button data-v="double">Double</button>
+      <button data-v="long">Long</button>
+    </div>
+  </div>
+  <div class="permission-line" id="notif-permission-line"></div>
+  <div class="sheet-actions">
+    <button class="delete hidden" id="alarm-delete">Delete</button>
+    <button class="continue" id="alarm-save">Continue</button>
+  </div>
+</div>
+
+<div class="sheet" id="timer-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">New Timer</div>
+  <div class="sheet-field">
+    <label>Label</label>
+    <input id="timer-label" type="text" placeholder="Timer" maxlength="30" />
+  </div>
+  <div class="sheet-field">
+    <label>Duration</label>
+    <input id="timer-duration" type="time" step="1" value="00:05:00" />
+  </div>
+  <div class="sheet-actions">
+    <button class="continue" id="timer-save">Continue</button>
+  </div>
+</div>
+
+<div class="ringer" id="ringer">
+  <div class="ringer-icon">🔔</div>
+  <div class="ringer-label" id="ringer-label">Alarm</div>
+  <div class="ringer-time" id="ringer-time">--:--</div>
+  <div class="ringer-actions">
+    <button class="ringer-btn snooze" id="ringer-snooze">Snooze</button>
+    <button class="ringer-btn stop" id="ringer-stop">Stop</button>
+  </div>
+</div>
+
+<div class="timer-done-flash" id="timer-flash"></div>
+
+<script type="application/json" id="cities-data">
+[
+["New York","United States","America/New_York",40.7128,-74.006],
+["Los Angeles","United States","America/Los_Angeles",34.0522,-118.2437],
+["Chicago","United States","America/Chicago",41.8781,-87.6298],
+["Houston","United States","America/Chicago",29.7604,-95.3698],
+["Phoenix","United States","America/Phoenix",33.4484,-112.074],
+["Philadelphia","United States","America/New_York",39.9526,-75.1652],
+["San Antonio","United States","America/Chicago",29.4241,-98.4936],
+["San Diego","United States","America/Los_Angeles",32.7157,-117.1611],
+["Dallas","United States","America/Chicago",32.7767,-96.797],
+["San Jose","United States","America/Los_Angeles",37.3382,-121.8863],
+["Austin","United States","America/Chicago",30.2672,-97.7431],
+["Jacksonville","United States","America/New_York",30.3322,-81.6557],
+["Fort Worth","United States","America/Chicago",32.7555,-97.3308],
+["Columbus","United States","America/New_York",39.9612,-82.9988],
+["Indianapolis","United States","America/Indiana/Indianapolis",39.7684,-86.1581],
+["Charlotte","United States","America/New_York",35.2271,-80.8431],
+["San Francisco","United States","America/Los_Angeles",37.7749,-122.4194],
+["Seattle","United States","America/Los_Angeles",47.6062,-122.3321],
+["Denver","United States","America/Denver",39.7392,-104.9903],
+["Washington","United States","America/New_York",38.9072,-77.0369],
+["Boston","United States","America/New_York",42.3601,-71.0589],
+["El Paso","United States","America/Denver",31.7619,-106.485],
+["Nashville","United States","America/Chicago",36.1627,-86.7816],
+["Detroit","United States","America/Detroit",42.3314,-83.0458],
+["Portland","United States","America/Los_Angeles",45.5152,-122.6784],
+["Memphis","United States","America/Chicago",35.1495,-90.049],
+["Oklahoma City","United States","America/Chicago",35.4676,-97.5164],
+["Las Vegas","United States","America/Los_Angeles",36.1699,-115.1398],
+["Louisville","United States","America/Kentucky/Louisville",38.2527,-85.7585],
+["Baltimore","United States","America/New_York",39.2904,-76.6122],
+["Milwaukee","United States","America/Chicago",43.0389,-87.9065],
+["Albuquerque","United States","America/Denver",35.0844,-106.6504],
+["Tucson","United States","America/Phoenix",32.2226,-110.9747],
+["Fresno","United States","America/Los_Angeles",36.7378,-119.7871],
+["Mesa","United States","America/Phoenix",33.4152,-111.8315],
+["Sacramento","United States","America/Los_Angeles",38.5816,-121.4944],
+["Atlanta","United States","America/New_York",33.749,-84.388],
+["Kansas City","United States","America/Chicago",39.0997,-94.5786],
+["Colorado Springs","United States","America/Denver",38.8339,-104.8214],
+["Miami","United States","America/New_York",25.7617,-80.1918],
+["Raleigh","United States","America/New_York",35.7796,-78.6382],
+["Omaha","United States","America/Chicago",41.2565,-95.9345],
+["Long Beach","United States","America/Los_Angeles",33.7701,-118.1937],
+["Virginia Beach","United States","America/New_York",36.8529,-75.978],
+["Oakland","United States","America/Los_Angeles",37.8044,-122.2712],
+["Minneapolis","United States","America/Chicago",44.9778,-93.265],
+["Tulsa","United States","America/Chicago",36.154,-95.9928],
+["Arlington","United States","America/Chicago",32.7357,-97.1081],
+["Tampa","United States","America/New_York",27.9506,-82.4572],
+["New Orleans","United States","America/Chicago",29.9511,-90.0715],
+["Wichita","United States","America/Chicago",37.6872,-97.3301],
+["Cleveland","United States","America/New_York",41.4993,-81.6944],
+["Bakersfield","United States","America/Los_Angeles",35.3733,-119.0187],
+["Aurora","United States","America/Denver",39.7294,-104.8319],
+["Anaheim","United States","America/Los_Angeles",33.8366,-117.9143],
+["Honolulu","United States","Pacific/Honolulu",21.3069,-157.8583],
+["Santa Ana","United States","America/Los_Angeles",33.7455,-117.8677],
+["Riverside","United States","America/Los_Angeles",33.9533,-117.3962],
+["Corpus Christi","United States","America/Chicago",27.8006,-97.3964],
+["Lexington","United States","America/New_York",38.0406,-84.5037],
+["Henderson","United States","America/Los_Angeles",36.0395,-114.9817],
+["Stockton","United States","America/Los_Angeles",37.9577,-121.2908],
+["Saint Paul","United States","America/Chicago",44.9537,-93.09],
+["Cincinnati","United States","America/New_York",39.1031,-84.512],
+["St. Louis","United States","America/Chicago",38.627,-90.1994],
+["Pittsburgh","United States","America/New_York",40.4406,-79.9959],
+["Greensboro","United States","America/New_York",36.0726,-79.792],
+["Lincoln","United States","America/Chicago",40.8136,-96.7026],
+["Anchorage","United States","America/Anchorage",61.2181,-149.9003],
+["Plano","United States","America/Chicago",33.0198,-96.6989],
+["Orlando","United States","America/New_York",28.5383,-81.3792],
+["Irvine","United States","America/Los_Angeles",33.6846,-117.8265],
+["Newark","United States","America/New_York",40.7357,-74.1724],
+["Toledo","United States","America/New_York",41.6528,-83.5379],
+["Durham","United States","America/New_York",35.994,-78.8986],
+["Chula Vista","United States","America/Los_Angeles",32.6401,-117.0842],
+["Fort Wayne","United States","America/Indiana/Indianapolis",41.0793,-85.1394],
+["Jersey City","United States","America/New_York",40.7178,-74.0431],
+["St. Petersburg","United States","America/New_York",27.7676,-82.6403],
+["Laredo","United States","America/Chicago",27.5306,-99.4803],
+["Madison","United States","America/Chicago",43.0731,-89.4012],
+["Chandler","United States","America/Phoenix",33.3062,-111.8413],
+["Buffalo","United States","America/New_York",42.8864,-78.8784],
+["Lubbock","United States","America/Chicago",33.5779,-101.8552],
+["Scottsdale","United States","America/Phoenix",33.4942,-111.9261],
+["Reno","United States","America/Los_Angeles",39.5296,-119.8138],
+["Glendale","United States","America/Phoenix",33.5387,-112.186],
+["Gilbert","United States","America/Phoenix",33.3528,-111.789],
+["Winston-Salem","United States","America/New_York",36.0999,-80.2442],
+["North Las Vegas","United States","America/Los_Angeles",36.1989,-115.1175],
+["Norfolk","United States","America/New_York",36.8508,-76.2859],
+["Chesapeake","United States","America/New_York",36.7682,-76.2875],
+["Garland","United States","America/Chicago",32.9126,-96.6389],
+["Irving","United States","America/Chicago",32.814,-96.9489],
+["Hialeah","United States","America/New_York",25.8576,-80.2781],
+["Fremont","United States","America/Los_Angeles",37.5485,-121.9886],
+["Boise","United States","America/Boise",43.615,-116.2023],
+["Richmond","United States","America/New_York",37.5407,-77.436],
+["Baton Rouge","United States","America/Chicago",30.4515,-91.1871],
+["Spokane","United States","America/Los_Angeles",47.6588,-117.426],
+["Des Moines","United States","America/Chicago",41.5868,-93.625],
+["Salt Lake City","United States","America/Denver",40.7608,-111.891],
+["Tacoma","United States","America/Los_Angeles",47.2529,-122.4443],
+["Fontana","United States","America/Los_Angeles",34.0922,-117.435],
+["Montgomery","United States","America/Chicago",32.3792,-86.3077],
+["Birmingham","United States","America/Chicago",33.5186,-86.8104],
+["Salem","United States","America/Los_Angeles",44.9429,-123.0351],
+["Grand Rapids","United States","America/Detroit",42.9634,-85.6681],
+["Mobile","United States","America/Chicago",30.6954,-88.0399],
+["Yonkers","United States","America/New_York",40.9312,-73.8987],
+["Knoxville","United States","America/New_York",35.9606,-83.9207],
+["Worcester","United States","America/New_York",42.2626,-71.8023],
+["Providence","United States","America/New_York",41.824,-71.4128],
+["Akron","United States","America/New_York",41.0814,-81.519],
+["Little Rock","United States","America/Chicago",34.7465,-92.2896],
+["Fayetteville","United States","America/New_York",35.0527,-78.8784],
+["Springfield","United States","America/Chicago",39.7817,-89.6501],
+["Augusta","United States","America/New_York",33.4735,-82.0105],
+["Rochester","United States","America/New_York",43.1566,-77.6088],
+["Huntington Beach","United States","America/Los_Angeles",33.6603,-117.9992],
+["Glendale","United States","America/Los_Angeles",34.1425,-118.2551],
+["Salinas","United States","America/Los_Angeles",36.6777,-121.6555],
+["Tallahassee","United States","America/New_York",30.4383,-84.2807],
+["Huntsville","United States","America/Chicago",34.7304,-86.5861],
+["Grand Prairie","United States","America/Chicago",32.7459,-96.9978],
+["Kansas City","United States","America/Chicago",39.1142,-94.6275],
+["Overland Park","United States","America/Chicago",38.9822,-94.6708],
+["McKinney","United States","America/Chicago",33.1972,-96.6398],
+["Frisco","United States","America/Chicago",33.1507,-96.8236],
+["Cary","United States","America/New_York",35.7915,-78.7811],
+["Mountain View","United States","America/Los_Angeles",37.3861,-122.0839],
+["Berkeley","United States","America/Los_Angeles",37.8716,-122.273],
+["Palo Alto","United States","America/Los_Angeles",37.4419,-122.143],
+["Cupertino","United States","America/Los_Angeles",37.3229,-122.0322],
+["Toronto","Canada","America/Toronto",43.6532,-79.3832],
+["Montreal","Canada","America/Toronto",45.5017,-73.5673],
+["Vancouver","Canada","America/Vancouver",49.2827,-123.1207],
+["Calgary","Canada","America/Edmonton",51.0447,-114.0719],
+["Edmonton","Canada","America/Edmonton",53.5461,-113.4938],
+["Ottawa","Canada","America/Toronto",45.4215,-75.6972],
+["Winnipeg","Canada","America/Winnipeg",49.8951,-97.1384],
+["Quebec City","Canada","America/Toronto",46.8139,-71.208],
+["Hamilton","Canada","America/Toronto",43.2557,-79.8711],
+["Kitchener","Canada","America/Toronto",43.4516,-80.4925],
+["London","Canada","America/Toronto",42.9849,-81.2453],
+["Halifax","Canada","America/Halifax",44.6488,-63.5752],
+["Victoria","Canada","America/Vancouver",48.4284,-123.3656],
+["Saskatoon","Canada","America/Regina",52.1332,-106.67],
+["Regina","Canada","America/Regina",50.4452,-104.6189],
+["St. John's","Canada","America/St_Johns",47.5615,-52.7126],
+["Mississauga","Canada","America/Toronto",43.589,-79.6441],
+["Brampton","Canada","America/Toronto",43.7315,-79.7624],
+["Surrey","Canada","America/Vancouver",49.1913,-122.849],
+["Mexico City","Mexico","America/Mexico_City",19.4326,-99.1332],
+["Guadalajara","Mexico","America/Mexico_City",20.6597,-103.3496],
+["Monterrey","Mexico","America/Monterrey",25.6866,-100.3161],
+["Puebla","Mexico","America/Mexico_City",19.0414,-98.2063],
+["Tijuana","Mexico","America/Tijuana",32.5149,-117.0382],
+["Leon","Mexico","America/Mexico_City",21.129,-101.6717],
+["Juarez","Mexico","America/Ojinaga",31.6904,-106.4245],
+["Cancun","Mexico","America/Cancun",21.1619,-86.8515],
+["Merida","Mexico","America/Merida",20.9674,-89.5926],
+["Acapulco","Mexico","America/Mexico_City",16.8531,-99.8237],
+["London","United Kingdom","Europe/London",51.5074,-0.1278],
+["Birmingham","United Kingdom","Europe/London",52.4862,-1.8904],
+["Manchester","United Kingdom","Europe/London",53.4808,-2.2426],
+["Glasgow","United Kingdom","Europe/London",55.8642,-4.2518],
+["Liverpool","United Kingdom","Europe/London",53.4084,-2.9916],
+["Leeds","United Kingdom","Europe/London",53.8008,-1.5491],
+["Sheffield","United Kingdom","Europe/London",53.3811,-1.4701],
+["Edinburgh","United Kingdom","Europe/London",55.9533,-3.1883],
+["Bristol","United Kingdom","Europe/London",51.4545,-2.5879],
+["Cardiff","United Kingdom","Europe/London",51.4816,-3.1791],
+["Belfast","United Kingdom","Europe/London",54.5973,-5.9301],
+["Newcastle","United Kingdom","Europe/London",54.9783,-1.6178],
+["Nottingham","United Kingdom","Europe/London",52.9548,-1.1581],
+["Cambridge","United Kingdom","Europe/London",52.2053,0.1218],
+["Oxford","United Kingdom","Europe/London",51.752,-1.2577],
+["Dublin","Ireland","Europe/Dublin",53.3498,-6.2603],
+["Cork","Ireland","Europe/Dublin",51.8985,-8.4756],
+["Galway","Ireland","Europe/Dublin",53.2707,-9.0568],
+["Paris","France","Europe/Paris",48.8566,2.3522],
+["Marseille","France","Europe/Paris",43.2965,5.3698],
+["Lyon","France","Europe/Paris",45.764,4.8357],
+["Toulouse","France","Europe/Paris",43.6047,1.4442],
+["Nice","France","Europe/Paris",43.7102,7.262],
+["Nantes","France","Europe/Paris",47.2184,-1.5536],
+["Strasbourg","France","Europe/Paris",48.5734,7.7521],
+["Montpellier","France","Europe/Paris",43.6108,3.8767],
+["Bordeaux","France","Europe/Paris",44.8378,-0.5792],
+["Lille","France","Europe/Paris",50.6292,3.0573],
+["Berlin","Germany","Europe/Berlin",52.52,13.405],
+["Hamburg","Germany","Europe/Berlin",53.5511,9.9937],
+["Munich","Germany","Europe/Berlin",48.1351,11.582],
+["Cologne","Germany","Europe/Berlin",50.9375,6.9603],
+["Frankfurt","Germany","Europe/Berlin",50.1109,8.6821],
+["Stuttgart","Germany","Europe/Berlin",48.7758,9.1829],
+["Dusseldorf","Germany","Europe/Berlin",51.2277,6.7735],
+["Dortmund","Germany","Europe/Berlin",51.5136,7.4653],
+["Essen","Germany","Europe/Berlin",51.4556,7.0116],
+["Leipzig","Germany","Europe/Berlin",51.3397,12.3731],
+["Bremen","Germany","Europe/Berlin",53.0793,8.8017],
+["Dresden","Germany","Europe/Berlin",51.0504,13.7373],
+["Hanover","Germany","Europe/Berlin",52.3759,9.732],
+["Nuremberg","Germany","Europe/Berlin",49.4521,11.0767],
+["Madrid","Spain","Europe/Madrid",40.4168,-3.7038],
+["Barcelona","Spain","Europe/Madrid",41.3851,2.1734],
+["Valencia","Spain","Europe/Madrid",39.4699,-0.3763],
+["Seville","Spain","Europe/Madrid",37.3886,-5.9823],
+["Zaragoza","Spain","Europe/Madrid",41.6488,-0.8891],
+["Malaga","Spain","Europe/Madrid",36.7213,-4.4214],
+["Bilbao","Spain","Europe/Madrid",43.263,-2.935],
+["Palma","Spain","Europe/Madrid",39.5696,2.6502],
+["Las Palmas","Spain","Atlantic/Canary",28.1235,-15.4363],
+["Granada","Spain","Europe/Madrid",37.1773,-3.5986],
+["Rome","Italy","Europe/Rome",41.9028,12.4964],
+["Milan","Italy","Europe/Rome",45.4642,9.19],
+["Naples","Italy","Europe/Rome",40.8518,14.2681],
+["Turin","Italy","Europe/Rome",45.0703,7.6869],
+["Palermo","Italy","Europe/Rome",38.1157,13.3615],
+["Genoa","Italy","Europe/Rome",44.4056,8.9463],
+["Bologna","Italy","Europe/Rome",44.4949,11.3426],
+["Florence","Italy","Europe/Rome",43.7696,11.2558],
+["Venice","Italy","Europe/Rome",45.4408,12.3155],
+["Verona","Italy","Europe/Rome",45.4384,10.9916],
+["Catania","Italy","Europe/Rome",37.5079,15.083],
+["Bari","Italy","Europe/Rome",41.1171,16.8719],
+["Lisbon","Portugal","Europe/Lisbon",38.7223,-9.1393],
+["Porto","Portugal","Europe/Lisbon",41.1579,-8.6291],
+["Coimbra","Portugal","Europe/Lisbon",40.2033,-8.4103],
+["Amsterdam","Netherlands","Europe/Amsterdam",52.3676,4.9041],
+["Rotterdam","Netherlands","Europe/Amsterdam",51.9244,4.4777],
+["The Hague","Netherlands","Europe/Amsterdam",52.0705,4.3007],
+["Utrecht","Netherlands","Europe/Amsterdam",52.0907,5.1214],
+["Eindhoven","Netherlands","Europe/Amsterdam",51.4416,5.4697],
+["Brussels","Belgium","Europe/Brussels",50.8503,4.3517],
+["Antwerp","Belgium","Europe/Brussels",51.2194,4.4025],
+["Ghent","Belgium","Europe/Brussels",51.0543,3.7174],
+["Bruges","Belgium","Europe/Brussels",51.2093,3.2247],
+["Luxembourg","Luxembourg","Europe/Luxembourg",49.6116,6.1319],
+["Vienna","Austria","Europe/Vienna",48.2082,16.3738],
+["Salzburg","Austria","Europe/Vienna",47.8095,13.055],
+["Innsbruck","Austria","Europe/Vienna",47.2692,11.4041],
+["Graz","Austria","Europe/Vienna",47.0707,15.4395],
+["Zurich","Switzerland","Europe/Zurich",47.3769,8.5417],
+["Geneva","Switzerland","Europe/Zurich",46.2044,6.1432],
+["Basel","Switzerland","Europe/Zurich",47.5596,7.5886],
+["Bern","Switzerland","Europe/Zurich",46.948,7.4474],
+["Lausanne","Switzerland","Europe/Zurich",46.5197,6.6323],
+["Copenhagen","Denmark","Europe/Copenhagen",55.6761,12.5683],
+["Aarhus","Denmark","Europe/Copenhagen",56.1629,10.2039],
+["Odense","Denmark","Europe/Copenhagen",55.4038,10.4024],
+["Stockholm","Sweden","Europe/Stockholm",59.3293,18.0686],
+["Gothenburg","Sweden","Europe/Stockholm",57.7089,11.9746],
+["Malmo","Sweden","Europe/Stockholm",55.605,13.0038],
+["Uppsala","Sweden","Europe/Stockholm",59.8586,17.6389],
+["Oslo","Norway","Europe/Oslo",59.9139,10.7522],
+["Bergen","Norway","Europe/Oslo",60.3913,5.3221],
+["Trondheim","Norway","Europe/Oslo",63.4305,10.3951],
+["Stavanger","Norway","Europe/Oslo",58.9699,5.7331],
+["Helsinki","Finland","Europe/Helsinki",60.1699,24.9384],
+["Espoo","Finland","Europe/Helsinki",60.2055,24.6559],
+["Tampere","Finland","Europe/Helsinki",61.4978,23.761],
+["Turku","Finland","Europe/Helsinki",60.4518,22.2666],
+["Reykjavik","Iceland","Atlantic/Reykjavik",64.1466,-21.9426],
+["Warsaw","Poland","Europe/Warsaw",52.2297,21.0122],
+["Krakow","Poland","Europe/Warsaw",50.0647,19.945],
+["Wroclaw","Poland","Europe/Warsaw",51.1079,17.0385],
+["Poznan","Poland","Europe/Warsaw",52.4064,16.9252],
+["Gdansk","Poland","Europe/Warsaw",54.352,18.6466],
+["Lodz","Poland","Europe/Warsaw",51.7592,19.4559],
+["Prague","Czech Republic","Europe/Prague",50.0755,14.4378],
+["Brno","Czech Republic","Europe/Prague",49.1951,16.6068],
+["Ostrava","Czech Republic","Europe/Prague",49.8209,18.2625],
+["Bratislava","Slovakia","Europe/Bratislava",48.1486,17.1077],
+["Budapest","Hungary","Europe/Budapest",47.4979,19.0402],
+["Debrecen","Hungary","Europe/Budapest",47.5316,21.6273],
+["Szeged","Hungary","Europe/Budapest",46.253,20.1414],
+["Bucharest","Romania","Europe/Bucharest",44.4268,26.1025],
+["Cluj-Napoca","Romania","Europe/Bucharest",46.7712,23.6236],
+["Timisoara","Romania","Europe/Bucharest",45.7489,21.2087],
+["Iasi","Romania","Europe/Bucharest",47.1585,27.6014],
+["Sofia","Bulgaria","Europe/Sofia",42.6977,23.3219],
+["Plovdiv","Bulgaria","Europe/Sofia",42.1354,24.7453],
+["Varna","Bulgaria","Europe/Sofia",43.2141,27.9147],
+["Belgrade","Serbia","Europe/Belgrade",44.7866,20.4489],
+["Novi Sad","Serbia","Europe/Belgrade",45.2671,19.8335],
+["Zagreb","Croatia","Europe/Zagreb",45.815,15.9819],
+["Split","Croatia","Europe/Zagreb",43.5081,16.4402],
+["Rijeka","Croatia","Europe/Zagreb",45.3271,14.4422],
+["Dubrovnik","Croatia","Europe/Zagreb",42.6507,18.0944],
+["Ljubljana","Slovenia","Europe/Ljubljana",46.0569,14.5058],
+["Sarajevo","Bosnia and Herzegovina","Europe/Sarajevo",43.8563,18.4131],
+["Skopje","North Macedonia","Europe/Skopje",41.9981,21.4254],
+["Tirana","Albania","Europe/Tirane",41.3275,19.8187],
+["Pristina","Kosovo","Europe/Belgrade",42.6629,21.1655],
+["Podgorica","Montenegro","Europe/Podgorica",42.4304,19.2594],
+["Athens","Greece","Europe/Athens",37.9838,23.7275],
+["Thessaloniki","Greece","Europe/Athens",40.6401,22.9444],
+["Patras","Greece","Europe/Athens",38.2466,21.7346],
+["Heraklion","Greece","Europe/Athens",35.3387,25.1442],
+["Nicosia","Cyprus","Asia/Nicosia",35.1856,33.3823],
+["Valletta","Malta","Europe/Malta",35.8989,14.5146],
+["Moscow","Russia","Europe/Moscow",55.7558,37.6173],
+["Saint Petersburg","Russia","Europe/Moscow",59.9311,30.3609],
+["Novosibirsk","Russia","Asia/Novosibirsk",55.0084,82.9357],
+["Yekaterinburg","Russia","Asia/Yekaterinburg",56.8389,60.6057],
+["Nizhny Novgorod","Russia","Europe/Moscow",56.2965,43.9361],
+["Kazan","Russia","Europe/Moscow",55.8304,49.0661],
+["Chelyabinsk","Russia","Asia/Yekaterinburg",55.1644,61.4368],
+["Omsk","Russia","Asia/Omsk",54.9885,73.3242],
+["Samara","Russia","Europe/Samara",53.2415,50.2212],
+["Rostov-on-Don","Russia","Europe/Moscow",47.2357,39.7015],
+["Ufa","Russia","Asia/Yekaterinburg",54.7388,55.9721],
+["Krasnoyarsk","Russia","Asia/Krasnoyarsk",56.0152,92.8932],
+["Voronezh","Russia","Europe/Moscow",51.6608,39.2003],
+["Perm","Russia","Asia/Yekaterinburg",58.0105,56.2502],
+["Volgograd","Russia","Europe/Volgograd",48.708,44.5133],
+["Vladivostok","Russia","Asia/Vladivostok",43.1198,131.8869],
+["Kaliningrad","Russia","Europe/Kaliningrad",54.7104,20.4522],
+["Irkutsk","Russia","Asia/Irkutsk",52.2869,104.305],
+["Sochi","Russia","Europe/Moscow",43.6028,39.7342],
+["Kyiv","Ukraine","Europe/Kyiv",50.4501,30.5234],
+["Kharkiv","Ukraine","Europe/Kyiv",49.9935,36.2304],
+["Odesa","Ukraine","Europe/Kyiv",46.4825,30.7233],
+["Dnipro","Ukraine","Europe/Kyiv",48.4647,35.0462],
+["Lviv","Ukraine","Europe/Kyiv",49.8397,24.0297],
+["Minsk","Belarus","Europe/Minsk",53.9006,27.559],
+["Vilnius","Lithuania","Europe/Vilnius",54.6872,25.2797],
+["Kaunas","Lithuania","Europe/Vilnius",54.8985,23.9036],
+["Riga","Latvia","Europe/Riga",56.9496,24.1052],
+["Tallinn","Estonia","Europe/Tallinn",59.437,24.7536],
+["Chisinau","Moldova","Europe/Chisinau",47.0105,28.8638],
+["Istanbul","Turkey","Europe/Istanbul",41.0082,28.9784],
+["Ankara","Turkey","Europe/Istanbul",39.9334,32.8597],
+["Izmir","Turkey","Europe/Istanbul",38.4192,27.1287],
+["Bursa","Turkey","Europe/Istanbul",40.1828,29.0665],
+["Adana","Turkey","Europe/Istanbul",37.0,35.3213],
+["Antalya","Turkey","Europe/Istanbul",36.8969,30.7133],
+["Gaziantep","Turkey","Europe/Istanbul",37.0662,37.3833],
+["Konya","Turkey","Europe/Istanbul",37.8746,32.4932],
+["Tbilisi","Georgia","Asia/Tbilisi",41.7151,44.8271],
+["Yerevan","Armenia","Asia/Yerevan",40.1792,44.4991],
+["Baku","Azerbaijan","Asia/Baku",40.4093,49.8671],
+["Tehran","Iran","Asia/Tehran",35.6892,51.389],
+["Mashhad","Iran","Asia/Tehran",36.2605,59.6168],
+["Isfahan","Iran","Asia/Tehran",32.6539,51.667],
+["Tabriz","Iran","Asia/Tehran",38.0802,46.2919],
+["Shiraz","Iran","Asia/Tehran",29.5916,52.5836],
+["Baghdad","Iraq","Asia/Baghdad",33.3152,44.3661],
+["Basra","Iraq","Asia/Baghdad",30.5085,47.7804],
+["Erbil","Iraq","Asia/Baghdad",36.191,44.0093],
+["Damascus","Syria","Asia/Damascus",33.5138,36.2765],
+["Aleppo","Syria","Asia/Damascus",36.2021,37.1343],
+["Beirut","Lebanon","Asia/Beirut",33.8938,35.5018],
+["Amman","Jordan","Asia/Amman",31.9454,35.9284],
+["Jerusalem","Israel","Asia/Jerusalem",31.7683,35.2137],
+["Tel Aviv","Israel","Asia/Jerusalem",32.0853,34.7818],
+["Haifa","Israel","Asia/Jerusalem",32.7940,34.9896],
+["Gaza","Palestine","Asia/Hebron",31.5,34.4667],
+["Riyadh","Saudi Arabia","Asia/Riyadh",24.7136,46.6753],
+["Jeddah","Saudi Arabia","Asia/Riyadh",21.4858,39.1925],
+["Mecca","Saudi Arabia","Asia/Riyadh",21.3891,39.8579],
+["Medina","Saudi Arabia","Asia/Riyadh",24.5247,39.5692],
+["Dammam","Saudi Arabia","Asia/Riyadh",26.4207,50.0888],
+["Dubai","United Arab Emirates","Asia/Dubai",25.2048,55.2708],
+["Abu Dhabi","United Arab Emirates","Asia/Dubai",24.4539,54.3773],
+["Sharjah","United Arab Emirates","Asia/Dubai",25.3463,55.4209],
+["Doha","Qatar","Asia/Qatar",25.2854,51.531],
+["Manama","Bahrain","Asia/Bahrain",26.2285,50.586],
+["Kuwait City","Kuwait","Asia/Kuwait",29.3759,47.9774],
+["Muscat","Oman","Asia/Muscat",23.588,58.3829],
+["Sanaa","Yemen","Asia/Aden",15.3694,44.191],
+["Cairo","Egypt","Africa/Cairo",30.0444,31.2357],
+["Alexandria","Egypt","Africa/Cairo",31.2001,29.9187],
+["Giza","Egypt","Africa/Cairo",30.0131,31.2089],
+["Luxor","Egypt","Africa/Cairo",25.6872,32.6396],
+["Tripoli","Libya","Africa/Tripoli",32.8872,13.1913],
+["Benghazi","Libya","Africa/Tripoli",32.1167,20.0667],
+["Tunis","Tunisia","Africa/Tunis",36.8065,10.1815],
+["Algiers","Algeria","Africa/Algiers",36.7538,3.0588],
+["Oran","Algeria","Africa/Algiers",35.6976,-0.6337],
+["Casablanca","Morocco","Africa/Casablanca",33.5731,-7.5898],
+["Rabat","Morocco","Africa/Casablanca",34.0209,-6.8416],
+["Marrakech","Morocco","Africa/Casablanca",31.6295,-7.9811],
+["Fez","Morocco","Africa/Casablanca",34.0181,-5.0078],
+["Tangier","Morocco","Africa/Casablanca",35.7595,-5.834],
+["Khartoum","Sudan","Africa/Khartoum",15.5007,32.5599],
+["Lagos","Nigeria","Africa/Lagos",6.5244,3.3792],
+["Abuja","Nigeria","Africa/Lagos",9.0765,7.3986],
+["Kano","Nigeria","Africa/Lagos",12.0022,8.592],
+["Ibadan","Nigeria","Africa/Lagos",7.3775,3.947],
+["Port Harcourt","Nigeria","Africa/Lagos",4.8156,7.0498],
+["Accra","Ghana","Africa/Accra",5.6037,-0.187],
+["Kumasi","Ghana","Africa/Accra",6.6885,-1.6244],
+["Abidjan","Ivory Coast","Africa/Abidjan",5.3599,-4.0083],
+["Dakar","Senegal","Africa/Dakar",14.7167,-17.4677],
+["Bamako","Mali","Africa/Bamako",12.6392,-8.0029],
+["Ouagadougou","Burkina Faso","Africa/Ouagadougou",12.3714,-1.5197],
+["Niamey","Niger","Africa/Niamey",13.5117,2.1251],
+["Conakry","Guinea","Africa/Conakry",9.6412,-13.5784],
+["Freetown","Sierra Leone","Africa/Freetown",8.4657,-13.2317],
+["Monrovia","Liberia","Africa/Monrovia",6.3009,-10.7972],
+["Yaounde","Cameroon","Africa/Douala",3.848,11.5021],
+["Douala","Cameroon","Africa/Douala",4.0511,9.7679],
+["Libreville","Gabon","Africa/Libreville",0.4162,9.4673],
+["Brazzaville","Congo","Africa/Brazzaville",-4.2634,15.2429],
+["Kinshasa","DR Congo","Africa/Kinshasa",-4.4419,15.2663],
+["Lubumbashi","DR Congo","Africa/Lubumbashi",-11.6876,27.5026],
+["Luanda","Angola","Africa/Luanda",-8.839,13.2894],
+["Windhoek","Namibia","Africa/Windhoek",-22.5609,17.0658],
+["Gaborone","Botswana","Africa/Gaborone",-24.6282,25.9231],
+["Harare","Zimbabwe","Africa/Harare",-17.8252,31.0335],
+["Lusaka","Zambia","Africa/Lusaka",-15.3875,28.3228],
+["Lilongwe","Malawi","Africa/Blantyre",-13.9626,33.7741],
+["Maputo","Mozambique","Africa/Maputo",-25.9692,32.5732],
+["Antananarivo","Madagascar","Indian/Antananarivo",-18.8792,47.5079],
+["Port Louis","Mauritius","Indian/Mauritius",-20.1609,57.5012],
+["Nairobi","Kenya","Africa/Nairobi",-1.2921,36.8219],
+["Mombasa","Kenya","Africa/Nairobi",-4.0435,39.6682],
+["Kampala","Uganda","Africa/Kampala",0.3476,32.5825],
+["Dar es Salaam","Tanzania","Africa/Dar_es_Salaam",-6.7924,39.2083],
+["Dodoma","Tanzania","Africa/Dar_es_Salaam",-6.163,35.7516],
+["Kigali","Rwanda","Africa/Kigali",-1.9706,30.1044],
+["Bujumbura","Burundi","Africa/Bujumbura",-3.3614,29.3599],
+["Addis Ababa","Ethiopia","Africa/Addis_Ababa",9.03,38.74],
+["Asmara","Eritrea","Africa/Asmara",15.3229,38.9251],
+["Djibouti","Djibouti","Africa/Djibouti",11.572,43.1456],
+["Mogadishu","Somalia","Africa/Mogadishu",2.0469,45.3182],
+["Johannesburg","South Africa","Africa/Johannesburg",-26.2041,28.0473],
+["Cape Town","South Africa","Africa/Johannesburg",-33.9249,18.4241],
+["Durban","South Africa","Africa/Johannesburg",-29.8587,31.0218],
+["Pretoria","South Africa","Africa/Johannesburg",-25.7479,28.2293],
+["Port Elizabeth","South Africa","Africa/Johannesburg",-33.9608,25.6022],
+["Bloemfontein","South Africa","Africa/Johannesburg",-29.0852,26.1596],
+["Tokyo","Japan","Asia/Tokyo",35.6762,139.6503],
+["Yokohama","Japan","Asia/Tokyo",35.4437,139.638],
+["Osaka","Japan","Asia/Tokyo",34.6937,135.5023],
+["Nagoya","Japan","Asia/Tokyo",35.1815,136.9066],
+["Sapporo","Japan","Asia/Tokyo",43.0618,141.3545],
+["Fukuoka","Japan","Asia/Tokyo",33.5904,130.4017],
+["Kobe","Japan","Asia/Tokyo",34.6901,135.1956],
+["Kyoto","Japan","Asia/Tokyo",35.0116,135.7681],
+["Kawasaki","Japan","Asia/Tokyo",35.5308,139.7029],
+["Hiroshima","Japan","Asia/Tokyo",34.3853,132.4553],
+["Sendai","Japan","Asia/Tokyo",38.2682,140.8694],
+["Okinawa","Japan","Asia/Tokyo",26.2125,127.6792],
+["Seoul","South Korea","Asia/Seoul",37.5665,126.978],
+["Busan","South Korea","Asia/Seoul",35.1796,129.0756],
+["Incheon","South Korea","Asia/Seoul",37.4563,126.7052],
+["Daegu","South Korea","Asia/Seoul",35.8714,128.6014],
+["Daejeon","South Korea","Asia/Seoul",36.3504,127.3845],
+["Gwangju","South Korea","Asia/Seoul",35.1595,126.8526],
+["Pyongyang","North Korea","Asia/Pyongyang",39.0392,125.7625],
+["Beijing","China","Asia/Shanghai",39.9042,116.4074],
+["Shanghai","China","Asia/Shanghai",31.2304,121.4737],
+["Guangzhou","China","Asia/Shanghai",23.1291,113.2644],
+["Shenzhen","China","Asia/Shanghai",22.5431,114.0579],
+["Chengdu","China","Asia/Shanghai",30.5728,104.0668],
+["Tianjin","China","Asia/Shanghai",39.3434,117.3616],
+["Chongqing","China","Asia/Shanghai",29.4316,106.9123],
+["Wuhan","China","Asia/Shanghai",30.5928,114.3055],
+["Hangzhou","China","Asia/Shanghai",30.2741,120.1551],
+["Xian","China","Asia/Shanghai",34.3416,108.9398],
+["Nanjing","China","Asia/Shanghai",32.0603,118.7969],
+["Shenyang","China","Asia/Shanghai",41.8057,123.4315],
+["Harbin","China","Asia/Shanghai",45.8038,126.5347],
+["Qingdao","China","Asia/Shanghai",36.0671,120.3826],
+["Dalian","China","Asia/Shanghai",38.914,121.6147],
+["Suzhou","China","Asia/Shanghai",31.299,120.5853],
+["Xiamen","China","Asia/Shanghai",24.4798,118.0894],
+["Kunming","China","Asia/Shanghai",25.0389,102.7183],
+["Lhasa","China","Asia/Shanghai",29.6500,91.1000],
+["Urumqi","China","Asia/Shanghai",43.825592,87.616848],
+["Hong Kong","Hong Kong","Asia/Hong_Kong",22.3193,114.1694],
+["Macau","Macau","Asia/Macau",22.1987,113.5439],
+["Taipei","Taiwan","Asia/Taipei",25.033,121.5654],
+["Kaohsiung","Taiwan","Asia/Taipei",22.6273,120.3014],
+["Taichung","Taiwan","Asia/Taipei",24.1477,120.6736],
+["Tainan","Taiwan","Asia/Taipei",22.9999,120.227],
+["Ulaanbaatar","Mongolia","Asia/Ulaanbaatar",47.8864,106.9057],
+["Bangkok","Thailand","Asia/Bangkok",13.7563,100.5018],
+["Chiang Mai","Thailand","Asia/Bangkok",18.7883,98.9853],
+["Pattaya","Thailand","Asia/Bangkok",12.9236,100.8825],
+["Phuket","Thailand","Asia/Bangkok",7.8804,98.3923],
+["Hanoi","Vietnam","Asia/Ho_Chi_Minh",21.0285,105.8542],
+["Ho Chi Minh City","Vietnam","Asia/Ho_Chi_Minh",10.8231,106.6297],
+["Da Nang","Vietnam","Asia/Ho_Chi_Minh",16.0544,108.2022],
+["Phnom Penh","Cambodia","Asia/Phnom_Penh",11.5564,104.9282],
+["Siem Reap","Cambodia","Asia/Phnom_Penh",13.3633,103.8564],
+["Vientiane","Laos","Asia/Vientiane",17.9757,102.6331],
+["Yangon","Myanmar","Asia/Yangon",16.8409,96.1735],
+["Naypyidaw","Myanmar","Asia/Yangon",19.7633,96.0785],
+["Mandalay","Myanmar","Asia/Yangon",21.9588,96.0891],
+["Singapore","Singapore","Asia/Singapore",1.3521,103.8198],
+["Kuala Lumpur","Malaysia","Asia/Kuala_Lumpur",3.139,101.6869],
+["George Town","Malaysia","Asia/Kuala_Lumpur",5.4164,100.3327],
+["Johor Bahru","Malaysia","Asia/Kuala_Lumpur",1.4927,103.7414],
+["Kota Kinabalu","Malaysia","Asia/Kuala_Lumpur",5.9804,116.0735],
+["Kuching","Malaysia","Asia/Kuching",1.5535,110.3593],
+["Bandar Seri Begawan","Brunei","Asia/Brunei",4.9031,114.9398],
+["Jakarta","Indonesia","Asia/Jakarta",-6.2088,106.8456],
+["Surabaya","Indonesia","Asia/Jakarta",-7.2575,112.7521],
+["Bandung","Indonesia","Asia/Jakarta",-6.9175,107.6191],
+["Medan","Indonesia","Asia/Jakarta",3.5952,98.6722],
+["Semarang","Indonesia","Asia/Jakarta",-6.9667,110.4167],
+["Makassar","Indonesia","Asia/Makassar",-5.1477,119.4327],
+["Denpasar","Indonesia","Asia/Makassar",-8.6705,115.2126],
+["Yogyakarta","Indonesia","Asia/Jakarta",-7.7956,110.3695],
+["Manila","Philippines","Asia/Manila",14.5995,120.9842],
+["Quezon City","Philippines","Asia/Manila",14.676,121.0437],
+["Davao","Philippines","Asia/Manila",7.1907,125.4553],
+["Cebu City","Philippines","Asia/Manila",10.3157,123.8854],
+["Mumbai","India","Asia/Kolkata",19.076,72.8777],
+["Delhi","India","Asia/Kolkata",28.7041,77.1025],
+["Bangalore","India","Asia/Kolkata",12.9716,77.5946],
+["Hyderabad","India","Asia/Kolkata",17.385,78.4867],
+["Ahmedabad","India","Asia/Kolkata",23.0225,72.5714],
+["Chennai","India","Asia/Kolkata",13.0827,80.2707],
+["Kolkata","India","Asia/Kolkata",22.5726,88.3639],
+["Pune","India","Asia/Kolkata",18.5204,73.8567],
+["Jaipur","India","Asia/Kolkata",26.9124,75.7873],
+["Lucknow","India","Asia/Kolkata",26.8467,80.9462],
+["Kanpur","India","Asia/Kolkata",26.4499,80.3319],
+["Nagpur","India","Asia/Kolkata",21.1458,79.0882],
+["Indore","India","Asia/Kolkata",22.7196,75.8577],
+["Thane","India","Asia/Kolkata",19.2183,72.9781],
+["Bhopal","India","Asia/Kolkata",23.2599,77.4126],
+["Visakhapatnam","India","Asia/Kolkata",17.6868,83.2185],
+["Patna","India","Asia/Kolkata",25.5941,85.1376],
+["Vadodara","India","Asia/Kolkata",22.3072,73.1812],
+["Ghaziabad","India","Asia/Kolkata",28.6692,77.4538],
+["Ludhiana","India","Asia/Kolkata",30.901,75.8573],
+["Agra","India","Asia/Kolkata",27.1767,78.0081],
+["Nashik","India","Asia/Kolkata",19.9975,73.7898],
+["Surat","India","Asia/Kolkata",21.1702,72.8311],
+["Goa","India","Asia/Kolkata",15.2993,74.124],
+["Kochi","India","Asia/Kolkata",9.9312,76.2673],
+["Thiruvananthapuram","India","Asia/Kolkata",8.5241,76.9366],
+["Chandigarh","India","Asia/Kolkata",30.7333,76.7794],
+["Mysore","India","Asia/Kolkata",12.2958,76.6394],
+["Karachi","Pakistan","Asia/Karachi",24.8607,67.0011],
+["Lahore","Pakistan","Asia/Karachi",31.5204,74.3587],
+["Faisalabad","Pakistan","Asia/Karachi",31.4504,73.135],
+["Rawalpindi","Pakistan","Asia/Karachi",33.6007,73.0679],
+["Islamabad","Pakistan","Asia/Karachi",33.6844,73.0479],
+["Multan","Pakistan","Asia/Karachi",30.1575,71.5249],
+["Peshawar","Pakistan","Asia/Karachi",34.0151,71.5249],
+["Quetta","Pakistan","Asia/Karachi",30.1798,66.9750],
+["Dhaka","Bangladesh","Asia/Dhaka",23.8103,90.4125],
+["Chittagong","Bangladesh","Asia/Dhaka",22.3569,91.7832],
+["Khulna","Bangladesh","Asia/Dhaka",22.8456,89.5403],
+["Rajshahi","Bangladesh","Asia/Dhaka",24.3636,88.6241],
+["Kathmandu","Nepal","Asia/Kathmandu",27.7172,85.324],
+["Pokhara","Nepal","Asia/Kathmandu",28.2096,83.9856],
+["Colombo","Sri Lanka","Asia/Colombo",6.9271,79.8612],
+["Kandy","Sri Lanka","Asia/Colombo",7.2906,80.6337],
+["Thimphu","Bhutan","Asia/Thimphu",27.4728,89.6390],
+["Male","Maldives","Indian/Maldives",4.1755,73.5093],
+["Kabul","Afghanistan","Asia/Kabul",34.5553,69.2075],
+["Tashkent","Uzbekistan","Asia/Tashkent",41.2995,69.2401],
+["Samarkand","Uzbekistan","Asia/Samarkand",39.6542,66.9597],
+["Almaty","Kazakhstan","Asia/Almaty",43.222,76.8512],
+["Astana","Kazakhstan","Asia/Almaty",51.1605,71.4704],
+["Bishkek","Kyrgyzstan","Asia/Bishkek",42.8746,74.5698],
+["Dushanbe","Tajikistan","Asia/Dushanbe",38.5598,68.787],
+["Ashgabat","Turkmenistan","Asia/Ashgabat",37.9601,58.3261],
+["Sydney","Australia","Australia/Sydney",-33.8688,151.2093],
+["Melbourne","Australia","Australia/Melbourne",-37.8136,144.9631],
+["Brisbane","Australia","Australia/Brisbane",-27.4698,153.0251],
+["Perth","Australia","Australia/Perth",-31.9523,115.8613],
+["Adelaide","Australia","Australia/Adelaide",-34.9285,138.6007],
+["Gold Coast","Australia","Australia/Brisbane",-28.0167,153.4],
+["Canberra","Australia","Australia/Sydney",-35.2809,149.13],
+["Newcastle","Australia","Australia/Sydney",-32.9283,151.7817],
+["Wollongong","Australia","Australia/Sydney",-34.4248,150.8931],
+["Hobart","Australia","Australia/Hobart",-42.8821,147.3272],
+["Darwin","Australia","Australia/Darwin",-12.4634,130.8456],
+["Cairns","Australia","Australia/Brisbane",-16.9186,145.7781],
+["Auckland","New Zealand","Pacific/Auckland",-36.8485,174.7633],
+["Wellington","New Zealand","Pacific/Auckland",-41.2865,174.7762],
+["Christchurch","New Zealand","Pacific/Auckland",-43.532,172.6306],
+["Hamilton","New Zealand","Pacific/Auckland",-37.7826,175.2528],
+["Dunedin","New Zealand","Pacific/Auckland",-45.8788,170.5028],
+["Queenstown","New Zealand","Pacific/Auckland",-45.0312,168.6626],
+["Suva","Fiji","Pacific/Fiji",-18.1416,178.4419],
+["Port Moresby","Papua New Guinea","Pacific/Port_Moresby",-9.4438,147.1803],
+["Noumea","New Caledonia","Pacific/Noumea",-22.2758,166.458],
+["Papeete","French Polynesia","Pacific/Tahiti",-17.5516,-149.5585],
+["Apia","Samoa","Pacific/Apia",-13.8506,-171.7513],
+["Nukualofa","Tonga","Pacific/Tongatapu",-21.1393,-175.2046],
+["Honiara","Solomon Islands","Pacific/Guadalcanal",-9.4438,159.9499],
+["Port Vila","Vanuatu","Pacific/Efate",-17.7334,168.3273],
+["Guam","Guam","Pacific/Guam",13.4443,144.7937],
+["Saipan","Northern Mariana Islands","Pacific/Saipan",15.1850,145.7467],
+["Buenos Aires","Argentina","America/Argentina/Buenos_Aires",-34.6037,-58.3816],
+["Cordoba","Argentina","America/Argentina/Cordoba",-31.4201,-64.1888],
+["Rosario","Argentina","America/Argentina/Cordoba",-32.9442,-60.6505],
+["Mendoza","Argentina","America/Argentina/Mendoza",-32.8895,-68.8458],
+["La Plata","Argentina","America/Argentina/Buenos_Aires",-34.9215,-57.9545],
+["Ushuaia","Argentina","America/Argentina/Ushuaia",-54.8019,-68.303],
+["Santiago","Chile","America/Santiago",-33.4489,-70.6693],
+["Valparaiso","Chile","America/Santiago",-33.0472,-71.6127],
+["Concepcion","Chile","America/Santiago",-36.827,-73.0498],
+["Easter Island","Chile","Pacific/Easter",-27.1127,-109.3497],
+["Lima","Peru","America/Lima",-12.0464,-77.0428],
+["Cusco","Peru","America/Lima",-13.5319,-71.9675],
+["Arequipa","Peru","America/Lima",-16.409,-71.5375],
+["Bogota","Colombia","America/Bogota",4.711,-74.0721],
+["Medellin","Colombia","America/Bogota",6.2442,-75.5812],
+["Cali","Colombia","America/Bogota",3.4516,-76.532],
+["Cartagena","Colombia","America/Bogota",10.3997,-75.5144],
+["Caracas","Venezuela","America/Caracas",10.4806,-66.9036],
+["Maracaibo","Venezuela","America/Caracas",10.6543,-71.6125],
+["Valencia","Venezuela","America/Caracas",10.162,-68.0078],
+["Quito","Ecuador","America/Guayaquil",-0.1807,-78.4678],
+["Guayaquil","Ecuador","America/Guayaquil",-2.1709,-79.9224],
+["La Paz","Bolivia","America/La_Paz",-16.4897,-68.1193],
+["Santa Cruz","Bolivia","America/La_Paz",-17.7833,-63.1821],
+["Sucre","Bolivia","America/La_Paz",-19.0196,-65.2619],
+["Asuncion","Paraguay","America/Asuncion",-25.2637,-57.5759],
+["Montevideo","Uruguay","America/Montevideo",-34.9011,-56.1645],
+["Punta del Este","Uruguay","America/Montevideo",-34.9671,-54.9521],
+["Sao Paulo","Brazil","America/Sao_Paulo",-23.5505,-46.6333],
+["Rio de Janeiro","Brazil","America/Sao_Paulo",-22.9068,-43.1729],
+["Brasilia","Brazil","America/Sao_Paulo",-15.8267,-47.9218],
+["Salvador","Brazil","America/Bahia",-12.9714,-38.5014],
+["Fortaleza","Brazil","America/Fortaleza",-3.7172,-38.5433],
+["Belo Horizonte","Brazil","America/Sao_Paulo",-19.9167,-43.9345],
+["Manaus","Brazil","America/Manaus",-3.119,-60.0217],
+["Curitiba","Brazil","America/Sao_Paulo",-25.4284,-49.2733],
+["Recife","Brazil","America/Recife",-8.0476,-34.877],
+["Porto Alegre","Brazil","America/Sao_Paulo",-30.0346,-51.2177],
+["Belem","Brazil","America/Belem",-1.4558,-48.5039],
+["Florianopolis","Brazil","America/Sao_Paulo",-27.5954,-48.548],
+["Goiania","Brazil","America/Sao_Paulo",-16.6869,-49.2648],
+["Natal","Brazil","America/Fortaleza",-5.795,-35.2094],
+["Georgetown","Guyana","America/Guyana",6.8013,-58.1551],
+["Paramaribo","Suriname","America/Paramaribo",5.852,-55.2038],
+["Cayenne","French Guiana","America/Cayenne",4.9333,-52.3333],
+["Havana","Cuba","America/Havana",23.1136,-82.3666],
+["Santiago de Cuba","Cuba","America/Havana",20.0247,-75.8219],
+["Kingston","Jamaica","America/Jamaica",17.9714,-76.7931],
+["Port-au-Prince","Haiti","America/Port-au-Prince",18.5944,-72.3074],
+["Santo Domingo","Dominican Republic","America/Santo_Domingo",18.4861,-69.9312],
+["San Juan","Puerto Rico","America/Puerto_Rico",18.4655,-66.1057],
+["Nassau","Bahamas","America/Nassau",25.0343,-77.3963],
+["Bridgetown","Barbados","America/Barbados",13.0975,-59.6167],
+["Port of Spain","Trinidad and Tobago","America/Port_of_Spain",10.6918,-61.2225],
+["Castries","Saint Lucia","America/St_Lucia",14.0101,-60.9875],
+["Roseau","Dominica","America/Dominica",15.3092,-61.379],
+["St. George's","Grenada","America/Grenada",12.0561,-61.7488],
+["Basseterre","Saint Kitts and Nevis","America/St_Kitts",17.3026,-62.7177],
+["Belize City","Belize","America/Belize",17.5045,-88.1962],
+["Guatemala City","Guatemala","America/Guatemala",14.6349,-90.5069],
+["San Salvador","El Salvador","America/El_Salvador",13.6929,-89.2182],
+["Tegucigalpa","Honduras","America/Tegucigalpa",14.0723,-87.1921],
+["Managua","Nicaragua","America/Managua",12.1364,-86.2514],
+["San Jose","Costa Rica","America/Costa_Rica",9.9281,-84.0907],
+["Panama City","Panama","America/Panama",8.9824,-79.5199]
+]
+</script>
+
+<script>
+'use strict';
+
+/* ====================================================================
+   STATE & PERSISTENCE
+   ==================================================================== */
+const KEYS = {
+  settings: 'clock.settings',
+  world: 'clock.world',
+  alarms: 'clock.alarms',
+  timers: 'clock.timers',
+  stopwatch: 'clock.stopwatch',
+  schema: 'clock.schemaVersion',
+};
+
+const defaultState = () => ({
+  settings: { use24h: false, activeTab: 'home' },
+  world: [],
+  alarms: [],
+  timers: [],
+  stopwatch: { startedAt: null, accumulatedMs: 0, running: false, laps: [] },
+});
+
+const Store = defaultState();
+
+function load(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+function hydrate() {
+  Object.assign(Store.settings, load(KEYS.settings) || {});
+  Store.world   = load(KEYS.world)   || [];
+  Store.alarms  = load(KEYS.alarms)  || [];
+  Store.timers  = load(KEYS.timers)  || [];
+  const sw = load(KEYS.stopwatch);
+  if (sw) Store.stopwatch = sw;
+  save(KEYS.schema, 1);
+}
+function persistAll() {
+  save(KEYS.settings, Store.settings);
+  save(KEYS.world, Store.world);
+  save(KEYS.alarms, Store.alarms);
+  save(KEYS.timers, Store.timers);
+  save(KEYS.stopwatch, Store.stopwatch);
+}
+function persist(slice) { save(KEYS[slice], Store[slice]); }
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+/* ====================================================================
+   TIME UTILITIES
+   ==================================================================== */
+function pad(n, w=2) { return String(n).padStart(w, '0'); }
+
+function fmtTime(date, use24h, opts={}) {
+  const showSeconds = opts.seconds !== false;
+  const tz = opts.timeZone;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit', minute: '2-digit',
+    ...(showSeconds ? { second: '2-digit' } : {}),
+    hour12: !use24h,
+    timeZone: tz,
+  }).formatToParts(date);
+  let h='', m='', s='', ap='';
+  for (const p of parts) {
+    if (p.type === 'hour') h = p.value;
+    else if (p.type === 'minute') m = p.value;
+    else if (p.type === 'second') s = p.value;
+    else if (p.type === 'dayPeriod') ap = p.value;
+  }
+  return { h, m, s, ap };
+}
+
+function fmtHMS(ms) {
+  if (ms < 0) ms = 0;
+  const totalSeconds = Math.floor(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
+  return `${pad(m)}:${pad(s)}`;
+}
+
+function fmtStopwatch(ms) {
+  if (ms < 0) ms = 0;
+  const totalSeconds = Math.floor(ms / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  const cs = Math.floor((ms % 1000) / 10);
+  return { mm: pad(m), ss: pad(s), cs: pad(cs) };
+}
+
+function tzAbbrev(tz, date=new Date()) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(date);
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    return tzPart ? tzPart.value : '';
+  } catch { return ''; }
+}
+
+function tzOffsetMinutes(tz, date=new Date()) {
+  // Compute offset of the named timezone vs UTC at the given moment.
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hour12: false,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+    const parts = dtf.formatToParts(date);
+    const obj = {};
+    for (const p of parts) obj[p.type] = p.value;
+    const asUTC = Date.UTC(+obj.year, +obj.month - 1, +obj.day, +obj.hour % 24, +obj.minute, +obj.second);
+    return Math.round((asUTC - date.getTime()) / 60000);
+  } catch { return 0; }
+}
+
+function deltaToLocal(tz) {
+  const now = new Date();
+  const local = -now.getTimezoneOffset();
+  const remote = tzOffsetMinutes(tz, now);
+  const diff = remote - local;
+  if (diff === 0) return 'Same';
+  const sign = diff > 0 ? '+' : '−';
+  const mag = Math.abs(diff);
+  const h = Math.floor(mag / 60);
+  const m = mag % 60;
+  return sign + (m === 0 ? `${h}h` : `${h}h${pad(m)}`);
+}
+
+/* ====================================================================
+   SOLAR CALCULATIONS (NOAA-derived sunrise / sunset)
+   ==================================================================== */
+function julianDay(date) {
+  return date.getTime() / 86400000 + 2440587.5;
+}
+
+function sunriseSunsetUTC(date, lat, lng) {
+  // Returns { sunrise, sunset } as JS Date objects in UTC.
+  // Standard NOAA algorithm.
+  const rad = Math.PI / 180;
+  const deg = 180 / Math.PI;
+
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  // Day of year
+  const A = Math.floor((14 - m) / 12);
+  const Y = y + 4800 - A;
+  const M = m + 12 * A - 3;
+  const jd0 = d + Math.floor((153 * M + 2) / 5) + 365 * Y + Math.floor(Y / 4) - Math.floor(Y / 100) + Math.floor(Y / 400) - 32045;
+  const n = jd0 - 2451545.0 + 0.0008;
+
+  const Jstar = n - (lng / 360);
+  const M_sun = (357.5291 + 0.98560028 * Jstar) % 360;
+  const M_rad = M_sun * rad;
+  const C = 1.9148 * Math.sin(M_rad) + 0.02 * Math.sin(2 * M_rad) + 0.0003 * Math.sin(3 * M_rad);
+  const lambda = (M_sun + C + 180 + 102.9372) % 360;
+  const lambda_rad = lambda * rad;
+  const Jtransit = 2451545 + Jstar + 0.0053 * Math.sin(M_rad) - 0.0069 * Math.sin(2 * lambda_rad);
+  const delta = Math.asin(Math.sin(lambda_rad) * Math.sin(23.44 * rad));
+  const h0 = -0.83 * rad; // refraction correction
+  const lat_rad = lat * rad;
+  const cosH = (Math.sin(h0) - Math.sin(lat_rad) * Math.sin(delta)) / (Math.cos(lat_rad) * Math.cos(delta));
+  if (cosH > 1) return { sunrise: null, sunset: null, polar: 'night' };
+  if (cosH < -1) return { sunrise: null, sunset: null, polar: 'day' };
+  const H = Math.acos(cosH) * deg;
+  const Jset = Jtransit + (H / 360);
+  const Jrise = Jtransit - (H / 360);
+
+  const sunrise = new Date((Jrise - 2440587.5) * 86400000);
+  const sunset = new Date((Jset - 2440587.5) * 86400000);
+  return { sunrise, sunset, polar: null };
+}
+
+function formatLocalTime(date, tz, use24h) {
+  if (!date) return '—';
+  const { h, m, ap } = fmtTime(date, use24h, { seconds: false, timeZone: tz });
+  return use24h ? `${h}:${m}` : `${h}:${m} ${ap}`;
+}
+
+/* ====================================================================
+   MOON PHASE
+   ==================================================================== */
+function moonPhase(date) {
+  // Synodic month: 29.530588853 days; reference new moon: 2000-01-06 18:14 UT (JD 2451550.1)
+  const synodic = 29.530588853;
+  const jd = julianDay(date);
+  const days = jd - 2451550.1;
+  let phase = (days % synodic) / synodic;
+  if (phase < 0) phase += 1;
+  return phase; // 0..1; 0 = new
+}
+function moonGlyph(phase) {
+  // 8 buckets
+  const i = Math.floor(phase * 8 + 0.5) % 8;
+  return ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'][i];
+}
+function moonName(phase) {
+  const i = Math.floor(phase * 8 + 0.5) % 8;
+  return ['New','Waxing crescent','First quarter','Waxing gibbous','Full','Waning gibbous','Last quarter','Waning crescent'][i];
+}
+
+/* ====================================================================
+   ANALOG CLOCK — Build face once
+   ==================================================================== */
+const ROMAN = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+function buildClockFace() {
+  const ticks = document.getElementById('ticks');
+  const numerals = document.getElementById('numerals');
+  for (let i = 0; i < 60; i++) {
+    const isMajor = i % 5 === 0;
+    const a = i * 6;
+    const ns = 'http://www.w3.org/2000/svg';
+    const line = document.createElementNS(ns, 'line');
+    const len = isMajor ? 8 : 3;
+    line.setAttribute('x1', 100);
+    line.setAttribute('y1', 8);
+    line.setAttribute('x2', 100);
+    line.setAttribute('y2', 8 + len);
+    line.setAttribute('class', isMajor ? 'tick-major' : 'tick-minor');
+    line.setAttribute('transform', `rotate(${a} 100 100)`);
+    ticks.appendChild(line);
+  }
+  for (let i = 0; i < 12; i++) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const a = (i * 30 - 90) * Math.PI / 180;
+    const r = 76;
+    const x = 100 + Math.cos(a) * r;
+    const y = 100 + Math.sin(a) * r;
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', x);
+    t.setAttribute('y', y);
+    t.setAttribute('class', 'numeral');
+    t.setAttribute('font-size', 14);
+    t.textContent = ROMAN[i];
+    numerals.appendChild(t);
+  }
+}
+
+const hourG = () => document.getElementById('hand-hour-group');
+const minG  = () => document.getElementById('hand-min-group');
+const secG  = () => document.getElementById('hand-sec-group');
+
+function renderAnalog(now) {
+  const ms = now.getMilliseconds();
+  const s = now.getSeconds() + ms / 1000;
+  const m = now.getMinutes() + s / 60;
+  const h = (now.getHours() % 12) + m / 60;
+  hourG().setAttribute('transform', `rotate(${h * 30} 100 100)`);
+  minG().setAttribute('transform', `rotate(${m * 6} 100 100)`);
+  secG().setAttribute('transform', `rotate(${s * 6} 100 100)`);
+}
+
+/* ====================================================================
+   DIGITAL READOUT
+   ==================================================================== */
+const $digitalTime = () => document.getElementById('digital-time');
+const $digitalDate = () => document.getElementById('digital-date');
+function renderDigital(now) {
+  const { h, m, s, ap } = fmtTime(now, Store.settings.use24h);
+  const apSpan = Store.settings.use24h ? '' : `<span class="ampm">${ap}</span>`;
+  $digitalTime().innerHTML = `${h}:${m}<span class="secs">:${s}</span>${apSpan}`;
+  const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+  $digitalDate().textContent = now.toLocaleDateString(undefined, opts);
+}
+function renderFormatToggle() {
+  document.getElementById('format-pill-12').className = Store.settings.use24h ? '' : 'pill-active';
+  document.getElementById('format-pill-24').className = Store.settings.use24h ? 'pill-active' : '';
+}
+
+/* ====================================================================
+   TAB NAVIGATION
+   ==================================================================== */
+let notifPromptedThisSession = false;
+function setTab(tab) {
+  Store.settings.activeTab = tab;
+  persist('settings');
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === `screen-${tab}`));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if (tab === 'world') renderWorld();
+  if (tab === 'alarm') {
+    renderAlarms();
+    if (!notifPromptedThisSession) {
+      notifPromptedThisSession = true;
+      requestNotifPermission();
+    }
+  }
+  if (tab === 'timer') renderTimers();
+  if (tab === 'stopwatch') renderStopwatchOnce();
+}
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => setTab(btn.dataset.tab));
+});
+
+/* ====================================================================
+   WORLD CLOCK
+   ==================================================================== */
+let citiesCache = null;
+
+function loadCities() {
+  if (!citiesCache) {
+    const el = document.getElementById('cities-data');
+    citiesCache = el ? JSON.parse(el.textContent) : [];
+  }
+  return Promise.resolve(citiesCache);
+}
+
+/* ====================================================================
+   SWIPE-TO-DELETE
+   ==================================================================== */
+let _openSwipe = null;
+
+function attachSwipeDelete(card, onDelete) {
+  const br = card.classList.contains('timer-card') ? '18px' : '14px';
+  const wrap = document.createElement('div');
+  wrap.className = 'swipe-wrap';
+  wrap.style.borderRadius = br;
+
+  const bg = document.createElement('div');
+  bg.className = 'swipe-delete-bg';
+  bg.style.borderRadius = br;
+  bg.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+
+  wrap.appendChild(bg);
+  wrap.appendChild(card);
+
+  let startX = 0, startY = 0, dx = 0, decided = false, isH = false;
+  const THRESHOLD = 80;
+
+  function setX(px, anim) {
+    const offset = Math.min(0, px);
+    card.style.transition = anim ? 'transform 240ms cubic-bezier(0.25,1,0.5,1)' : 'none';
+    card.style.transform = `translateX(${offset}px)`;
+    bg.style.opacity = String(Math.min(1, Math.abs(offset) / THRESHOLD));
+  }
+  function snapBack() { setX(0, true); bg.style.opacity = '0'; _openSwipe = null; }
+  function closeOther() {
+    if (_openSwipe && _openSwipe !== wrap) {
+      const prev = _openSwipe.querySelector('.city-card,.alarm-card,.timer-card');
+      if (prev) { prev.style.transition = 'transform 220ms cubic-bezier(0.25,1,0.5,1)'; prev.style.transform = ''; }
+      _openSwipe = null;
+    }
+  }
+  function confirmDelete() {
+    if (_openSwipe === wrap) _openSwipe = null;
+    const h = wrap.offsetHeight;
+    card.style.transition = 'transform 200ms cubic-bezier(0.4,0,0.6,1)';
+    card.style.transform = 'translateX(-110%)';
+    setTimeout(() => {
+      wrap.style.overflow = 'hidden';
+      wrap.style.height = h + 'px';
+      requestAnimationFrame(() => {
+        wrap.style.transition = 'height 220ms ease, opacity 180ms ease, margin-bottom 220ms ease';
+        wrap.style.height = '0';
+        wrap.style.opacity = '0';
+        wrap.style.marginBottom = '-14px';
+      });
+      setTimeout(onDelete, 240);
+    }, 180);
+  }
+
+  // ── Touch ────────────────────────────────────────────────
+  card.addEventListener('touchstart', e => {
+    if (e.target.closest('button,input,.switch,.drag-handle')) return;
+    closeOther();
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    dx = 0; decided = false; isH = false;
+    card.style.transition = 'none';
+  }, { passive: true });
+
+  card.addEventListener('touchmove', e => {
+    if (!e.touches[0]) return;
+    dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!decided) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) { decided = true; isH = true; }
+      else if (Math.abs(dy) > 8) { decided = true; isH = false; }
+      else return;
+    }
+    if (!isH) return;
+    e.preventDefault();
+    setX(dx, false);
+    _openSwipe = wrap;
+  }, { passive: false });
+
+  card.addEventListener('touchend', () => {
+    if (!isH) return;
+    if (dx < -THRESHOLD) confirmDelete(); else snapBack();
+  });
+  card.addEventListener('touchcancel', () => { if (isH) snapBack(); });
+
+  // ── Mouse (desktop) ──────────────────────────────────────
+  let mDown = false, mStartX = 0, mDx = 0;
+  function onMouseMove(e) {
+    if (!mDown) return;
+    mDx = e.clientX - mStartX;
+    if (mDx < 0) { setX(mDx, false); _openSwipe = wrap; }
+  }
+  function onMouseUp() {
+    if (!mDown) return;
+    mDown = false;
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
+    if (mDx < -THRESHOLD) confirmDelete(); else snapBack();
+  }
+  card.addEventListener('mousedown', e => {
+    if (e.target.closest('button,input,.switch,.drag-handle')) return;
+    if (e.button !== 0) return;
+    closeOther();
+    mDown = true; mStartX = e.clientX; mDx = 0;
+    card.style.transition = 'none';
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  });
+
+  return wrap;
+}
+
+function renderWorld() {
+  const list = document.getElementById('world-list');
+  list.innerHTML = '';
+  if (Store.world.length === 0) {
+    list.innerHTML = `<div class="world-empty">
+      <div class="hero-emoji">🌍</div>
+      <div>No cities added yet</div>
+      <div style="margin-top:6px;font-size:12px;">Tap + to add your first city</div>
+    </div>`;
+    return;
+  }
+  Store.world.sort((a,b) => a.order - b.order);
+  for (const city of Store.world) {
+    list.appendChild(makeCityCard(city));
+  }
+}
+
+function makeCityCard(city) {
+  const card = document.createElement('div');
+  card.className = 'city-card';
+  card.dataset.id = city.id;
+  card.innerHTML = `
+    <div>
+      <div class="city-name">${escapeHtml(city.name)} <span class="tz-abbr"></span></div>
+      <div class="city-meta">
+        <span class="country">${escapeHtml(city.country)}</span>
+        <span class="delta">·</span>
+      </div>
+    </div>
+    <div class="city-time"></div>
+    <div class="sun-moon">
+      <div class="sun"></div>
+      <div class="moon-glyph"></div>
+    </div>
+    <div class="drag-handle" title="Drag to reorder">
+      <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor">
+        <circle cx="3" cy="3" r="1.4"/><circle cx="7" cy="3" r="1.4"/>
+        <circle cx="3" cy="8" r="1.4"/><circle cx="7" cy="8" r="1.4"/>
+        <circle cx="3" cy="13" r="1.4"/><circle cx="7" cy="13" r="1.4"/>
+      </svg>
+    </div>
+  `;
+  attachDragReorder(card);
+  updateCityCard(card, city);
+  return attachSwipeDelete(card, () => {
+    Store.world = Store.world.filter(c => c.id !== city.id);
+    persist('world');
+    renderWorld();
+  });
+}
+
+function updateCityCard(card, city) {
+  const now = new Date();
+  const { h, m, s, ap } = fmtTime(now, Store.settings.use24h, { timeZone: city.tz });
+  const apSpan = Store.settings.use24h ? '' : ` <span style="font-size:12px;color:var(--text-dim);">${ap}</span>`;
+  card.querySelector('.city-time').innerHTML = `${h}:${m}<span class="secs">:${s}</span>${apSpan}`;
+  card.querySelector('.tz-abbr').textContent = tzAbbrev(city.tz, now);
+  const delta = deltaToLocal(city.tz);
+  card.querySelector('.delta').textContent = delta;
+  // Sunrise/sunset
+  const { sunrise, sunset, polar } = sunriseSunsetUTC(now, city.lat, city.lon);
+  const sunEl = card.querySelector('.sun');
+  if (polar === 'night') sunEl.innerHTML = '🌌 polar night';
+  else if (polar === 'day') sunEl.innerHTML = '☀ polar day';
+  else sunEl.innerHTML = `☀ ${formatLocalTime(sunrise, city.tz, Store.settings.use24h)}<br>🌇 ${formatLocalTime(sunset, city.tz, Store.settings.use24h)}`;
+  // Moon (at city local midnight today, approximated by current UTC moment which is fine)
+  const ph = moonPhase(now);
+  const moonEl = card.querySelector('.moon-glyph');
+  moonEl.title = moonName(ph);
+  moonEl.textContent = moonGlyph(ph);
+}
+
+function updateAllCityCards() {
+  const cards = document.querySelectorAll('#world-list .city-card');
+  cards.forEach(card => {
+    const id = card.dataset.id;
+    const city = Store.world.find(c => c.id === id);
+    if (city) updateCityCard(card, city);
+  });
+}
+
+function nextUntitled(existingLabels) {
+  if (!existingLabels.includes('Untitled')) return 'Untitled';
+  let i = 1;
+  while (existingLabels.includes(`Untitled ${i}`)) i++;
+  return `Untitled ${i}`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+/* Drag-to-reorder via pointer events */
+function attachDragReorder(card) {
+  const handle = card.querySelector('.drag-handle');
+  let startY = 0, originalIndex = 0, dragging = false, list, items, itemHeight;
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const wrap = card.parentElement; // .swipe-wrap
+    list = wrap.parentElement;       // #world-list
+    items = Array.from(list.children);
+    originalIndex = items.indexOf(wrap);
+    itemHeight = wrap.getBoundingClientRect().height + 14;
+    startY = e.clientY;
+    dragging = true;
+    card.classList.add('dragging');
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const wrap = card.parentElement;
+    const dy = e.clientY - startY;
+    wrap.style.transform = `translateY(${dy}px)`;
+    wrap.style.zIndex = '5';
+    card.style.transform = 'scale(1.02)';
+    const newIndex = Math.max(0, Math.min(items.length - 1, originalIndex + Math.round(dy / itemHeight)));
+    items.forEach((it, i) => {
+      if (it === wrap) return;
+      if (originalIndex < newIndex && i > originalIndex && i <= newIndex) it.style.transform = `translateY(-${itemHeight}px)`;
+      else if (originalIndex > newIndex && i < originalIndex && i >= newIndex) it.style.transform = `translateY(${itemHeight}px)`;
+      else it.style.transform = '';
+    });
+  });
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    const wrap = card.parentElement;
+    const dy = e.clientY - startY;
+    const newIndex = Math.max(0, Math.min(items.length - 1, originalIndex + Math.round(dy / itemHeight)));
+    card.classList.remove('dragging');
+    card.style.transform = '';
+    items.forEach(it => { it.style.transform = ''; it.style.zIndex = ''; });
+    wrap.style.zIndex = '';
+    if (newIndex !== originalIndex) {
+      const cardId = card.dataset.id;
+      const fromIdx = Store.world.findIndex(c => c.id === cardId);
+      const moved = Store.world.splice(fromIdx, 1)[0];
+      Store.world.splice(newIndex, 0, moved);
+      Store.world.forEach((c, i) => c.order = i);
+      persist('world');
+      renderWorld();
+    }
+  }
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+}
+
+/* City search modal */
+document.getElementById('world-add').addEventListener('click', openCitySearch);
+
+async function openCitySearch() {
+  openSheet('city-sheet');
+  const input = document.getElementById('city-search');
+  input.value = '';
+  input.focus();
+  const results = document.getElementById('search-results');
+  results.innerHTML = '<div class="search-loading">Loading cities…</div>';
+  const cities = await loadCities();
+  results.innerHTML = '';
+  renderSearchResults(cities.slice(0, 30), cities);
+  input.oninput = () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { renderSearchResults(cities.slice(0, 30), cities); return; }
+    const filtered = cities.filter(([name, country]) =>
+      name.toLowerCase().includes(q) || country.toLowerCase().includes(q)
+    ).slice(0, 100);
+    renderSearchResults(filtered, cities);
+  };
+}
+
+function renderSearchResults(filtered, allCities) {
+  const results = document.getElementById('search-results');
+  results.innerHTML = '';
+  if (filtered.length === 0) {
+    results.innerHTML = '<div class="search-loading">No matches</div>';
+    return;
+  }
+  for (const c of filtered) {
+    const [name, country, tz, lat, lon] = c;
+    const row = document.createElement('div');
+    row.className = 'search-result';
+    row.innerHTML = `
+      <div class="city-info">
+        <span class="name">${escapeHtml(name)}</span>
+        <span class="country">${escapeHtml(country)}</span>
+      </div>
+      <span class="tz-pill">${tzAbbrev(tz)}</span>
+    `;
+    row.addEventListener('click', () => {
+      // Add city to store
+      const cityObj = {
+        id: uid(),
+        name, country, tz, lat, lon,
+        order: Store.world.length,
+      };
+      Store.world.push(cityObj);
+      persist('world');
+      closeSheet();
+      renderWorld();
+    });
+    results.appendChild(row);
+  }
+}
+
+/* ====================================================================
+   ALARM
+   ==================================================================== */
+let editingAlarmId = null;
+let alarmSheetState = { time: '07:00', label: '', days: [], snoozeMin: 5, vibration: 'single' };
+
+function renderAlarms() {
+  const list = document.getElementById('alarm-list');
+  list.innerHTML = '';
+  const perm = document.getElementById('alarm-permission-status');
+  if (!('Notification' in window)) {
+    perm.textContent = 'Notifications not supported';
+  } else if (Notification.permission === 'granted') {
+    perm.textContent = 'Notifications enabled';
+  } else if (Notification.permission === 'denied') {
+    perm.textContent = 'Notifications blocked in browser settings';
+  } else {
+    perm.textContent = 'Tap an alarm to enable notifications';
+  }
+  if (Store.alarms.length === 0) {
+    list.innerHTML = `<div class="alarm-empty">
+      <div class="hero-emoji">⏰</div>
+      <div>No alarms yet</div>
+      <div style="margin-top:6px;font-size:12px;">Tap + to add an alarm</div>
+    </div>`;
+    return;
+  }
+  // Sort by time
+  const sorted = [...Store.alarms].sort((a,b) => a.time.localeCompare(b.time));
+  for (const a of sorted) {
+    list.appendChild(makeAlarmCard(a));
+  }
+}
+
+function makeAlarmCard(alarm) {
+  const card = document.createElement('div');
+  card.className = 'alarm-card' + (alarm.enabled ? '' : ' disabled');
+  card.dataset.id = alarm.id;
+  const [hh, mm] = alarm.time.split(':');
+  const h = parseInt(hh, 10);
+  let display, ap = '';
+  if (Store.settings.use24h) {
+    display = `${pad(h)}:${mm}`;
+  } else {
+    const ap2 = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    display = `${h12}:${mm}`;
+    ap = `<span class="ampm">${ap2}</span>`;
+  }
+  const dayLabel = alarm.days.length === 7 ? 'Every day'
+    : alarm.days.length === 0 ? 'Once'
+    : (alarm.days.length === 5 && [1,2,3,4,5].every(d => alarm.days.includes(d))) ? 'Weekdays'
+    : (alarm.days.length === 2 && [0,6].every(d => alarm.days.includes(d))) ? 'Weekends'
+    : '';
+  const dayChips = ['M','T','W','T','F','S','S'].map((lbl, i) => {
+    const d = (i+1) % 7; // map M=1..S=6,S=0
+    return `<span class="alarm-day-chip ${alarm.days.includes(d) ? 'active' : ''}">${lbl}</span>`;
+  }).join('');
+  card.innerHTML = `
+    <div class="alarm-info">
+      <div class="alarm-time-large">${display}${ap}</div>
+      <div class="alarm-label">${escapeHtml(alarm.label || 'Alarm')}${dayLabel ? ` · ${dayLabel}` : ''}</div>
+      <div class="alarm-days">${dayChips}</div>
+    </div>
+    <div class="switch ${alarm.enabled ? 'on' : ''}"><div class="knob"></div></div>
+  `;
+  // Tap on info → edit
+  card.querySelector('.alarm-info').addEventListener('click', () => openAlarmSheet(alarm));
+  // Toggle switch
+  card.querySelector('.switch').addEventListener('click', (e) => {
+    e.stopPropagation();
+    alarm.enabled = !alarm.enabled;
+    alarm.snoozedUntil = null;
+    persist('alarms');
+    renderAlarms();
+    if (alarm.enabled) {
+      requestNotifPermission();
+      scheduleAlarmInSW(alarm);
+    } else {
+      cancelAlarmInSW(alarm.id);
+    }
+  });
+  return attachSwipeDelete(card, () => {
+    cancelAlarmInSW(alarm.id);
+    Store.alarms = Store.alarms.filter(a => a.id !== alarm.id);
+    persist('alarms');
+    renderAlarms();
+  });
+}
+
+function openAlarmSheet(alarm) {
+  editingAlarmId = alarm ? alarm.id : null;
+  document.getElementById('alarm-sheet-title').textContent = alarm ? 'Edit Alarm' : 'New Alarm';
+  document.getElementById('alarm-delete').classList.toggle('hidden', !alarm);
+  alarmSheetState = alarm
+    ? { time: alarm.time, label: alarm.label, days: [...alarm.days], snoozeMin: alarm.snoozeMin, vibration: alarm.vibration }
+    : { time: '07:00', label: '', days: [], snoozeMin: 5, vibration: 'single' };
+  document.getElementById('alarm-label').value = alarmSheetState.label;
+  document.getElementById('alarm-time').value = alarmSheetState.time;
+  // Day chips
+  document.querySelectorAll('#alarm-day-chips .day-chip').forEach(c => {
+    c.classList.toggle('active', alarmSheetState.days.includes(+c.dataset.d));
+  });
+  const onceEl = document.querySelector('.once-chip');
+  if (onceEl) onceEl.classList.toggle('active', alarmSheetState.days.length === 0);
+  // Snooze segmented
+  document.querySelectorAll('#alarm-snooze button').forEach(b => {
+    b.classList.toggle('active', +b.dataset.v === alarmSheetState.snoozeMin);
+  });
+  // Vibration segmented
+  document.querySelectorAll('#alarm-vibration button').forEach(b => {
+    b.classList.toggle('active', b.dataset.v === alarmSheetState.vibration);
+  });
+  // Notification permission line
+  const line = document.getElementById('notif-permission-line');
+  if ('Notification' in window) {
+    if (Notification.permission === 'granted') {
+      line.textContent = '✓ Notifications enabled — alarms can fire when on another tab.';
+      line.className = 'permission-line granted';
+    } else if (Notification.permission === 'denied') {
+      line.textContent = '⚠ Notifications blocked — enable in browser settings for background alarms.';
+      line.className = 'permission-line';
+    } else {
+      line.textContent = 'Notifications will be requested when you save.';
+      line.className = 'permission-line';
+    }
+  }
+  openSheet('alarm-sheet');
+}
+
+function bindAlarmSheet() {
+  const onceChip = document.querySelector('.once-chip');
+  function syncOnceChip() {
+    onceChip.classList.toggle('active', alarmSheetState.days.length === 0);
+  }
+  document.querySelectorAll('#alarm-day-chips .day-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      const d = +c.dataset.d;
+      const i = alarmSheetState.days.indexOf(d);
+      if (i >= 0) alarmSheetState.days.splice(i, 1);
+      else alarmSheetState.days.push(d);
+      c.classList.toggle('active');
+      syncOnceChip(); // called after state update so Once reflects correct value
+    });
+  });
+  onceChip.addEventListener('click', () => {
+    alarmSheetState.days = [];
+    document.querySelectorAll('#alarm-day-chips .day-chip').forEach(c => c.classList.remove('active'));
+    syncOnceChip();
+  });
+  syncOnceChip();
+  document.querySelectorAll('#alarm-snooze button').forEach(b => {
+    b.addEventListener('click', () => {
+      alarmSheetState.snoozeMin = +b.dataset.v;
+      document.querySelectorAll('#alarm-snooze button').forEach(x => x.classList.toggle('active', x === b));
+    });
+  });
+  document.querySelectorAll('#alarm-vibration button').forEach(b => {
+    b.addEventListener('click', () => {
+      alarmSheetState.vibration = b.dataset.v;
+      document.querySelectorAll('#alarm-vibration button').forEach(x => x.classList.toggle('active', x === b));
+    });
+  });
+  document.getElementById('alarm-save').addEventListener('click', () => {
+    alarmSheetState.time = document.getElementById('alarm-time').value;
+    alarmSheetState.label = document.getElementById('alarm-label').value.trim()
+      || nextUntitled(Store.alarms.map(a => a.label));
+    const daysEl = document.getElementById('alarm-day-chips');
+    const repeatOk = alarmSheetState.days.length > 0 || document.querySelector('.once-chip').classList.contains('active');
+    if (!repeatOk) {
+      daysEl.classList.remove('input-error');
+      void daysEl.offsetWidth;
+      daysEl.classList.add('input-error');
+      daysEl.addEventListener('animationend', () => daysEl.classList.remove('input-error'), { once: true });
+      return;
+    }
+    if (!alarmSheetState.time) return;
+    let savedAlarm;
+    if (editingAlarmId) {
+      cancelAlarmInSW(editingAlarmId);
+      savedAlarm = Store.alarms.find(x => x.id === editingAlarmId);
+      if (savedAlarm) Object.assign(savedAlarm, alarmSheetState, { enabled: true, snoozedUntil: null });
+    } else {
+      savedAlarm = {
+        id: uid(),
+        ...alarmSheetState,
+        enabled: true,
+        snoozedUntil: null,
+        lastFired: null,
+      };
+      Store.alarms.push(savedAlarm);
+    }
+    persist('alarms');
+    closeSheet();
+    renderAlarms();
+    requestNotifPermission();
+    if (savedAlarm) scheduleAlarmInSW(savedAlarm);
+  });
+  document.getElementById('alarm-delete').addEventListener('click', () => {
+    if (!editingAlarmId) return;
+    cancelAlarmInSW(editingAlarmId);
+    Store.alarms = Store.alarms.filter(a => a.id !== editingAlarmId);
+    persist('alarms');
+    closeSheet();
+    renderAlarms();
+  });
+}
+
+document.getElementById('alarm-add').addEventListener('click', () => openAlarmSheet(null));
+
+function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') Notification.requestPermission();
+}
+
+// Next future fire timestamp for an alarm, or null. Honors snooze, time-of-day, and weekday repeat.
+function nextFireTime(alarm, fromMs) {
+  if (!alarm || !alarm.enabled) return null;
+  if (alarm.snoozedUntil && alarm.snoozedUntil > fromMs) return alarm.snoozedUntil;
+  if (!alarm.time) return null;
+  const [hh, mm] = alarm.time.split(':').map(Number);
+  const base = new Date(fromMs);
+  for (let offset = 0; offset < 8; offset++) {
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, hh, mm, 0, 0);
+    if (d.getTime() <= fromMs) continue;
+    if (alarm.days.length === 0) return d.getTime();
+    if (alarm.days.includes(d.getDay())) return d.getTime();
+  }
+  return null;
+}
+
+async function scheduleAlarmInSW(alarm) {
+  if (!('serviceWorker' in navigator)) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!('showTrigger' in Notification.prototype)) return;
+  const fireAtMs = nextFireTime(alarm, Date.now());
+  if (!fireAtMs) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const prior = await reg.getNotifications({ tag: `alarm-${alarm.id}`, includeTriggered: true });
+    prior.forEach(n => n.close());
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'schedule-alarm',
+        alarm: { id: alarm.id, label: alarm.label, time: alarm.time },
+        fireAtMs,
+      });
+    }
+  } catch {}
+}
+
+async function cancelAlarmInSW(alarmId) {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'cancel-alarm', alarmId });
+    }
+    const reg = await navigator.serviceWorker.ready;
+    const notes = await reg.getNotifications({ tag: `alarm-${alarmId}`, includeTriggered: true });
+    notes.forEach(n => n.close());
+  } catch {}
+}
+
+/* Alarm scheduler — runs at 1Hz */
+function alarmTick() {
+  const now = new Date();
+  if (ringingState.alarmId) return; // already ringing
+  for (const a of Store.alarms) {
+    if (!a.enabled) continue;
+    // Snoozed?
+    if (a.snoozedUntil && now.getTime() < a.snoozedUntil) continue;
+    if (a.snoozedUntil && now.getTime() >= a.snoozedUntil) {
+      // Fire snooze
+      fireAlarm(a);
+      a.snoozedUntil = null;
+      persist('alarms');
+      return;
+    }
+    // Check time + day
+    const [hh, mm] = a.time.split(':').map(Number);
+    if (now.getHours() !== hh || now.getMinutes() !== mm) continue;
+    if (now.getSeconds() > 4) continue; // only fire in first 5 seconds of the minute
+    // Day check
+    if (a.days.length > 0 && !a.days.includes(now.getDay())) continue;
+    // Avoid double-firing within the same minute
+    const key = `${a.id}:${now.toISOString().slice(0,16)}`;
+    if (a.lastFired === key) continue;
+    a.lastFired = key;
+    persist('alarms');
+    // If "once", disable after firing
+    if (a.days.length === 0) {
+      a.enabled = false;
+      persist('alarms');
+      renderAlarms();
+    }
+    fireAlarm(a);
+    // Reschedule SW notification for the next occurrence (no-op for disabled "once" alarms)
+    scheduleAlarmInSW(a);
+    return;
+  }
+}
+
+/* ====================================================================
+   WEB AUDIO — FADE-IN CHIME
+   ==================================================================== */
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playChime({ fadeInS=30, peakGain=0.5 } = {}) {
+  const ctx = ensureAudio();
+  const t0 = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.0001, t0);
+  master.gain.linearRampToValueAtTime(peakGain, t0 + fadeInS);
+  master.connect(ctx.destination);
+
+  // Two-note chord with slow tremolo
+  const o1 = ctx.createOscillator();
+  o1.type = 'triangle';
+  o1.frequency.value = 660;
+  const o2 = ctx.createOscillator();
+  o2.type = 'triangle';
+  o2.frequency.value = 880;
+  // Tremolo via LFO
+  const lfo = ctx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.value = 4.5;
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.value = 0.35;
+  lfo.connect(lfoGain).connect(master.gain);
+  o1.connect(master); o2.connect(master);
+  o1.start(t0); o2.start(t0); lfo.start(t0);
+
+  return {
+    stop() {
+      try {
+        const tNow = ctx.currentTime;
+        master.gain.cancelScheduledValues(tNow);
+        master.gain.setValueAtTime(master.gain.value, tNow);
+        master.gain.linearRampToValueAtTime(0.0001, tNow + 0.2);
+        o1.stop(tNow + 0.25); o2.stop(tNow + 0.25); lfo.stop(tNow + 0.25);
+      } catch {}
+    }
+  };
+}
+
+/* ====================================================================
+   RINGER — Fullscreen alarm display
+   ==================================================================== */
+const ringingState = { alarmId: null, chime: null, vibInterval: null };
+
+function fireAlarm(alarm) {
+  ringingState.alarmId = alarm.id;
+  ringingState.alarm = alarm;
+  document.getElementById('ringer-label').textContent = alarm.label || 'Alarm';
+  const now = new Date();
+  const { h, m, s, ap } = fmtTime(now, Store.settings.use24h);
+  document.getElementById('ringer-time').innerHTML = `${h}:${m}<span style="font-size:24px;">:${s}</span> ${ap}`;
+  document.getElementById('ringer').classList.add('open');
+  // Sound
+  try { ringingState.chime = playChime({ fadeInS: 30, peakGain: 0.6 }); } catch {}
+  // Vibration
+  startVibration(alarm.vibration);
+  // Notification
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification(alarm.label || 'Alarm', {
+        body: `Alarm at ${alarm.time}`,
+        tag: alarm.id,
+        requireInteraction: true,
+        silent: false,
+      });
+    } catch {}
+  }
+  // Dedup: close any SW-scheduled notification for this alarm so the OS doesn't double-fire.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(reg =>
+      reg.getNotifications({ tag: `alarm-${alarm.id}`, includeTriggered: true })
+        .then(notes => notes.forEach(n => n.close()))
+    ).catch(() => {});
+  }
+}
+
+function vibrationPattern(name) {
+  switch (name) {
+    case 'single': return [300];
+    case 'double': return [200, 150, 200];
+    case 'long':   return [1200];
+    default: return null;
+  }
+}
+
+function startVibration(name) {
+  const pattern = vibrationPattern(name);
+  if (!pattern || !('vibrate' in navigator)) return;
+  stopVibration();
+  try { navigator.vibrate(pattern); } catch {}
+  ringingState.vibInterval = setInterval(() => {
+    try { navigator.vibrate(pattern); } catch {}
+  }, 2000);
+}
+function stopVibration() {
+  if (ringingState.vibInterval) clearInterval(ringingState.vibInterval);
+  ringingState.vibInterval = null;
+  try { navigator.vibrate(0); } catch {}
+}
+
+function stopRinging() {
+  if (ringingState.chime) ringingState.chime.stop();
+  ringingState.chime = null;
+  stopVibration();
+  ringingState.alarmId = null;
+  ringingState.alarm = null;
+  document.getElementById('ringer').classList.remove('open');
+}
+
+document.getElementById('ringer-stop').addEventListener('click', stopRinging);
+document.getElementById('ringer-snooze').addEventListener('click', () => {
+  const a = ringingState.alarm;
+  if (a) {
+    a.snoozedUntil = Date.now() + a.snoozeMin * 60000;
+    persist('alarms');
+  }
+  stopRinging();
+});
+
+/* ====================================================================
+   STOPWATCH
+   ==================================================================== */
+function stopwatchElapsed() {
+  const s = Store.stopwatch;
+  if (s.running && s.startedAt) return s.accumulatedMs + (Date.now() - s.startedAt);
+  return s.accumulatedMs;
+}
+
+function renderStopwatchOnce() {
+  // Make sure UI matches state immediately on tab open
+  updateStopwatchDisplay();
+  renderLaps();
+  updateStopwatchButtons();
+}
+
+function updateStopwatchDisplay() {
+  const ms = stopwatchElapsed();
+  const { mm, ss, cs } = fmtStopwatch(ms);
+  document.getElementById('sw-display').innerHTML = `${mm}:${ss}<span class="centis">.${cs}</span>`;
+}
+
+function updateStopwatchButtons() {
+  const s = Store.stopwatch;
+  const startBtn = document.getElementById('sw-start-btn');
+  const lapBtn = document.getElementById('sw-lap-btn');
+  if (s.running) {
+    startBtn.textContent = 'Pause';
+    startBtn.className = 'sw-btn pause';
+    lapBtn.textContent = 'Lap';
+    lapBtn.className = 'sw-btn lap';
+    lapBtn.disabled = false;
+  } else {
+    startBtn.textContent = s.accumulatedMs > 0 ? 'Resume' : 'Start';
+    startBtn.className = 'sw-btn start';
+    lapBtn.textContent = 'Reset';
+    lapBtn.className = 'sw-btn reset';
+    lapBtn.disabled = s.accumulatedMs === 0;
+  }
+}
+
+document.getElementById('sw-start-btn').addEventListener('click', () => {
+  const s = Store.stopwatch;
+  if (s.running) {
+    // Pause
+    s.accumulatedMs += Date.now() - s.startedAt;
+    s.startedAt = null;
+    s.running = false;
+  } else {
+    // Start / resume
+    s.startedAt = Date.now();
+    s.running = true;
+  }
+  persist('stopwatch');
+  updateStopwatchButtons();
+});
+
+document.getElementById('sw-lap-btn').addEventListener('click', () => {
+  const s = Store.stopwatch;
+  if (s.running) {
+    // Lap
+    const total = stopwatchElapsed();
+    const prevTotal = s.laps.length ? s.laps[0].total : 0;
+    const split = total - prevTotal;
+    s.laps.unshift({ split, total });
+    persist('stopwatch');
+    renderLaps();
+  } else {
+    // Reset
+    s.startedAt = null;
+    s.accumulatedMs = 0;
+    s.running = false;
+    s.laps = [];
+    persist('stopwatch');
+    updateStopwatchDisplay();
+    updateStopwatchButtons();
+    renderLaps();
+  }
+});
+
+function renderLaps() {
+  const list = document.getElementById('lap-list');
+  list.innerHTML = '';
+  const s = Store.stopwatch;
+  if (s.laps.length === 0) return;
+  const splits = s.laps.map(l => l.split);
+  const minSplit = Math.min(...splits);
+  const maxSplit = Math.max(...splits);
+  s.laps.forEach((l, idx) => {
+    const num = s.laps.length - idx;
+    const row = document.createElement('div');
+    let cls = 'lap-row';
+    if (splits.length >= 2) {
+      if (l.split === minSplit) cls += ' fastest';
+      else if (l.split === maxSplit) cls += ' slowest';
+    }
+    row.className = cls;
+    const { mm, ss, cs } = fmtStopwatch(l.split);
+    const tot = fmtStopwatch(l.total);
+    row.innerHTML = `<span class="lap-num">${num}</span><span class="lap-split">${mm}:${ss}.${cs}</span><span class="lap-total">${tot.mm}:${tot.ss}.${tot.cs}</span>`;
+    // Tap to show deltas
+    row.addEventListener('click', () => {
+      const exp = row.classList.toggle('expanded');
+      if (exp) {
+        const prevSplit = idx < s.laps.length - 1 ? s.laps[idx + 1].split : null;
+        const deltaPrev = prevSplit == null ? null : l.split - prevSplit;
+        const deltaFastest = l.split - minSplit;
+        const dp = deltaPrev == null ? '—'
+          : (deltaPrev >= 0 ? '+' : '−') + fmtStopwatch(Math.abs(deltaPrev)).mm + ':' + fmtStopwatch(Math.abs(deltaPrev)).ss + '.' + fmtStopwatch(Math.abs(deltaPrev)).cs;
+        const df = (deltaFastest >= 0 ? '+' : '−') + fmtStopwatch(Math.abs(deltaFastest)).mm + ':' + fmtStopwatch(Math.abs(deltaFastest)).ss + '.' + fmtStopwatch(Math.abs(deltaFastest)).cs;
+        let dEl = row.querySelector('.deltas');
+        if (!dEl) {
+          dEl = document.createElement('div');
+          dEl.className = 'deltas';
+          row.appendChild(dEl);
+        }
+        dEl.innerHTML = `<span>Δ prev: ${dp}</span><span>Δ best: ${df}</span>`;
+      }
+    });
+    list.appendChild(row);
+  });
+  // Auto-scroll to top (newest lap)
+  list.scrollTop = 0;
+}
+
+/* ====================================================================
+   TIMER
+   ==================================================================== */
+function renderTimers() {
+  const list = document.getElementById('timer-list');
+  list.innerHTML = '';
+  if (Store.timers.length === 0) {
+    list.innerHTML = `<div class="timer-empty">
+      <div class="hero-emoji">⏳</div>
+      <div>No timers</div>
+      <div style="margin-top:6px;font-size:12px;">Tap + to add a timer</div>
+    </div>`;
+    return;
+  }
+  for (const t of Store.timers) {
+    list.appendChild(makeTimerCard(t));
+  }
+}
+
+function makeTimerCard(t) {
+  const card = document.createElement('div');
+  card.className = 'timer-card' + (t.finished ? ' finished' : '');
+  card.dataset.id = t.id;
+  const circumference = 2 * Math.PI * 45;
+  card.innerHTML = `
+    <div class="timer-ring-wrap">
+      <svg class="timer-ring" viewBox="0 0 100 100">
+        <circle class="ring-bg" cx="50" cy="50" r="45"/>
+        <circle class="ring-fg" cx="50" cy="50" r="45"
+          stroke-dasharray="${circumference}" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-ring-inner">
+        <div class="timer-time">--:--</div>
+      </div>
+    </div>
+    <div class="timer-label">${escapeHtml(t.label || 'Timer')}</div>
+    <div class="timer-controls">
+      <button class="timer-btn primary toggle-btn">Start</button>
+      <button class="timer-btn reset-btn">Reset</button>
+    </div>
+  `;
+  card.querySelector('.toggle-btn').addEventListener('click', () => toggleTimer(t.id));
+  card.querySelector('.reset-btn').addEventListener('click', () => resetTimer(t.id));
+  updateTimerCard(card, t);
+  return attachSwipeDelete(card, () => {
+    Store.timers = Store.timers.filter(x => x.id !== t.id);
+    persist('timers');
+    renderTimers();
+  });
+}
+
+function timerRemaining(t) {
+  if (t.finished) return 0;
+  if (t.running && t.endsAt) return Math.max(0, t.endsAt - Date.now());
+  if (t.remainingAtPauseMs != null) return t.remainingAtPauseMs;
+  return t.durationMs;
+}
+
+function updateTimerCard(card, t) {
+  const rem = timerRemaining(t);
+  const ring = card.querySelector('.ring-fg');
+  const circumference = 2 * Math.PI * 45;
+  const frac = t.durationMs > 0 ? rem / t.durationMs : 0;
+  ring.setAttribute('stroke-dashoffset', String(circumference * (1 - frac)));
+  card.querySelector('.timer-time').textContent = fmtHMS(rem);
+  const toggle = card.querySelector('.toggle-btn');
+  if (t.finished) {
+    toggle.textContent = 'Dismiss';
+    toggle.className = 'timer-btn primary toggle-btn';
+    card.classList.add('finished');
+  } else {
+    toggle.textContent = t.running ? 'Pause' : (rem === t.durationMs ? 'Start' : 'Resume');
+    toggle.className = 'timer-btn ' + (t.running ? '' : 'primary ') + 'toggle-btn';
+    card.classList.remove('finished');
+  }
+}
+
+function updateAllTimerCards() {
+  const cards = document.querySelectorAll('#timer-list .timer-card');
+  cards.forEach(card => {
+    const id = card.dataset.id;
+    const t = Store.timers.find(x => x.id === id);
+    if (t) updateTimerCard(card, t);
+  });
+}
+
+function toggleTimer(id) {
+  const t = Store.timers.find(x => x.id === id);
+  if (!t) return;
+  if (t.finished) {
+    // Dismiss: reset
+    t.finished = false;
+    t.running = false;
+    t.endsAt = null;
+    t.remainingAtPauseMs = t.durationMs;
+    persist('timers');
+    renderTimers();
+    return;
+  }
+  if (t.running) {
+    // Pause
+    t.remainingAtPauseMs = Math.max(0, t.endsAt - Date.now());
+    t.running = false;
+    t.endsAt = null;
+  } else {
+    // Start / resume
+    const rem = t.remainingAtPauseMs != null ? t.remainingAtPauseMs : t.durationMs;
+    t.endsAt = Date.now() + rem;
+    t.running = true;
+    t.remainingAtPauseMs = null;
+    ensureAudio(); // user gesture
+  }
+  persist('timers');
+  renderTimers();
+}
+
+function resetTimer(id) {
+  const t = Store.timers.find(x => x.id === id);
+  if (!t) return;
+  t.running = false;
+  t.endsAt = null;
+  t.remainingAtPauseMs = t.durationMs;
+  t.finished = false;
+  persist('timers');
+  renderTimers();
+}
+
+/* Drum picker helpers */
+function buildDrumPicker(el, count, initialVal) {
+  el.innerHTML = '';
+  const pad1 = document.createElement('div'); pad1.className = 'drum-pad'; el.appendChild(pad1);
+  for (let i = 0; i < count; i++) {
+    const div = document.createElement('div');
+    div.className = 'drum-item';
+    div.textContent = String(i).padStart(2, '0');
+    el.appendChild(div);
+  }
+  const pad2 = document.createElement('div'); pad2.className = 'drum-pad'; el.appendChild(pad2);
+  requestAnimationFrame(() => { el.scrollTop = initialVal * 40; });
+}
+function getDrumValue(el) { return Math.round(el.scrollTop / 40); }
+
+/* Add timer sheet */
+document.getElementById('timer-add').addEventListener('click', () => {
+  document.getElementById('timer-label').value = '';
+  document.getElementById('timer-duration').value = '00:05:00';
+  openSheet('timer-sheet');
+});
+
+document.getElementById('timer-save').addEventListener('click', () => {
+  const labelEl = document.getElementById('timer-label');
+  const label = labelEl.value.trim() || nextUntitled(Store.timers.map(t => t.label));
+  const val = document.getElementById('timer-duration').value || '00:05:00';
+  const [th, tm, ts] = val.split(':').map(Number);
+  const ms = ((th * 3600) + (tm * 60) + (ts || 0)) * 1000;
+  if (ms <= 0) return;
+  ensureAudio();
+  Store.timers.push({
+    id: uid(),
+    label,
+    durationMs: ms,
+    endsAt: Date.now() + ms,
+    remainingAtPauseMs: null,
+    running: true,
+    finished: false,
+  });
+  persist('timers');
+  closeSheet();
+  renderTimers();
+});
+
+/* Timer scheduler — checks for expirations */
+function timerTick() {
+  let anyFinished = false;
+  for (const t of Store.timers) {
+    if (t.running && t.endsAt && Date.now() >= t.endsAt && !t.finished) {
+      t.running = false;
+      t.endsAt = null;
+      t.remainingAtPauseMs = 0;
+      t.finished = true;
+      anyFinished = true;
+      fireTimerDone(t);
+    }
+  }
+  if (anyFinished) {
+    persist('timers');
+    renderTimers();
+  }
+  // Update UI for any visible timer cards
+  if (document.getElementById('screen-timer').classList.contains('active')) {
+    updateAllTimerCards();
+  }
+}
+
+function fireTimerDone(t) {
+  // Sound
+  try { playChime({ fadeInS: 0.8, peakGain: 0.55 }); } catch {}
+  // Vibration
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate([300, 150, 300, 150, 300]); } catch {}
+  }
+  // Flash
+  const flash = document.getElementById('timer-flash');
+  flash.classList.remove('show');
+  void flash.offsetWidth;
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 1600);
+  // Notification if hidden
+  if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification(`Timer: ${t.label}`, {
+        body: 'Time is up!',
+        tag: 'timer-' + t.id,
+        requireInteraction: false,
+      });
+    } catch {}
+  }
+}
+
+/* ====================================================================
+   MODAL HELPERS
+   ==================================================================== */
+let openSheetId = null;
+function openSheet(id) {
+  openSheetId = id;
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById(id).classList.add('open');
+}
+function closeSheet() {
+  if (!openSheetId) return;
+  document.getElementById('backdrop').classList.remove('open');
+  document.getElementById(openSheetId).classList.remove('open');
+  openSheetId = null;
+}
+document.getElementById('backdrop').addEventListener('click', closeSheet);
+
+/* ====================================================================
+   12/24h TOGGLE
+   ==================================================================== */
+document.getElementById('format-toggle').addEventListener('click', () => {
+  Store.settings.use24h = !Store.settings.use24h;
+  persist('settings');
+  renderFormatToggle();
+  // Re-render any time-dependent UI
+  renderAlarms();
+});
+
+/* ====================================================================
+   TICK LOOP — rAF (UI) + setInterval(1s) (schedulers)
+   ==================================================================== */
+let rafId = null;
+let lastDigitalSec = -1;
+function tick() {
+  const now = new Date();
+  // Update home only if visible
+  if (document.getElementById('screen-home').classList.contains('active')) {
+    renderAnalog(now);
+    if (now.getSeconds() !== lastDigitalSec) {
+      renderDigital(now);
+      lastDigitalSec = now.getSeconds();
+    }
+  }
+  // Stopwatch (only if visible & running)
+  if (document.getElementById('screen-stopwatch').classList.contains('active')) {
+    updateStopwatchDisplay();
+  }
+  // Timer (only if visible)
+  if (document.getElementById('screen-timer').classList.contains('active')) {
+    updateAllTimerCards();
+  }
+  // World (only if visible) — update each frame is fine, but it's cheap
+  if (document.getElementById('screen-world').classList.contains('active')) {
+    updateAllCityCards();
+  }
+  rafId = requestAnimationFrame(tick);
+}
+function startTickLoop() {
+  if (rafId) return;
+  rafId = requestAnimationFrame(tick);
+}
+function stopTickLoop() {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopTickLoop();
+  else startTickLoop();
+});
+
+// 1Hz scheduler — runs even when tab hidden (throttled by browser)
+setInterval(() => {
+  alarmTick();
+  timerTick();
+}, 1000);
+
+/* ====================================================================
+   SERVICE WORKER REGISTRATION
+   ==================================================================== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+
+/* ====================================================================
+   INIT
+   ==================================================================== */
+function init() {
+  hydrate();
+  buildClockFace();
+  renderFormatToggle();
+  renderDigital(new Date());
+  renderAnalog(new Date());
+  // Restore tab
+  setTab(Store.settings.activeTab || 'home');
+  bindAlarmSheet();
+  startTickLoop();
+  // Reschedule all enabled alarms in the SW (handles SW upgrades + first run after install).
+  Store.alarms.filter(a => a.enabled).forEach(a => scheduleAlarmInSW(a));
+  // First user interaction unlocks Web Audio
+  const unlock = () => {
+    try { ensureAudio(); } catch {}
+    document.removeEventListener('pointerdown', unlock);
+  };
+  document.addEventListener('pointerdown', unlock, { once: true });
+}
+
+init();
+</script>
+</body>
+</html>

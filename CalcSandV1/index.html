@@ -1,0 +1,3907 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Calc</title>
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0e0e0e" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Calc" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" href="icons/icon-192.png" type="image/png" />
+
+<style>
+/* ========================================================================
+   THEMES
+   ======================================================================== */
+/* ── Phosphor terminal themes ─────────────────────────────────────────────
+   Each theme = a different CRT phosphor colour.
+   Hardware tokens (surfaces/borders/key-text) are similar across all themes.
+   Phosphor tokens drive the display glow only.
+   ──────────────────────────────────────────────────────────────────────── */
+:root,
+[data-theme="midnight"] {
+  /* Green phosphor — VT100 / BBC Micro */
+  --bg-1: #0e0e0e;
+  --bg-glow: rgba(51,255,87,0.04);
+  --display-bg: #020402;
+  --surface: #1e1e1e;
+  --surface-2: #252525;
+  --surface-strong: #2e2e2e;
+  --border: #2c2c2c;
+  --border-strong: #404040;
+  --text: #ccc8bc;
+  --text-dim: rgba(204,200,188,0.60);
+  --text-faint: rgba(204,200,188,0.44);
+  --phosphor: #33ff57;
+  --phosphor-dim: rgba(51,255,87,0.55);
+  --phosphor-faint: rgba(51,255,87,0.30);
+  --glow-1: rgba(51,255,87,0.55);
+  --glow-2: rgba(51,255,87,0.18);
+  --accent: #33ff57;
+  --accent-2: rgba(51,255,87,0.7);
+  --op: #0c2e12;
+  --op-text: #33ff57;
+  --equals: #0e3518;
+  --equals-text: #33ff57;
+  --danger: #ff4040;
+  --good: #33ff57;
+  --shadow: 0 8px 32px rgba(0,0,0,0.8);
+  --shadow-soft: 0 2px 12px rgba(0,0,0,0.6);
+  --blob-a: #0e0e0e;
+  --blob-b: #0e0e0e;
+  --blob-c: #0e0e0e;
+}
+[data-theme="aurora"] {
+  /* Cyan phosphor — VFD / Futaba */
+  --bg-1: #0a0c10;
+  --bg-glow: rgba(0,232,255,0.04);
+  --display-bg: #020408;
+  --surface: #161a22;
+  --surface-2: #1e2430;
+  --surface-strong: #262e3e;
+  --border: #242a36;
+  --border-strong: #383e50;
+  --text: #b8c4d0;
+  --text-dim: rgba(184,196,208,0.60);
+  --text-faint: rgba(184,196,208,0.44);
+  --phosphor: #00e8ff;
+  --phosphor-dim: rgba(0,232,255,0.55);
+  --phosphor-faint: rgba(0,232,255,0.30);
+  --glow-1: rgba(0,232,255,0.55);
+  --glow-2: rgba(0,232,255,0.18);
+  --accent: #00e8ff;
+  --accent-2: rgba(0,232,255,0.7);
+  --op: #002d35;
+  --op-text: #00e8ff;
+  --equals: #003842;
+  --equals-text: #00e8ff;
+  --danger: #ff4040;
+  --good: #00e8ff;
+  --shadow: 0 8px 32px rgba(0,0,0,0.8);
+  --shadow-soft: 0 2px 12px rgba(0,0,0,0.6);
+  --blob-a: #0a0c10;
+  --blob-b: #0a0c10;
+  --blob-c: #0a0c10;
+}
+[data-theme="sunset"] {
+  /* Amber phosphor — HP-35 / Apple II */
+  --bg-1: #100e08;
+  --bg-glow: rgba(255,170,0,0.05);
+  --display-bg: #060400;
+  --surface: #1e1c14;
+  --surface-2: #26221a;
+  --surface-strong: #302c20;
+  --border: #2c2820;
+  --border-strong: #403c2e;
+  --text: #ccc4a8;
+  --text-dim: rgba(204,196,168,0.60);
+  --text-faint: rgba(204,196,168,0.44);
+  --phosphor: #ffaa00;
+  --phosphor-dim: rgba(255,170,0,0.55);
+  --phosphor-faint: rgba(255,170,0,0.30);
+  --glow-1: rgba(255,170,0,0.55);
+  --glow-2: rgba(255,170,0,0.18);
+  --accent: #ffaa00;
+  --accent-2: rgba(255,170,0,0.7);
+  --op: #2e1e00;
+  --op-text: #ffaa00;
+  --equals: #382400;
+  --equals-text: #ffaa00;
+  --danger: #ff4040;
+  --good: #ffaa00;
+  --shadow: 0 8px 32px rgba(0,0,0,0.8);
+  --shadow-soft: 0 2px 12px rgba(0,0,0,0.6);
+  --blob-a: #100e08;
+  --blob-b: #100e08;
+  --blob-c: #100e08;
+}
+[data-theme="forest"] {
+  /* Teal phosphor — Casio VFD */
+  --bg-1: #080f0c;
+  --bg-glow: rgba(0,255,208,0.04);
+  --display-bg: #020604;
+  --surface: #141e1a;
+  --surface-2: #1a2622;
+  --surface-strong: #22302a;
+  --border: #202c28;
+  --border-strong: #304038;
+  --text: #b4c8c0;
+  --text-dim: rgba(180,200,192,0.60);
+  --text-faint: rgba(180,200,192,0.44);
+  --phosphor: #00ffd0;
+  --phosphor-dim: rgba(0,255,208,0.55);
+  --phosphor-faint: rgba(0,255,208,0.30);
+  --glow-1: rgba(0,255,208,0.55);
+  --glow-2: rgba(0,255,208,0.18);
+  --accent: #00ffd0;
+  --accent-2: rgba(0,255,208,0.7);
+  --op: #00302a;
+  --op-text: #00ffd0;
+  --equals: #003c34;
+  --equals-text: #00ffd0;
+  --danger: #ff4040;
+  --good: #00ffd0;
+  --shadow: 0 8px 32px rgba(0,0,0,0.8);
+  --shadow-soft: 0 2px 12px rgba(0,0,0,0.6);
+  --blob-a: #080f0c;
+  --blob-b: #080f0c;
+  --blob-c: #080f0c;
+}
+[data-theme="neon"] {
+  /* Violet phosphor — UV / Luxeon */
+  --bg-1: #0c080e;
+  --bg-glow: rgba(187,68,255,0.05);
+  --display-bg: #060408;
+  --surface: #1a1420;
+  --surface-2: #221a2a;
+  --surface-strong: #2c2236;
+  --border: #282034;
+  --border-strong: #3c3050;
+  --text: #beb0cc;
+  --text-dim: rgba(190,176,204,0.60);
+  --text-faint: rgba(190,176,204,0.44);
+  --phosphor: #bb44ff;
+  --phosphor-dim: rgba(187,68,255,0.55);
+  --phosphor-faint: rgba(187,68,255,0.30);
+  --glow-1: rgba(187,68,255,0.55);
+  --glow-2: rgba(187,68,255,0.18);
+  --accent: #bb44ff;
+  --accent-2: rgba(187,68,255,0.7);
+  --op: #21003e;
+  --op-text: #bb44ff;
+  --equals: #2a004e;
+  --equals-text: #bb44ff;
+  --danger: #ff4040;
+  --good: #bb44ff;
+  --shadow: 0 8px 32px rgba(0,0,0,0.8);
+  --shadow-soft: 0 2px 12px rgba(0,0,0,0.6);
+  --blob-a: #0c080e;
+  --blob-b: #0c080e;
+  --blob-c: #0c080e;
+}
+[data-theme="ember"] {
+  /* Orange phosphor — Nixie tube */
+  --bg-1: #0f0c08;
+  --bg-glow: rgba(255,119,0,0.05);
+  --display-bg: #060400;
+  --surface: #1e1914;
+  --surface-2: #26201a;
+  --surface-strong: #30281e;
+  --border: #2c2620;
+  --border-strong: #40382e;
+  --text: #c8c0b0;
+  --text-dim: rgba(200,192,176,0.60);
+  --text-faint: rgba(200,192,176,0.44);
+  --phosphor: #ff7700;
+  --phosphor-dim: rgba(255,119,0,0.55);
+  --phosphor-faint: rgba(255,119,0,0.30);
+  --glow-1: rgba(255,119,0,0.55);
+  --glow-2: rgba(255,119,0,0.18);
+  --accent: #ff7700;
+  --accent-2: rgba(255,119,0,0.7);
+  --op: #2e1400;
+  --op-text: #ff7700;
+  --equals: #381a00;
+  --equals-text: #ff7700;
+  --danger: #ff4040;
+  --good: #ff7700;
+  --shadow: 0 8px 32px rgba(0,0,0,0.8);
+  --shadow-soft: 0 2px 12px rgba(0,0,0,0.6);
+  --blob-a: #0f0c08;
+  --blob-b: #0f0c08;
+  --blob-c: #0f0c08;
+}
+
+/* ========================================================================
+   BASE
+   ======================================================================== */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--bg-1); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11", "tnum";
+  user-select: none; -webkit-user-select: none;
+  overflow: hidden; overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  transition: background-color 400ms ease;
+}
+button { font: inherit; color: inherit; }
+input, textarea { font: inherit; color: inherit; }
+
+/* Terminal background — near-black housing with ghost phosphor bleed */
+#bg-mesh {
+  position: fixed; inset: 0; z-index: -1; overflow: hidden;
+  background: var(--bg-1);
+}
+#bg-mesh > .blob {
+  position: absolute;
+  width: 140%; height: 50vh;
+  top: -10%; left: -20%;
+  background: radial-gradient(ellipse 60% 100% at 50% 0%, var(--bg-glow) 0%, transparent 70%);
+  animation: phosphor-bleed 8s ease-in-out infinite;
+  will-change: opacity;
+}
+@keyframes phosphor-bleed {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+@media (hover: hover) {
+  .key:hover { background: var(--surface-2); border-color: var(--border-strong); }
+}
+
+/* ========================================================================
+   APP SHELL
+   ======================================================================== */
+.app {
+  display: flex; flex-direction: column;
+  height: 100dvh; width: 100%;
+  max-width: 520px; margin: 0 auto;
+  padding:
+    calc(env(safe-area-inset-top) + 10px)
+    calc(env(safe-area-inset-right) + 12px)
+    calc(env(safe-area-inset-bottom) + 12px)
+    calc(env(safe-area-inset-left) + 12px);
+  gap: 10px;
+  position: relative;
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 2px;
+  flex-shrink: 0;
+}
+.icon-btn {
+  appearance: none; border: 0;
+  width: 40px; height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top-color: var(--border-strong);
+  border-radius: 14px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: background 120ms ease, box-shadow 80ms ease, transform 80ms ease;
+  flex-shrink: 0;
+}
+.icon-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.5), inset 0 1px 0 rgba(0,0,0,0.1);
+  background: var(--surface-strong);
+}
+.icon-btn svg { width: 20px; height: 20px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.mode-switcher {
+  flex: 1;
+  display: flex; gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+.mode-tab {
+  flex: 1; min-width: 0;
+  appearance: none; border: 0; background: transparent;
+  color: var(--text-dim);
+  font-size: 13px; font-weight: 600;
+  padding: 8px 4px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: color 200ms ease, background 200ms ease, transform 120ms ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.mode-tab:active { transform: scale(0.94); }
+.mode-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* ---------- Display — CRT screen ---------------------------------------- */
+@keyframes crt-flicker {
+  0%,100%   { opacity: 1; }
+  87%        { opacity: 1; }
+  88%        { opacity: 0.96; }
+  89%        { opacity: 1; }
+  94%        { opacity: 0.97; }
+  95%        { opacity: 1; }
+}
+.display {
+  position: relative;
+  flex-shrink: 0;
+  padding: 14px 16px 12px;
+  /* Scanlines + vignette + screen colour — all in background layers */
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.10) 0px,
+      rgba(0,0,0,0.10) 1px,
+      transparent     1px,
+      transparent     3px
+    ),
+    radial-gradient(ellipse 110% 75% at 50% 50%, transparent 52%, rgba(0,0,0,0.55) 100%),
+    var(--display-bg);
+  border: 1px solid rgba(0,0,0,0.9);
+  border-bottom-color: var(--border-strong);
+  border-right-color: var(--border);
+  border-radius: 12px;
+  box-shadow:
+    0 2px 0 var(--border-strong),
+    inset 0 0 60px rgba(0,0,0,0.6),
+    inset 0 0 0 1px rgba(255,255,255,0.03);
+  display: flex; flex-direction: column;
+  gap: 4px;
+  min-height: 110px;
+  overflow: hidden;
+  animation: crt-flicker 10s ease-in-out infinite;
+}
+.display-badges {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  min-height: 18px;
+}
+.badge {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--phosphor-faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: ui-monospace, "SF Mono", monospace;
+}
+.badge.active {
+  background: var(--phosphor);
+  color: var(--display-bg);
+  border-color: var(--phosphor);
+  box-shadow: 0 0 6px var(--glow-1);
+}
+.badge.memory {
+  border-color: var(--phosphor-faint);
+  color: var(--phosphor);
+}
+
+.expr-row {
+  flex: 1;
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(90deg, transparent 0, #000 32px);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 32px);
+}
+.expr-row::-webkit-scrollbar { display: none; }
+.expression {
+  font-family: ui-monospace, "SF Mono", Menlo, "Courier New", monospace;
+  font-weight: 400;
+  font-size: clamp(30px, 8vw, 50px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-align: right;
+  white-space: nowrap;
+  padding-left: 32px;
+  color: var(--phosphor);
+  text-shadow:
+    0 0 6px  var(--glow-1),
+    0 0 20px var(--glow-1),
+    0 0 55px var(--glow-2);
+}
+.expression .caret {
+  display: inline-block;
+  width: 2px; height: 0.85em;
+  background: var(--phosphor);
+  box-shadow: 0 0 6px var(--glow-1), 0 0 16px var(--glow-1);
+  margin-left: 3px;
+  vertical-align: -0.05em;
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.result {
+  font-family: ui-monospace, "SF Mono", Menlo, "Courier New", monospace;
+  font-size: 17px; font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--phosphor-dim);
+  text-shadow: 0 0 8px var(--glow-2);
+  text-align: right;
+  min-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.result.error {
+  color: rgba(255,60,60,0.9);
+  text-shadow: 0 0 8px rgba(255,60,60,0.5), 0 0 24px rgba(255,60,60,0.25);
+}
+.result .equals { color: var(--phosphor-faint); margin-right: 6px; }
+
+/* ---------- Keypad ---------- */
+.keypad-wrap {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.keypad {
+  display: grid;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+.keypad.basic {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, minmax(0,1fr));
+}
+.keypad.sci-extra {
+  grid-template-columns: repeat(5, 1fr);
+  flex: 0 0 auto;
+  max-height: 35%;
+}
+.keypad.prog-extra {
+  grid-template-columns: repeat(4, 1fr);
+  flex: 0 0 auto;
+}
+
+.key {
+  appearance: none; border: 0; outline: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: clamp(18px, 5.5vw, 26px);
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top-color: var(--border-strong);
+  border-radius: 15px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease,
+    background-color 100ms ease;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  display: grid; place-items: center;
+  padding: 4px;
+  line-height: 1.1;
+}
+.key::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+  background: rgba(255,255,255,0.10);
+  pointer-events: none;
+}
+.key:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.55), inset 0 1px 0 rgba(0,0,0,0.12);
+  background: var(--surface-strong);
+}
+.key .sub {
+  display: block;
+  font-size: 0.55em;
+  color: var(--text-faint);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.key.fn {
+  background: var(--surface-2);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.key.op {
+  background: var(--op); color: var(--op-text);
+  font-weight: 700;
+  border-color: rgba(0,0,0,0.2);
+  border-top-color: rgba(255,255,255,0.12);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.key.op.active {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  background: color-mix(in oklab, var(--op) 75%, white 25%);
+}
+.key.equals {
+  background: var(--equals); color: var(--equals-text);
+  font-weight: 700;
+  border-color: rgba(0,0,0,0.2);
+  border-top-color: rgba(255,255,255,0.1);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.10);
+}
+.key.op:active  { background: color-mix(in oklab, var(--op) 80%, black 20%); }
+.key.equals:active { background: color-mix(in oklab, var(--equals) 80%, black 20%); }
+.key.danger { color: var(--danger); }
+.key.small { font-size: clamp(13px, 3.5vw, 16px); font-weight: 600; }
+.key.span2 { grid-column: span 2; }
+
+/* ---------- Convert panel ---------- */
+.convert-panel {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
+  overflow: hidden;
+  min-height: 0;
+}
+.convert-categories {
+  display: flex; gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  padding: 2px;
+  margin: -2px;
+}
+.convert-categories::-webkit-scrollbar { display: none; }
+.cat-tab {
+  appearance: none; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-dim);
+  font-size: 12px; font-weight: 600;
+  padding: 7px 12px; border-radius: 12px;
+  cursor: pointer; white-space: nowrap;
+  transition: all 200ms ease;
+}
+.cat-tab.active {
+  background: var(--accent); color: var(--bg-1); border-color: var(--accent);
+}
+.convert-row {
+  display: flex; align-items: stretch; gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+.convert-row.active { border-color: var(--accent); }
+.convert-input {
+  flex: 1; min-width: 0;
+  appearance: none; border: 0; outline: 0; background: transparent;
+  font-size: clamp(20px, 6vw, 28px); font-weight: 300;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.convert-unit-btn {
+  appearance: none; border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px; font-weight: 600;
+  padding: 6px 14px; border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 4px;
+}
+.convert-swap {
+  align-self: center;
+  appearance: none; border: 0;
+  width: 40px; height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  cursor: pointer;
+  margin: -8px auto;
+  position: relative; z-index: 1;
+  transition: transform 250ms ease;
+}
+.convert-swap:active { transform: rotate(180deg); }
+.convert-unit-list {
+  flex-shrink: 0;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  max-height: 100%;
+}
+.unit-pill {
+  appearance: none;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 12px; font-weight: 600;
+  padding: 7px 12px; border-radius: 10px;
+  cursor: pointer; white-space: nowrap;
+}
+.unit-pill.active { background: var(--accent); color: var(--bg-1); border-color: var(--accent); }
+.convert-target { color: var(--text-dim); }
+
+.convert-keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ---------- Graph panel ---------- */
+.graph-panel {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
+  min-height: 0;
+}
+.graph-input-row {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 12px;
+}
+.graph-input-row .yeq {
+  color: var(--accent); font-weight: 600; font-size: 16px;
+}
+.graph-input {
+  flex: 1; min-width: 0;
+  appearance: none; border: 0; outline: 0; background: transparent;
+  font-size: 16px; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--text);
+  padding: 6px 0;
+}
+.graph-canvas-wrap {
+  flex: 1; min-height: 0;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--display-bg);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+}
+canvas.graph {
+  display: block;
+  width: 100%; height: 100%;
+  touch-action: none;
+}
+.graph-controls {
+  position: absolute; bottom: 8px; right: 8px;
+  display: flex; gap: 4px;
+}
+.graph-controls button {
+  appearance: none; border: 0;
+  width: 32px; height: 32px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 16px; font-weight: 700;
+  cursor: pointer;
+  display: grid; place-items: center;
+  transition: background 150ms ease, transform 100ms ease;
+}
+.graph-controls button:active {
+  transform: scale(0.88);
+  background: var(--surface-2);
+}
+
+/* ---------- Drawer ---------- */
+.drawer-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 50;
+  opacity: 0; pointer-events: none;
+  transition: opacity 250ms ease;
+}
+.drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; top: 0; bottom: 0; right: 0;
+  width: min(380px, 90vw);
+  background: var(--bg-1);
+  border-left: 1px solid var(--border);
+  z-index: 51;
+  transform: translateX(100%);
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex; flex-direction: column;
+  padding:
+    calc(env(safe-area-inset-top) + 16px)
+    calc(env(safe-area-inset-right) + 16px)
+    calc(env(safe-area-inset-bottom) + 16px)
+    16px;
+  gap: 12px;
+  box-shadow: -20px 0 60px rgba(0,0,0,0.4);
+}
+.drawer.open { transform: translateX(0); }
+.drawer-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 8px;
+}
+.drawer-header h2 { margin: 0; font-size: 22px; font-weight: 700; }
+.drawer-close {
+  appearance: none; border: 0;
+  width: 36px; height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  display: grid; place-items: center;
+  color: var(--text);
+  font-size: 18px;
+}
+.drawer-body {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+}
+
+.history-empty {
+  text-align: center; color: var(--text-faint);
+  padding: 40px 16px;
+  font-size: 14px;
+}
+.history-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  transition: background 140ms ease, transform 140ms ease;
+}
+.history-item:active { transform: scale(0.98); background: var(--surface-strong); }
+.history-expr {
+  font-size: 13px; color: var(--text-dim);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  word-break: break-all;
+}
+.history-result {
+  font-size: 22px; font-weight: 600;
+  text-align: right;
+  margin-top: 2px;
+}
+.history-time {
+  font-size: 10px; color: var(--text-faint);
+  margin-top: 2px;
+}
+
+/* Settings */
+.settings-section {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.settings-section h3 {
+  margin: 8px 0 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--text-faint); text-transform: uppercase;
+}
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  gap: 12px;
+}
+.settings-row .label { font-size: 14px; font-weight: 500; }
+.settings-row .sub { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+.theme-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.theme-swatch {
+  appearance: none; border: 2px solid transparent;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+.theme-swatch.active { border-color: var(--text); transform: scale(1.05); }
+.swatch-midnight { background: radial-gradient(ellipse at 60% 40%, #33ff57 0%, #0c2e12 45%, #0e0e0e 100%); }
+.swatch-aurora   { background: radial-gradient(ellipse at 60% 40%, #00e8ff 0%, #002d35 45%, #0a0c10 100%); }
+.swatch-sunset   { background: radial-gradient(ellipse at 60% 40%, #ffaa00 0%, #2e1e00 45%, #100e08 100%); }
+.swatch-forest   { background: radial-gradient(ellipse at 60% 40%, #00ffd0 0%, #00302a 45%, #080f0c 100%); }
+.swatch-neon     { background: radial-gradient(ellipse at 60% 40%, #bb44ff 0%, #21003e 45%, #0c080e 100%); }
+.swatch-ember    { background: radial-gradient(ellipse at 60% 40%, #ff7700 0%, #2e1400 45%, #0f0c08 100%); }
+
+.toggle {
+  appearance: none; border: 0;
+  width: 44px; height: 26px;
+  background: var(--surface-strong);
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 200ms ease;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: ''; position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  background: rgba(255,255,255,0.75); border-radius: 50%;
+  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+.toggle.on { background: var(--accent); }
+.toggle.on::after { transform: translateX(18px); }
+
+.segmented {
+  display: flex; gap: 2px;
+  background: var(--surface-strong);
+  border-radius: 10px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.segmented button {
+  appearance: none; border: 0; background: transparent;
+  color: var(--text-dim);
+  font-size: 12px; font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.segmented button.active { background: var(--text); color: var(--bg-1); }
+
+/* Unit picker overlay */
+.unit-picker {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 60;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+}
+.unit-picker.open { display: flex; }
+.unit-picker-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 22px 22px 16px 16px;
+  width: 100%; max-width: 480px;
+  max-height: 70vh; overflow-y: auto;
+  padding: 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+  display: flex; flex-direction: column; gap: 6px;
+  animation: slideUp 280ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } }
+.unit-picker-card h3 {
+  margin: 0 0 8px; font-size: 16px;
+}
+.unit-option {
+  appearance: none; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text);
+  padding: 12px 14px; border-radius: 12px;
+  text-align: left; font-size: 14px; font-weight: 500;
+  cursor: pointer;
+  display: flex; justify-content: space-between;
+}
+.unit-option .sym { color: var(--text-dim); font-family: ui-monospace, monospace; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px);
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text); color: var(--bg-1);
+  padding: 10px 18px; border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+  z-index: 70;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Install hint */
+.install-hint {
+  position: fixed; left: 16px; right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+  display: none;
+  align-items: center; gap: 8px;
+  z-index: 40;
+  animation: slideUp 400ms ease;
+}
+.install-hint.show { display: flex; }
+.install-hint button {
+  margin-left: auto;
+  appearance: none; border: 0; background: transparent; color: var(--text);
+  font-size: 18px; cursor: pointer; padding: 4px 8px;
+}
+
+/* Helpers */
+.hidden { display: none !important; }
+
+/* ============================================================
+   AURUM — Warm gold luxury palette (universal, all modes)
+   ============================================================ */
+.app {
+  /* Override theme tokens with a warm gold/cream palette */
+  --aurum-gold:        #d4a847;
+  --aurum-gold-bright: #f0cf72;
+  --aurum-cream:       #ece2cb;
+  --aurum-amber:       #b88a32;
+  --aurum-bg:          #0a0908;
+  --aurum-surface:     #1a1612;
+  --aurum-surface-2:   #221c14;
+  --aurum-border:      #2a221a;
+
+  --bg-1:           var(--aurum-bg);
+  --display-bg:     #060503;
+  --surface:        var(--aurum-surface);
+  --surface-2:      var(--aurum-surface-2);
+  --surface-strong: #2a221a;
+  --border:         var(--aurum-border);
+  --border-strong:  #3d3324;
+  --text:           var(--aurum-cream);
+  --text-dim:       rgba(236,226,203,0.62);
+  --text-faint:     rgba(236,226,203,0.38);
+  --phosphor:       var(--aurum-gold);
+  --phosphor-dim:   rgba(212,168,71,0.6);
+  --phosphor-faint: rgba(212,168,71,0.32);
+  --glow-1:         rgba(212,168,71,0.55);
+  --glow-2:         rgba(212,168,71,0.18);
+  --accent:         var(--aurum-gold-bright);
+  --accent-2:       rgba(240,207,114,0.75);
+  --op:             #1f1810;
+  --op-text:        var(--aurum-gold-bright);
+  --equals:         #2a2014;
+  --equals-text:    var(--aurum-gold-bright);
+
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 30%, rgba(212,168,71,0.10), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(184,138,50,0.05), transparent 60%),
+    var(--aurum-bg);
+}
+/* Display only hidden in modes that supply the AURUM stage themselves */
+.app[data-layout="aurum"] .display,
+.app[data-layout="aurum-sci"] .display,
+.app[data-layout="aurum-prog"] .display { display: none; }
+.app .topbar { opacity: 0.92; }
+/* The classic stacked display (used by convert / graph modes) — restyled in gold */
+:root { --aurum-bg-fallback: #0a0908; }
+body, html {
+  background: #0a0908;
+  color: #ece2cb;
+}
+.display {
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.10) 0px, rgba(0,0,0,0.10) 1px, transparent 1px, transparent 3px),
+    radial-gradient(ellipse 110% 75% at 50% 50%, transparent 52%, rgba(0,0,0,0.55) 100%),
+    var(--display-bg);
+  border-color: var(--aurum-border);
+}
+.expression {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  color: var(--aurum-gold-bright);
+  text-shadow: 0 0 12px var(--glow-1), 0 0 28px var(--glow-2);
+}
+.result, .result.error { color: var(--aurum-gold); }
+
+.app[data-layout="aurum"] #keypad-wrap,
+.app[data-layout="aurum-sci"] #keypad-wrap,
+.app[data-layout="aurum-prog"] #keypad-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header  scale"
+    "stage   scale"
+    "keys    keys";
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  padding: 6px 2px 0;
+}
+/* Sci adds an extra row for the sci-keys above the digit/op keys */
+.app[data-layout="aurum-sci"] #keypad-wrap {
+  grid-template-rows: auto 1fr auto auto;
+  grid-template-areas:
+    "header  scale"
+    "stage   scale"
+    "sci     sci"
+    "keys    keys";
+}
+/* Prog uses two functional rows below the stage */
+.app[data-layout="aurum-prog"] #keypad-wrap {
+  grid-template-rows: auto 1fr auto auto;
+  grid-template-areas:
+    "header  scale"
+    "stage   scale"
+    "progop  progop"
+    "keys    keys";
+}
+/* Sci-keys row */
+.aurum-sci-row {
+  grid-area: sci;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(3, minmax(38px, 1fr));
+  gap: 6px;
+  max-height: 160px;
+}
+/* Prog-ops row */
+.aurum-prog-row {
+  grid-area: progop;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, minmax(38px, 1fr));
+  gap: 6px;
+  max-height: 90px;
+}
+/* Prog uses a 4-col grid in the keys area (hex digits + ops integrated) */
+.app[data-layout="aurum-prog"] .aurum-keys-row {
+  grid-template-columns: 1fr;
+}
+.app[data-layout="aurum-prog"] .keypad-left {
+  grid-template-columns: repeat(4, 1fr);
+}
+.app[data-layout="aurum-prog"] .keypad-right { display: none; }
+
+/* Prog mode: fixed 4-row grid — positions are viewport-relative so keypad height never shifts them */
+.app[data-layout="aurum-prog"] .aurum-stage {
+  justify-content: center;
+  align-items: center;
+}
+.app[data-layout="aurum-prog"] .aurum-result {
+  flex: none !important;
+  align-self: auto;
+  display: grid !important;
+  grid-template-rows: repeat(4, 1fr);
+  height: clamp(220px, 50dvh, 360px);
+  font-size: clamp(16px, 4.5vw, 32px);
+  text-align: left;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  line-height: 1;
+  text-shadow: none;
+}
+.prog-base-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  opacity: 0.22;
+  overflow: hidden;
+  padding: 0 8px 0 6px;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+.prog-base-item.active {
+  opacity: 1;
+  border-left-color: var(--aurum-gold, #d4a847);
+}
+.prog-base-item .pbl {
+  font-size: 0.38em;
+  letter-spacing: 0.12em;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  min-width: 2.8em;
+  text-align: right;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.prog-base-item.active .pbl { opacity: 0.85; }
+.prog-base-item .pbv {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1em;
+}
+.prog-base-item.active .pbv {
+  text-shadow: 0 0 18px rgba(212,168,71,0.45), 0 0 50px rgba(212,168,71,0.25);
+}
+
+/* Branding (top-left) */
+.aurum-header {
+  grid-area: header;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 4px 0;
+}
+.aurum-brand .title {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+  font-size: clamp(22px, 6.2vw, 32px);
+  letter-spacing: 0.10em;
+  color: var(--aurum-cream);
+  line-height: 1;
+}
+.aurum-brand .title .ordinal {
+  color: var(--aurum-gold-bright);
+  margin-right: 4px;
+}
+.aurum-brand .sub {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Expression (top-right of header) */
+.aurum-expr {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: clamp(13px, 3.4vw, 17px);
+  color: var(--text-dim);
+  text-align: right;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+  min-height: 1em;
+  align-self: center;
+}
+
+/* The STAGE — where the result lives, as the centerpiece */
+.aurum-stage {
+  grid-area: stage;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+}
+/* Soft golden ambient glow behind the result */
+.aurum-stage::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90%;
+  height: 70%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(212,168,71,0.10), transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+.aurum-result {
+  position: relative;
+  z-index: 1;
+  font-family: 'Cormorant Garamond', 'Playfair Display', 'Didot', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: clamp(40px, 12vw, 76px);
+  color: var(--aurum-gold-bright);
+  text-shadow:
+    0 0 18px rgba(212,168,71,0.45),
+    0 0 50px rgba(212,168,71,0.25),
+    0 0 100px rgba(212,168,71,0.15);
+  letter-spacing: -0.015em;
+  line-height: 1.02;
+  text-align: center;
+  max-width: 100%;
+  padding: 0 4px;
+  transition: transform 0.45s cubic-bezier(0.34, 1.45, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+/* Cascading decimal lines (line 1 = primary, subsequent smaller & dimmer) */
+.aurum-result .line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1;
+}
+/* All cascade lines share the same em-based letter-spacing — inter-digit gap
+   scales with digit size automatically, so visual width can be kept equal. */
+.aurum-result .line {
+  letter-spacing: 0.015em;
+  font-variant-numeric: tabular-nums;
+}
+.aurum-result .line-1 { font-size: 1em; }
+.aurum-result .line-2 { font-size: 0.50em; opacity: 0.85; }
+.aurum-result .line-3 { font-size: 0.36em; opacity: 0.65; }
+.aurum-result .line-4 { font-size: 0.26em; opacity: 0.48; }
+.aurum-result .line-5 { font-size: 0.20em; opacity: 0.36; }
+/* Stacked fraction display */
+.aurum-result .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1;
+}
+.aurum-result .frac .num,
+.aurum-result .frac .den {
+  font-size: 0.55em;
+  padding: 0 0.3em;
+  line-height: 1.05;
+}
+.aurum-result .frac .bar {
+  width: 100%;
+  height: 2px;
+  background: var(--aurum-gold-bright);
+  margin: 2px 0;
+  box-shadow: 0 0 6px rgba(240,207,114,0.5);
+}
+
+/* Fraction toggle pill — appears under the result after = on decimal answers */
+.aurum-fraction-toggle {
+  appearance: none;
+  background: rgba(212,168,71,0.06);
+  border: 1px solid rgba(212,168,71,0.28);
+  color: var(--aurum-gold-bright);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  transition: background 200ms ease, box-shadow 200ms ease, transform 100ms ease;
+}
+.aurum-fraction-toggle .frac-glyph {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.aurum-fraction-toggle:hover { background: rgba(212,168,71,0.12); }
+.aurum-fraction-toggle:active { transform: scale(0.97); }
+.aurum-fraction-toggle.active {
+  background: rgba(212,168,71,0.22);
+  border-color: rgba(240,207,114,0.6);
+  color: #150e04;
+  background-color: var(--aurum-gold-bright);
+  box-shadow: 0 0 18px rgba(240,207,114,0.35);
+}
+.aurum-fraction-toggle[hidden] { display: none; }
+.aurum-result.flash {
+  animation: aurum-bloom 0.75s ease-out;
+}
+@keyframes aurum-bloom {
+  0%   { transform: scale(1);   filter: brightness(1); }
+  35%  { transform: scale(1.07); filter: brightness(1.35); }
+  100% { transform: scale(1);   filter: brightness(1); }
+}
+.aurum-result .equals-tag {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-style: normal;
+  font-size: 0.32em;
+  vertical-align: middle;
+  letter-spacing: 0.3em;
+  color: var(--text-faint);
+  margin-right: 0.4em;
+  text-shadow: none;
+}
+
+/* Magnitude scale on the right edge */
+.aurum-scale {
+  grid-area: scale;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: flex-end;
+  padding: 8px 2px 8px 6px;
+  pointer-events: none;
+}
+.aurum-scale .tick {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--text-faint);
+  opacity: 0.5;
+  transition: color 0.4s ease, opacity 0.4s ease, text-shadow 0.4s ease;
+  white-space: nowrap;
+  position: relative;
+  padding-right: 12px;
+}
+.aurum-scale .tick::after { content: none; }
+.aurum-scale .tick.active {
+  color: var(--aurum-gold-bright);
+  opacity: 1;
+  text-shadow: 0 0 10px var(--glow-1);
+}
+/* Bases scale (prog mode) — clickable */
+.aurum-scale[data-kind="bases"] { pointer-events: auto; }
+.aurum-scale .base-tick {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 4px 0 4px 6px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-transform: uppercase;
+}
+.aurum-scale .base-tick:active { transform: scale(0.95); }
+
+.base-cycle-btn {
+  appearance: none;
+  background: rgba(212,168,71,0.12);
+  border: 1px solid rgba(212,168,71,0.30);
+  border-radius: 10px;
+  color: var(--aurum-gold-bright);
+  cursor: pointer;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  padding: 8px 10px;
+  text-transform: uppercase;
+  transition: background 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 0 10px rgba(212,168,71,0.10);
+}
+.base-cycle-btn:active {
+  background: rgba(212,168,71,0.25);
+  transform: scale(0.93);
+}
+
+/* AURUM brand strip — used by Convert and Graph modes (compact horizontal banner) */
+.aurum-brand-strip {
+  flex-shrink: 0;
+  padding: 4px 4px 8px;
+}
+
+/* Convert / Graph panel restyles for AURUM */
+.convert-panel, .graph-panel {
+  border: 1px solid rgba(212,168,71,0.16);
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 0%, rgba(212,168,71,0.05), transparent 60%),
+    var(--aurum-surface);
+  box-shadow:
+    inset 0 1px 0 rgba(255,236,200,0.06),
+    inset 0 0 60px rgba(0,0,0,0.4);
+}
+.cat-tab, .unit-pill, .convert-unit-btn {
+  border-color: rgba(212,168,71,0.18);
+  background: linear-gradient(180deg, #221c14, #15110b);
+  color: var(--aurum-cream);
+}
+.cat-tab.active, .unit-pill.active {
+  background: linear-gradient(180deg, #b58928, #6b4c18);
+  color: #150e04;
+  border-color: rgba(255,236,200,0.5);
+  box-shadow: 0 0 18px rgba(212,168,71,0.25);
+}
+.convert-row, .graph-input-row {
+  background: rgba(34,28,20,0.6);
+  border-color: rgba(212,168,71,0.18);
+}
+.convert-row.active {
+  border-color: rgba(240,207,114,0.55);
+  box-shadow: 0 0 22px rgba(212,168,71,0.20);
+}
+.convert-input, .graph-input {
+  color: var(--aurum-cream);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+.graph-input-row .yeq {
+  color: var(--aurum-gold-bright);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 500;
+  text-shadow: 0 0 10px rgba(240,207,114,0.4);
+}
+.convert-swap {
+  background: linear-gradient(180deg, #2a2014, #1c150c);
+  border-color: rgba(212,168,71,0.35);
+  color: var(--aurum-gold-bright);
+}
+.graph-controls button {
+  background: linear-gradient(180deg, #221c14, #15110b);
+  border-color: rgba(212,168,71,0.18);
+  color: var(--aurum-cream);
+}
+.graph-canvas-wrap {
+  border-color: rgba(212,168,71,0.22);
+  box-shadow: inset 0 2px 12px rgba(0,0,0,0.55), 0 0 36px rgba(212,168,71,0.05);
+}
+.aurum-scale .tick.active::after {
+  background: var(--aurum-gold-bright);
+  width: 14px;
+  height: 1.5px;
+  box-shadow: 0 0 6px var(--glow-1);
+  opacity: 1;
+}
+
+/* Keys row — full-size rectangular keys filling their cells */
+.aurum-keys-row {
+  grid-area: keys;
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 10px;
+  min-height: 0;
+  max-height: 58%;
+  padding: 0 2px;
+}
+.aurum-keys-row .keypad-left {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.aurum-keys-row .keypad-right {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* Keys: warm dark surface with subtle gold rim — applies to ALL modes */
+.app .key {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, #221c14 0%, #15110b 100%);
+  border: 1px solid rgba(212,168,71,0.14);
+  color: var(--aurum-cream);
+  box-shadow:
+    0 4px 0 rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,236,200,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.45);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(18px, 5.2vw, 26px);
+  letter-spacing: 0.01em;
+  transition: transform 90ms ease, box-shadow 90ms ease, filter 200ms ease;
+}
+.app .key.fn,
+.app .key.small {
+  font-size: clamp(13px, 3.6vw, 17px);
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.app .key.fn.danger { color: #f0cf72; }
+.app .key.op {
+  background:
+    linear-gradient(180deg, #2a2014 0%, #1c150c 100%);
+  color: var(--aurum-gold-bright);
+  border-color: rgba(212,168,71,0.38);
+  font-weight: 600;
+  font-size: clamp(22px, 6vw, 30px);
+  box-shadow:
+    0 4px 0 rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,236,200,0.14),
+    0 0 22px rgba(212,168,71,0.16);
+}
+.app .key.op.active {
+  outline: 2px solid var(--aurum-gold-bright);
+  outline-offset: -3px;
+}
+.app .key.equals {
+  background:
+    linear-gradient(180deg, #b58928 0%, #6b4c18 100%);
+  color: #150e04;
+  border-color: rgba(255,236,200,0.45);
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255,244,204,0.4);
+  box-shadow:
+    0 4px 0 rgba(60,34,10,0.7),
+    inset 0 1px 0 rgba(255,244,204,0.45),
+    0 0 30px rgba(240,207,114,0.30);
+}
+.app .key:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(0,0,0,0.18);
+  filter: brightness(0.92);
+}
+.app .key:disabled {
+  opacity: 0.3;
+  filter: grayscale(0.4);
+}
+.app .key .sub {
+  display: block;
+  font-size: 0.55em;
+  color: var(--text-faint);
+}
+
+/* Small screens */
+@media (max-height: 660px) {
+  .key { font-size: clamp(16px, 4.5vw, 22px); border-radius: 14px; }
+  .keypad { gap: 6px; }
+  .keypad-wrap { gap: 6px; }
+  .display { min-height: 80px; padding: 10px 14px; }
+  .expression { font-size: clamp(28px, 8vw, 44px); }
+  .result { font-size: 16px; }
+}
+@media (max-width: 360px) {
+  .mode-tab { font-size: 11px; padding: 7px 2px; }
+}
+</style>
+</head>
+<body>
+
+<div id="bg-mesh"><div class="blob"></div></div>
+
+<div class="app" id="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <button class="icon-btn" id="btn-history" aria-label="History">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
+    </button>
+    <nav class="mode-switcher" id="mode-switcher" role="tablist">
+      <button class="mode-tab active" data-mode="basic" role="tab">Basic</button>
+      <button class="mode-tab" data-mode="sci" role="tab">Sci</button>
+      <button class="mode-tab" data-mode="prog" role="tab">Prog</button>
+      <button class="mode-tab" data-mode="convert" role="tab">Conv</button>
+      <button class="mode-tab" data-mode="graph" role="tab">Graph</button>
+    </nav>
+    <button class="icon-btn" id="btn-settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <!-- DISPLAY (shared by basic/sci/prog) -->
+  <section class="display" id="display">
+    <div class="display-badges" id="badges"></div>
+    <div class="expr-row"><div class="expression" id="expression">0<span class="caret"></span></div></div>
+    <div class="result" id="result"></div>
+  </section>
+
+  <!-- KEYPAD area; the inner content is swapped per mode -->
+  <div class="keypad-wrap" id="keypad-wrap">
+    <!-- Filled by JS -->
+  </div>
+
+  <!-- HISTORY DRAWER -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <aside class="drawer" id="history-drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <h2>History</h2>
+      <button class="drawer-close" id="history-clear" title="Clear all">Clear</button>
+    </div>
+    <div class="drawer-body" id="history-list"></div>
+  </aside>
+
+  <!-- SETTINGS DRAWER -->
+  <aside class="drawer" id="settings-drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <h2>Settings</h2>
+      <button class="drawer-close" id="settings-close">×</button>
+    </div>
+    <div class="drawer-body">
+      <div class="settings-section">
+        <h3>Theme</h3>
+        <div class="theme-grid" id="theme-grid">
+          <button class="theme-swatch swatch-midnight active" data-theme="midnight">Mid</button>
+          <button class="theme-swatch swatch-aurora" data-theme="aurora">Aur</button>
+          <button class="theme-swatch swatch-sunset" data-theme="sunset">Sun</button>
+          <button class="theme-swatch swatch-forest" data-theme="forest">For</button>
+          <button class="theme-swatch swatch-neon" data-theme="neon">Neon</button>
+          <button class="theme-swatch swatch-ember" data-theme="ember">Ember</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Calculation</h3>
+        <div class="settings-row">
+          <div>
+            <div class="label">Angle mode</div>
+            <div class="sub">For sin / cos / tan in Sci mode</div>
+          </div>
+          <div class="segmented" id="angle-mode">
+            <button data-val="rad" class="active">RAD</button>
+            <button data-val="deg">DEG</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="label">Decimal precision</div>
+            <div class="sub">Significant digits to display</div>
+          </div>
+          <div class="segmented" id="precision">
+            <button data-val="6">6</button>
+            <button data-val="10">10</button>
+            <button data-val="12" class="active">12</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Feel</h3>
+        <div class="settings-row">
+          <div>
+            <div class="label">Haptic feedback</div>
+            <div class="sub">Vibrate on key press (mobile)</div>
+          </div>
+          <button class="toggle on" id="toggle-haptic"></button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="label">Animated background</div>
+            <div class="sub">Slow color blobs</div>
+          </div>
+          <button class="toggle on" id="toggle-bg"></button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>About</h3>
+        <div class="settings-row" style="display:block">
+          <div class="label">Calc PWA</div>
+          <div class="sub">Add to Home Screen via Safari → Share → Add to Home Screen for fullscreen app launch and offline use.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- UNIT PICKER -->
+  <div class="unit-picker" id="unit-picker">
+    <div class="unit-picker-card" id="unit-picker-card"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <!-- INSTALL HINT (iOS) -->
+  <div class="install-hint" id="install-hint">
+    <span>Install: tap Share → Add to Home Screen</span>
+    <button id="dismiss-install" aria-label="Dismiss">×</button>
+  </div>
+
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const debounce = (fn, ms) => {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+};
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+const STORE_KEY = 'calc.v2.state';
+const HISTORY_KEY = 'calc.v2.history';
+const safeLoad = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
+};
+const safeSave = (key, value) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const persisted = safeLoad(STORE_KEY, {});
+const state = {
+  mode: persisted.mode || 'basic',
+  expr: '',
+  justEvaluated: false,
+  ans: persisted.ans ?? 0,
+  memory: persisted.memory ?? 0,
+  evaluatedOnce: persisted.evaluatedOnce === true,
+  lastTier: typeof persisted.lastTier === 'number' ? persisted.lastTier : 0,
+  showFraction: false,
+  theme: (persisted.theme === 'mono' ? 'midnight' : persisted.theme) || 'midnight',
+  angleMode: persisted.angleMode || 'rad',
+  precision: persisted.precision || 12,
+  haptic: persisted.haptic !== false,
+  bgAnim: persisted.bgAnim !== false,
+  // programmer mode
+  progValue: 0n,
+  progBase: 'DEC',
+  progBitWidth: 64,
+  // convert mode
+  convCategory: persisted.convCategory || 'length',
+  convFromUnit: persisted.convFromUnit || {},
+  convToUnit: persisted.convToUnit || {},
+  convFromValue: '1',
+  convActive: 'from',
+  // graph
+  graphExpr: persisted.graphExpr || 'sin(x)',
+  graphXMin: -10, graphXMax: 10, graphYMin: -5, graphYMax: 5,
+  // ui
+  history: safeLoad(HISTORY_KEY, []),
+};
+const persistState = () => safeSave(STORE_KEY, {
+  mode: state.mode, ans: state.ans, memory: state.memory,
+  theme: state.theme, angleMode: state.angleMode, precision: state.precision,
+  haptic: state.haptic, bgAnim: state.bgAnim,
+  convCategory: state.convCategory, convFromUnit: state.convFromUnit, convToUnit: state.convToUnit,
+  graphExpr: state.graphExpr,
+  evaluatedOnce: state.evaluatedOnce, lastTier: state.lastTier,
+});
+
+/* ============================================================
+   HAPTIC + TOAST + COPY
+   ============================================================ */
+const haptic = (ms = 8) => {
+  if (state.haptic && navigator.vibrate) {
+    try { navigator.vibrate(ms); } catch {}
+  }
+};
+let toastT;
+const toast = (msg, ms = 1600) => {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), ms);
+};
+const copyText = async (txt) => {
+  try {
+    await navigator.clipboard.writeText(txt);
+    toast('Copied');
+  } catch {
+    toast('Copy failed');
+  }
+};
+
+/* ============================================================
+   EXPRESSION EVALUATOR
+   ============================================================ */
+const factorial = (n) => {
+  if (n < 0 || n !== Math.floor(n)) return NaN;
+  if (n > 170) return Infinity;
+  let r = 1;
+  for (let i = 2; i <= n; i++) r *= i;
+  return r;
+};
+const gcd = (a, b) => { a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a; };
+const lcm = (a, b) => Math.abs(a*b) / gcd(a, b);
+
+const toRad = (a) => state.angleMode === 'deg' ? a * Math.PI / 180 : a;
+const fromRad = (a) => state.angleMode === 'deg' ? a * 180 / Math.PI : a;
+
+const FUNCTIONS = {
+  sin: (a) => Math.sin(toRad(a)),
+  cos: (a) => Math.cos(toRad(a)),
+  tan: (a) => Math.tan(toRad(a)),
+  asin: (a) => fromRad(Math.asin(a)),
+  acos: (a) => fromRad(Math.acos(a)),
+  atan: (a) => fromRad(Math.atan(a)),
+  atan2: (y, x) => fromRad(Math.atan2(y, x)),
+  sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh,
+  asinh: Math.asinh, acosh: Math.acosh, atanh: Math.atanh,
+  log: (a, b) => b === undefined ? Math.log10(a) : Math.log(a)/Math.log(b),
+  log10: Math.log10, log2: Math.log2, ln: Math.log,
+  sqrt: Math.sqrt, cbrt: Math.cbrt,
+  abs: Math.abs, sign: Math.sign,
+  floor: Math.floor, ceil: Math.ceil, round: Math.round,
+  exp: Math.exp,
+  fact: factorial,
+  min: Math.min, max: Math.max,
+  mod: (a, b) => ((a % b) + b) % b,
+  pow: Math.pow,
+  gcd, lcm,
+  rand: Math.random,
+  hypot: Math.hypot,
+};
+const CONSTANTS = {
+  pi: Math.PI, 'π': Math.PI,
+  e: Math.E,
+  tau: Math.PI * 2,
+  phi: (1 + Math.sqrt(5))/2,
+  inf: Infinity, infinity: Infinity,
+};
+
+const tokenize = (s) => {
+  const out = [];
+  let i = 0;
+  s = s.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+  while (i < s.length) {
+    const c = s[i];
+    if (c === ' ' || c === '\t') { i++; continue; }
+    if ((c >= '0' && c <= '9') || c === '.') {
+      let num = '';
+      while (i < s.length && ((s[i] >= '0' && s[i] <= '9') || s[i] === '.')) {
+        num += s[i]; i++;
+      }
+      // scientific notation: 1e5, 2.3e-4
+      if (i < s.length && (s[i] === 'e' || s[i] === 'E')) {
+        const nextC = s[i+1];
+        const nextC2 = s[i+2];
+        if ((nextC >= '0' && nextC <= '9') ||
+            ((nextC === '+' || nextC === '-') && (nextC2 >= '0' && nextC2 <= '9'))) {
+          num += s[i]; i++;
+          if (s[i] === '+' || s[i] === '-') { num += s[i]; i++; }
+          while (i < s.length && s[i] >= '0' && s[i] <= '9') { num += s[i]; i++; }
+        }
+      }
+      out.push({ type: 'num', value: parseFloat(num) });
+      continue;
+    }
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === 'π') {
+      let id = '';
+      while (i < s.length && ((s[i] >= 'a' && s[i] <= 'z') || (s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= '0' && s[i] <= '9') || s[i] === 'π')) {
+        id += s[i]; i++;
+      }
+      out.push({ type: 'id', value: id });
+      continue;
+    }
+    if ('+-*/^%!(),'.includes(c)) {
+      out.push({ type: 'op', value: c });
+      i++; continue;
+    }
+    throw new Error('Unexpected: ' + c);
+  }
+  return out;
+};
+
+const evaluate = (input, vars = {}) => {
+  if (!input || !input.trim()) throw new Error('empty');
+  const tokens = tokenize(input);
+  let pos = 0;
+  const peek = (o=0) => tokens[pos+o];
+  const consume = () => tokens[pos++];
+  const eat = (type, value) => {
+    const t = peek();
+    if (!t || t.type !== type || (value !== undefined && t.value !== value)) {
+      throw new Error('expected ' + (value || type));
+    }
+    return consume();
+  };
+
+  function parseExpr() { return parseAdd(); }
+
+  function parseAdd() {
+    let left = parseMul();
+    while (peek() && peek().type === 'op' && (peek().value === '+' || peek().value === '-')) {
+      const op = consume().value;
+      const right = parseMul();
+      left = op === '+' ? left + right : left - right;
+    }
+    return left;
+  }
+
+  function parseMul() {
+    let left = parsePow();
+    while (peek()) {
+      const t = peek();
+      if (t.type === 'op' && (t.value === '*' || t.value === '/')) {
+        const op = consume().value;
+        const right = parsePow();
+        left = op === '*' ? left * right : left / right;
+      } else if (t.type === 'num' || t.type === 'id' || (t.type === 'op' && t.value === '(')) {
+        // implicit multiplication: 2pi, 2(3), (1)(2), pi r
+        const right = parsePow();
+        left = left * right;
+      } else break;
+    }
+    return left;
+  }
+
+  function parsePow() {
+    const left = parseUnary();
+    if (peek() && peek().type === 'op' && peek().value === '^') {
+      consume();
+      const right = parsePow(); // right-assoc
+      return Math.pow(left, right);
+    }
+    return left;
+  }
+
+  function parseUnary() {
+    const t = peek();
+    if (t && t.type === 'op' && (t.value === '-' || t.value === '+')) {
+      const op = consume().value;
+      const val = parseUnary();
+      return op === '-' ? -val : val;
+    }
+    return parsePostfix();
+  }
+
+  function parsePostfix() {
+    let val = parsePrimary();
+    while (peek() && peek().type === 'op' && (peek().value === '!' || peek().value === '%')) {
+      const op = consume().value;
+      if (op === '!') val = factorial(val);
+      else if (op === '%') val = val / 100;
+    }
+    return val;
+  }
+
+  function parsePrimary() {
+    const t = peek();
+    if (!t) throw new Error('unexpected end');
+    if (t.type === 'num') { consume(); return t.value; }
+    if (t.type === 'op' && t.value === '(') {
+      consume();
+      const val = parseExpr();
+      eat('op', ')');
+      return val;
+    }
+    if (t.type === 'id') {
+      consume();
+      const name = t.value.toLowerCase();
+      if (peek() && peek().type === 'op' && peek().value === '(') {
+        consume();
+        const args = [];
+        if (!(peek() && peek().type === 'op' && peek().value === ')')) {
+          args.push(parseExpr());
+          while (peek() && peek().type === 'op' && peek().value === ',') {
+            consume();
+            args.push(parseExpr());
+          }
+        }
+        eat('op', ')');
+        if (FUNCTIONS[name]) return FUNCTIONS[name](...args);
+        throw new Error('unknown fn: ' + name);
+      }
+      if (name === 'ans') return vars.ans ?? state.ans ?? 0;
+      if (name === 'mem' || name === 'm') return vars.mem ?? state.memory ?? 0;
+      if (vars[name] !== undefined) return vars[name];
+      if (CONSTANTS[name] !== undefined) return CONSTANTS[name];
+      // π token (literal pi character)
+      if (t.value === 'π') return Math.PI;
+      throw new Error('unknown: ' + name);
+    }
+    throw new Error('unexpected: ' + t.value);
+  }
+
+  const result = parseExpr();
+  if (pos < tokens.length) throw new Error('trailing input');
+  return result;
+};
+
+/* Attempt to evaluate while user is typing — auto-complete dangling parens
+   and ignore trailing operators. Returns null on failure. */
+const liveEval = (input, vars) => {
+  if (!input || !input.trim()) return null;
+  // Try as-is
+  try { const v = evaluate(input, vars); if (Number.isFinite(v)) return v; } catch {}
+  // Try trimming trailing op / dot / open-paren
+  let s = input.trim();
+  while (s.length && /[+\-*/^.(,]$|×|÷|−$/.test(s[s.length-1])) s = s.slice(0, -1);
+  // Close open parens
+  const opens = (s.match(/\(/g) || []).length;
+  const closes = (s.match(/\)/g) || []).length;
+  if (opens > closes) s += ')'.repeat(opens - closes);
+  if (!s.length) return null;
+  try { const v = evaluate(s, vars); return Number.isFinite(v) ? v : null; } catch { return null; }
+};
+
+const formatNumber = (n) => {
+  if (n === null || n === undefined) return '';
+  if (!isFinite(n)) return n > 0 ? '∞' : '-∞';
+  if (isNaN(n)) return 'Error';
+  if (n === 0) return '0';
+  const abs = Math.abs(n);
+  if (abs >= 1e15 || (abs < 1e-9 && abs > 0)) {
+    return n.toExponential(Math.min(6, state.precision - 1));
+  }
+  let s = Number.parseFloat(n.toPrecision(state.precision)).toString();
+  if (s.includes('e')) return s;
+  return s;
+};
+
+/* ============================================================
+   UNITS
+   ============================================================ */
+const UNITS = {
+  length: {
+    label: 'Length',
+    base: 'm',
+    units: {
+      'mm': { sym: 'mm', name: 'Millimeter', f: 0.001 },
+      'cm': { sym: 'cm', name: 'Centimeter', f: 0.01 },
+      'm':  { sym: 'm',  name: 'Meter', f: 1 },
+      'km': { sym: 'km', name: 'Kilometer', f: 1000 },
+      'in': { sym: 'in', name: 'Inch', f: 0.0254 },
+      'ft': { sym: 'ft', name: 'Foot', f: 0.3048 },
+      'yd': { sym: 'yd', name: 'Yard', f: 0.9144 },
+      'mi': { sym: 'mi', name: 'Mile', f: 1609.344 },
+      'nmi':{ sym: 'nmi', name: 'Nautical Mile', f: 1852 },
+    }
+  },
+  mass: {
+    label: 'Mass',
+    base: 'kg',
+    units: {
+      'mg': { sym: 'mg', name: 'Milligram', f: 0.000001 },
+      'g':  { sym: 'g',  name: 'Gram', f: 0.001 },
+      'kg': { sym: 'kg', name: 'Kilogram', f: 1 },
+      't':  { sym: 't',  name: 'Tonne', f: 1000 },
+      'oz': { sym: 'oz', name: 'Ounce', f: 0.0283495 },
+      'lb': { sym: 'lb', name: 'Pound', f: 0.453592 },
+      'st': { sym: 'st', name: 'Stone', f: 6.35029 },
+    }
+  },
+  temperature: {
+    label: 'Temp',
+    base: 'C',
+    units: {
+      'C': { sym: '°C', name: 'Celsius' },
+      'F': { sym: '°F', name: 'Fahrenheit' },
+      'K': { sym: 'K',  name: 'Kelvin' },
+    },
+    convert: (v, from, to) => {
+      let c;
+      if (from === 'C') c = v;
+      else if (from === 'F') c = (v - 32) * 5/9;
+      else c = v - 273.15;
+      if (to === 'C') return c;
+      if (to === 'F') return c * 9/5 + 32;
+      return c + 273.15;
+    }
+  },
+  time: {
+    label: 'Time',
+    base: 's',
+    units: {
+      'ms':  { sym: 'ms',  name: 'Millisecond', f: 0.001 },
+      's':   { sym: 's',   name: 'Second', f: 1 },
+      'min': { sym: 'min', name: 'Minute', f: 60 },
+      'hr':  { sym: 'hr',  name: 'Hour', f: 3600 },
+      'day': { sym: 'd',   name: 'Day', f: 86400 },
+      'wk':  { sym: 'wk',  name: 'Week', f: 604800 },
+      'mo':  { sym: 'mo',  name: 'Month (30d)', f: 2592000 },
+      'yr':  { sym: 'yr',  name: 'Year', f: 31557600 },
+    }
+  },
+  volume: {
+    label: 'Vol',
+    base: 'L',
+    units: {
+      'mL':  { sym: 'mL',  name: 'Milliliter', f: 0.001 },
+      'L':   { sym: 'L',   name: 'Liter', f: 1 },
+      'm3':  { sym: 'm³',  name: 'Cubic Meter', f: 1000 },
+      'tsp': { sym: 'tsp', name: 'Teaspoon', f: 0.00492892 },
+      'tbsp':{ sym: 'tbsp',name: 'Tablespoon', f: 0.0147868 },
+      'floz':{ sym: 'fl oz', name: 'Fluid Ounce', f: 0.0295735 },
+      'cup': { sym: 'cup', name: 'Cup', f: 0.236588 },
+      'pt':  { sym: 'pt',  name: 'Pint', f: 0.473176 },
+      'qt':  { sym: 'qt',  name: 'Quart', f: 0.946353 },
+      'gal': { sym: 'gal', name: 'Gallon (US)', f: 3.78541 },
+    }
+  },
+  area: {
+    label: 'Area',
+    base: 'm2',
+    units: {
+      'mm2': { sym: 'mm²', name: 'Sq. Millimeter', f: 0.000001 },
+      'cm2': { sym: 'cm²', name: 'Sq. Centimeter', f: 0.0001 },
+      'm2':  { sym: 'm²',  name: 'Sq. Meter', f: 1 },
+      'km2': { sym: 'km²', name: 'Sq. Kilometer', f: 1000000 },
+      'in2': { sym: 'in²', name: 'Sq. Inch', f: 0.00064516 },
+      'ft2': { sym: 'ft²', name: 'Sq. Foot', f: 0.092903 },
+      'yd2': { sym: 'yd²', name: 'Sq. Yard', f: 0.836127 },
+      'ac':  { sym: 'ac',  name: 'Acre', f: 4046.86 },
+      'ha':  { sym: 'ha',  name: 'Hectare', f: 10000 },
+      'mi2': { sym: 'mi²', name: 'Sq. Mile', f: 2589988.11 },
+    }
+  },
+  speed: {
+    label: 'Speed',
+    base: 'mps',
+    units: {
+      'mps':  { sym: 'm/s',  name: 'Meters/sec', f: 1 },
+      'kmh':  { sym: 'km/h', name: 'Kilometers/hr', f: 0.277778 },
+      'mph':  { sym: 'mph',  name: 'Miles/hr', f: 0.44704 },
+      'kn':   { sym: 'kn',   name: 'Knots', f: 0.514444 },
+      'fps':  { sym: 'ft/s', name: 'Feet/sec', f: 0.3048 },
+      'mach': { sym: 'Mach', name: 'Mach', f: 343 },
+    }
+  },
+  data: {
+    label: 'Data',
+    base: 'B',
+    units: {
+      'bit': { sym: 'bit', name: 'Bit', f: 0.125 },
+      'B':   { sym: 'B',   name: 'Byte', f: 1 },
+      'KB':  { sym: 'KB',  name: 'Kilobyte', f: 1000 },
+      'MB':  { sym: 'MB',  name: 'Megabyte', f: 1e6 },
+      'GB':  { sym: 'GB',  name: 'Gigabyte', f: 1e9 },
+      'TB':  { sym: 'TB',  name: 'Terabyte', f: 1e12 },
+      'KiB': { sym: 'KiB', name: 'Kibibyte', f: 1024 },
+      'MiB': { sym: 'MiB', name: 'Mebibyte', f: 1048576 },
+      'GiB': { sym: 'GiB', name: 'Gibibyte', f: 1073741824 },
+      'TiB': { sym: 'TiB', name: 'Tebibyte', f: 1099511627776 },
+    }
+  },
+  angle: {
+    label: 'Angle',
+    base: 'rad',
+    units: {
+      'rad': { sym: 'rad', name: 'Radian', f: 1 },
+      'deg': { sym: '°',   name: 'Degree', f: Math.PI/180 },
+      'grad':{ sym: 'grad',name: 'Gradian', f: Math.PI/200 },
+      'turn':{ sym: 'turn',name: 'Turn', f: Math.PI*2 },
+    }
+  },
+};
+
+const convertUnit = (val, fromKey, toKey, category) => {
+  const cat = UNITS[category];
+  if (cat.convert) return cat.convert(val, fromKey, toKey);
+  const from = cat.units[fromKey], to = cat.units[toKey];
+  return val * from.f / to.f;
+};
+
+// Default unit selections per category
+const DEFAULT_UNITS = {
+  length: ['m', 'ft'],
+  mass: ['kg', 'lb'],
+  temperature: ['C', 'F'],
+  time: ['hr', 'min'],
+  volume: ['L', 'gal'],
+  area: ['m2', 'ft2'],
+  speed: ['kmh', 'mph'],
+  data: ['MB', 'MiB'],
+  angle: ['rad', 'deg'],
+};
+for (const cat of Object.keys(UNITS)) {
+  if (!state.convFromUnit[cat]) state.convFromUnit[cat] = DEFAULT_UNITS[cat][0];
+  if (!state.convToUnit[cat]) state.convToUnit[cat] = DEFAULT_UNITS[cat][1];
+}
+
+/* ============================================================
+   THEME + BACKGROUND
+   ============================================================ */
+const applyTheme = (t) => {
+  document.documentElement.dataset.theme = t;
+  // Update meta theme-color to match bg
+  const themeColors = {
+    midnight: '#0e0e0e', aurora: '#0a0c10', sunset: '#100e08',
+    forest: '#080f0c', neon: '#0c080e', ember: '#0f0c08',
+  };
+  document.querySelector('meta[name=theme-color]').setAttribute('content', themeColors[t] || '#07071a');
+  document.querySelectorAll('.theme-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.theme === t);
+  });
+  state.theme = t;
+  persistState();
+  // Cache graph colors after the new theme has been applied to the DOM
+  requestAnimationFrame(() => {
+    const cs = getComputedStyle(document.documentElement);
+    // Read from .app (where AURUM tokens live) with a sensible gold fallback.
+    const appCs = getComputedStyle(document.getElementById('app'));
+    graphColors.text   = appCs.getPropertyValue('--text').trim()       || '#ece2cb';
+    graphColors.dim    = appCs.getPropertyValue('--text-faint').trim() || 'rgba(236,226,203,0.38)';
+    graphColors.accent = appCs.getPropertyValue('--accent').trim()     || '#f0cf72';
+  });
+};
+
+const scheduleDrawGraph = () => {
+  if (graphRafId) return;
+  graphRafId = requestAnimationFrame(() => { graphRafId = null; drawGraph(); });
+};
+const applyBg = () => {
+  const mesh = document.getElementById('bg-mesh');
+  mesh.style.animationPlayState = state.bgAnim ? 'running' : 'paused';
+  mesh.querySelectorAll('*').forEach(el => el.style.animationPlayState = state.bgAnim ? 'running' : 'paused');
+  if (!state.bgAnim) {
+    mesh.style.background = 'var(--bg-1)';
+  } else {
+    mesh.style.background = '';
+  }
+};
+
+/* ============================================================
+   KEYPAD LAYOUTS
+   ============================================================ */
+// Each key: { label, type, data, cls?, sub? }
+// type: 'digit' | 'op' | 'paren' | 'fn' | 'action' | 'const' | 'sci' | 'prog'
+const BASIC_KEYS = [
+  { label: 'AC',  type: 'action', data: 'clear', cls: 'fn danger' },
+  { label: '±',   type: 'action', data: 'sign',  cls: 'fn' },
+  { label: '%',   type: 'op',     data: '%',     cls: 'fn' },
+  { label: '÷',   type: 'op',     data: '/',     cls: 'op' },
+  { label: '7' }, { label: '8' }, { label: '9' },
+  { label: '×',   type: 'op',     data: '*',     cls: 'op' },
+  { label: '4' }, { label: '5' }, { label: '6' },
+  { label: '−',   type: 'op',     data: '-',     cls: 'op' },
+  { label: '1' }, { label: '2' }, { label: '3' },
+  { label: '+',   type: 'op',     data: '+',     cls: 'op' },
+  { label: '0', cls: 'span2' }, { label: '.' },
+  { label: '=',   type: 'action', data: 'equals', cls: 'equals' },
+];
+// Hourglass layout keys
+const HOURGLASS_LEFT_KEYS = [
+  { label: 'AC',  type: 'action', data: 'clear',  cls: 'fn danger' },
+  { label: '±',   type: 'action', data: 'sign',   cls: 'fn' },
+  { label: '%',   type: 'op',     data: '%',       cls: 'fn' },
+  { label: '7' }, { label: '8' }, { label: '9' },
+  { label: '4' }, { label: '5' }, { label: '6' },
+  { label: '1' }, { label: '2' }, { label: '3' },
+  { label: '⌫',   type: 'action', data: 'del',     cls: 'fn' },
+  { label: '0' }, { label: '.' },
+];
+const HOURGLASS_RIGHT_KEYS = [
+  { label: '÷',   type: 'op',     data: '/',       cls: 'op' },
+  { label: '×',   type: 'op',     data: '*',       cls: 'op' },
+  { label: '−',   type: 'op',     data: '-',       cls: 'op' },
+  { label: '+',   type: 'op',     data: '+',       cls: 'op' },
+  { label: '=',   type: 'action', data: 'equals',  cls: 'equals' },
+];
+
+// Sci extra row(s) — these sit above the basic keypad
+const SCI_KEYS = [
+  { label: '2nd', type: 'action', data: 'alt',    cls: 'fn small' },
+  { label: 'x²',  type: 'sci',    data: '^2',     cls: 'fn small', alt: { label: 'x³', data: '^3' } },
+  { label: 'xʸ',  type: 'sci',    data: '^',      cls: 'fn small', alt: { label: 'ʸ√x', data: 'yroot' } },
+  { label: '√',   type: 'fn',     data: 'sqrt',   cls: 'fn small', alt: { label: '∛', data: 'cbrt' } },
+  { label: '!',   type: 'op',     data: '!',      cls: 'fn small' },
+
+  { label: 'sin', type: 'fn',     data: 'sin',    cls: 'fn small', alt: { label: 'asin', data: 'asin' } },
+  { label: 'cos', type: 'fn',     data: 'cos',    cls: 'fn small', alt: { label: 'acos', data: 'acos' } },
+  { label: 'tan', type: 'fn',     data: 'tan',    cls: 'fn small', alt: { label: 'atan', data: 'atan' } },
+  { label: 'log', type: 'fn',     data: 'log',    cls: 'fn small', alt: { label: 'ln',   data: 'ln' } },
+  { label: 'eˣ',  type: 'sci',    data: 'exp',    cls: 'fn small', alt: { label: '10ˣ',  data: '10pow' } },
+
+  { label: '(',   type: 'paren',  data: '(',      cls: 'fn small' },
+  { label: ')',   type: 'paren',  data: ')',      cls: 'fn small' },
+  { label: 'π',   type: 'const',  data: 'π',      cls: 'fn small' },
+  { label: 'e',   type: 'const',  data: 'e',      cls: 'fn small' },
+  { label: 'ans', type: 'const',  data: 'ans',    cls: 'fn small' },
+];
+
+const PROG_KEYS = [
+  { label: 'AND', type: 'prog', data: '&',  cls: 'fn small' },
+  { label: 'OR',  type: 'prog', data: '|',  cls: 'fn small' },
+  { label: 'XOR', type: 'prog', data: '^',  cls: 'fn small' },
+  { label: 'NOT', type: 'prog', data: '~',  cls: 'fn small' },
+
+  { label: '<<',  type: 'prog', data: '<<', cls: 'fn small' },
+  { label: '>>',  type: 'prog', data: '>>', cls: 'fn small' },
+  { label: 'MOD', type: 'prog', data: '%',  cls: 'fn small' },
+  { label: '⌫',   type: 'action', data: 'back', cls: 'fn small' },
+];
+
+const PROG_DIGIT_KEYS = {
+  'HEX': [
+    { label: 'A' }, { label: 'B' }, { label: 'C' },
+    { label: '÷', type: 'op', data: '/', cls: 'op' },
+    { label: 'D' }, { label: 'E' }, { label: 'F' },
+    { label: '×', type: 'op', data: '*', cls: 'op' },
+    { label: '7' }, { label: '8' }, { label: '9' },
+    { label: '−', type: 'op', data: '-', cls: 'op' },
+    { label: '4' }, { label: '5' }, { label: '6' },
+    { label: '+', type: 'op', data: '+', cls: 'op' },
+    { label: '1' }, { label: '2' }, { label: '3' },
+    { label: '=', type: 'action', data: 'equals', cls: 'equals' },
+    { label: 'AC', type: 'action', data: 'clear', cls: 'fn danger span2' },
+    { label: '0', cls: 'span2' },
+  ],
+  'DEC': [
+    { label: '7' }, { label: '8' }, { label: '9' },
+    { label: '÷', type: 'op', data: '/', cls: 'op' },
+    { label: '4' }, { label: '5' }, { label: '6' },
+    { label: '×', type: 'op', data: '*', cls: 'op' },
+    { label: '1' }, { label: '2' }, { label: '3' },
+    { label: '−', type: 'op', data: '-', cls: 'op' },
+    { label: 'AC', type: 'action', data: 'clear', cls: 'fn danger' },
+    { label: '0' },
+    { label: '+', type: 'op', data: '+', cls: 'op' },
+    { label: '=', type: 'action', data: 'equals', cls: 'equals' },
+  ],
+  'OCT': [
+    { label: '4' }, { label: '5' }, { label: '6' }, { label: '7' },
+    { label: '0' }, { label: '1' }, { label: '2' }, { label: '3' },
+    { label: '÷', type: 'op', data: '/', cls: 'op' },
+    { label: '×', type: 'op', data: '*', cls: 'op' },
+    { label: '−', type: 'op', data: '-', cls: 'op' },
+    { label: '+', type: 'op', data: '+', cls: 'op' },
+    { label: 'AC', type: 'action', data: 'clear', cls: 'fn danger span2' },
+    { label: '=', type: 'action', data: 'equals', cls: 'equals span2' },
+  ],
+  'BIN': [
+    { label: '÷', type: 'op', data: '/', cls: 'op' },
+    { label: '×', type: 'op', data: '*', cls: 'op' },
+    { label: '−', type: 'op', data: '-', cls: 'op' },
+    { label: '+', type: 'op', data: '+', cls: 'op' },
+    { label: 'AC', type: 'action', data: 'clear', cls: 'fn danger' },
+    { label: '0' }, { label: '1' },
+    { label: '=', type: 'action', data: 'equals', cls: 'equals' },
+  ],
+};
+
+/* ============================================================
+   RENDER KEYPADS
+   ============================================================ */
+const keypadWrap = document.getElementById('keypad-wrap');
+
+const makeKeyEl = (k) => {
+  const btn = document.createElement('button');
+  btn.className = 'key ' + (k.cls || '');
+  // Default to digit if just a label
+  if (!k.type) {
+    k.type = 'digit';
+    k.data = k.label;
+  }
+  btn.dataset.type = k.type;
+  btn.dataset.data = k.data ?? k.label;
+  btn.innerHTML = k.label;
+  if (k.sub) {
+    const sub = document.createElement('span');
+    sub.className = 'sub'; sub.textContent = k.sub;
+    btn.appendChild(sub);
+  }
+  return btn;
+};
+
+// Magnitude tiers for the dial's concentric rings & side scale
+const AURUM_TIERS = [
+  { label: 'ONES',     min: 0,        max: 10 },
+  { label: 'TENS',     min: 10,       max: 100 },
+  { label: 'HUNDREDS', min: 100,      max: 1e3 },
+  { label: 'THOUSAND', min: 1e3,      max: 1e6 },
+  { label: 'MILLION',  min: 1e6,      max: 1e9 },
+  { label: 'BILLION',  min: 1e9,      max: Infinity },
+];
+
+const prettyExpr = (s) => (s || '')
+  .replace(/\*/g, ' × ')
+  .replace(/\//g, ' ÷ ')
+  .replace(/-/g, ' − ')
+  .replace(/\+/g, ' + ')
+  .replace(/\bsqrt\(/g, '√(')
+  .replace(/\bpi\b/g, 'π')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+// Group digits in threes, joined by thin spaces.
+// dir = 'left'  → group from right edge (for integer part)
+// dir = 'right' → group from left edge  (for decimal part)
+const groupDigits = (digits, dir) => {
+  if (!digits) return '';
+  return dir === 'left'
+    ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+    : digits.replace(/(\d{3})(?=\d)/g, '$1 ');
+};
+
+// Font-scale per cascade line. Visual width = chars × scale (em-based, so
+// digit spacing scales too). To keep each line the same visual width, the
+// number of chars per line is inverse-proportional to its scale.
+const AURUM_SCALES = [1.0, 0.50, 0.36, 0.26, 0.20];
+// Line 1 char capacity (tuned for the stage column width; serif numerals).
+const AURUM_LINE1_CAP = 11;
+
+// Break already-formatted text into cascade lines so every subsequent line
+// holds MORE chars than the one above and all lines occupy the same visual
+// width (chars / scale ≈ constant).
+const cascadeChunks = (text, opts = {}) => {
+  const baseCap = opts.line1Cap || AURUM_LINE1_CAP;
+  if (text.length <= baseCap) return [{ text, cls: 'line-1' }];
+
+  // Optional "snap" — for decimal numbers we prefer line 1 to end right after
+  // the first 5 decimal digits, even if that nudges past baseCap a bit.
+  let line1End = baseCap;
+  if (opts.snapAfterDecimal) {
+    const dotIdx = text.indexOf('.');
+    if (dotIdx >= 0 && dotIdx < baseCap + 2) {
+      let digits = 0;
+      let i = dotIdx + 1;
+      while (i < text.length && digits < 5) {
+        if (/\d/.test(text[i])) digits++;
+        i++;
+      }
+      line1End = Math.min(text.length, Math.max(baseCap, i));
+      // Don't let line 1 grow unbounded for big integers
+      line1End = Math.min(line1End, baseCap + 3);
+    }
+  }
+  // Trim trailing whitespace so we don't end a line on a space.
+  while (line1End > 0 && text[line1End - 1] === ' ') line1End--;
+
+  const lines = [{ text: text.slice(0, line1End), cls: 'line-1' }];
+  const baseWidth = line1End; // chars at scale 1.0
+  let cursor = line1End;
+  for (let i = 1; i < AURUM_SCALES.length && cursor < text.length; i++) {
+    // Char capacity at this scale to match line 1's visual width.
+    const cap = Math.max(1, Math.floor(baseWidth / AURUM_SCALES[i]));
+    let chunk = text.slice(cursor, cursor + cap);
+    cursor += cap;
+    // Strip leading whitespace so lines start clean.
+    chunk = chunk.replace(/^ +/, '');
+    if (chunk) lines.push({ text: chunk, cls: 'line-' + (i + 1) });
+  }
+  // Any leftover digits get tacked onto the smallest line.
+  if (cursor < text.length && lines.length) {
+    lines[lines.length - 1].text += text.slice(cursor);
+  }
+  return lines;
+};
+
+// Convert a finite number into spaced-grouped text (no cascade).
+const formatNumberSpaced = (num) => {
+  if (num === null || num === undefined || isNaN(num)) return 'Error';
+  if (!isFinite(num)) return num > 0 ? '∞' : '−∞';
+  if (num === 0) return '0';
+
+  const abs = Math.abs(num);
+  const sign = num < 0 ? '−' : '';
+
+  if (abs >= 1e15 || (abs < 1e-9 && abs > 0)) {
+    return sign + abs.toExponential(Math.min(6, state.precision - 1));
+  }
+  let s = Number.parseFloat(abs.toPrecision(state.precision)).toString();
+  if (s.includes('e')) return sign + s;
+
+  const [intPart, decPart = ''] = s.split('.');
+  const intStr = groupDigits(intPart, 'left');
+  return decPart ? sign + intStr + '.' + groupDigits(decPart, 'right') : sign + intStr;
+};
+
+// Public: numeric result → cascade lines.
+const formatAurum = (num) => {
+  const text = formatNumberSpaced(num);
+  return cascadeChunks(text, { snapAfterDecimal: true });
+};
+
+// Decimal → simplified improper fraction via continued-fraction expansion.
+// Returns [numerator, denominator] (denominator ≥ 1, sign on numerator) or null.
+const decimalToFraction = (num, maxDenom = 1e9, tol = 1e-12) => {
+  if (!isFinite(num) || isNaN(num)) return null;
+  if (num === 0) return [0n, 1n];
+  if (Number.isInteger(num)) return [BigInt(Math.trunc(num)), 1n];
+
+  const sign = num < 0 ? -1 : 1;
+  let x = Math.abs(num);
+
+  let h1 = 1n, h0 = 0n, k1 = 0n, k0 = 1n;
+  let b = x;
+  for (let i = 0; i < 100; i++) {
+    const a = BigInt(Math.floor(b));
+    const h2 = a * h1 + h0;
+    const k2 = a * k1 + k0;
+    if (Number(k2) > maxDenom) break;
+    h0 = h1; h1 = h2;
+    k0 = k1; k1 = k2;
+    const frac = b - Number(a);
+    if (Math.abs(frac) < tol) break;
+    b = 1 / frac;
+    if (!isFinite(b)) break;
+  }
+
+  // Reduce by GCD (already coprime via continued fractions, but be safe)
+  const gcd = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { [a, b] = [b, a % b]; } return a; };
+  const g = gcd(h1, k1) || 1n;
+  return [(sign < 0 ? -h1 : h1) / g, k1 / g];
+};
+
+const renderFractionInto = (el, num, den) => {
+  el.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'frac';
+  const n = document.createElement('div'); n.className = 'num'; n.textContent = num.toString().replace('-', '−');
+  const bar = document.createElement('div'); bar.className = 'bar';
+  const d = document.createElement('div'); d.className = 'den'; d.textContent = den.toString();
+  wrap.appendChild(n); wrap.appendChild(bar); wrap.appendChild(d);
+  el.appendChild(wrap);
+};
+
+const updateAurumDial = () => {
+  const exprEl   = document.getElementById('aurum-expr');
+  const resultEl = document.getElementById('aurum-result');
+  const fracBtn  = document.getElementById('aurum-frac-toggle');
+  if (!resultEl) return;
+
+  // PROG MODE: all 4 bases in a fixed 4-row grid — positions never shift on base change.
+  if (state.mode === 'prog') {
+    resultEl.innerHTML = '';
+    const base = state.progBase;
+    ['HEX','DEC','OCT','BIN'].forEach(b => {
+      const div = document.createElement('div');
+      div.className = 'prog-base-item' + (b === base ? ' active' : '');
+      const lbl = document.createElement('span');
+      lbl.className = 'pbl';
+      lbl.textContent = b;
+      const val = document.createElement('span');
+      val.className = 'pbv';
+      val.textContent = fmtProg(state.progValue, b);
+      div.appendChild(lbl);
+      div.appendChild(val);
+      div.addEventListener('click', () => {
+        if (b !== state.progBase) { haptic(); state.progBase = b; persistState(); renderKeypad(); renderProgDisplay(); }
+      });
+      resultEl.appendChild(div);
+    });
+    const cycleBtn = document.getElementById('base-cycle-btn');
+    if (cycleBtn) cycleBtn.textContent = state.progBase;
+    if (fracBtn) fracBtn.hidden = true;
+    return;
+  }
+
+  let tierIdx = -1;
+  resultEl.innerHTML = '';
+  let canShowFraction = false;
+
+  // Sci-mode badges in the header expr area (angle mode + 2nd)
+  if (state.mode === 'sci' && exprEl) {
+    // we'll set exprEl below; for now nothing
+  }
+
+  if (state.justEvaluated) {
+    // After =, the BIG text becomes the answer
+    const num = typeof state.ans === 'number' ? state.ans : parseFloat(state.ans) || 0;
+    const absVal = Math.abs(isFinite(num) ? num : 0);
+
+    // Magnitude tier for the side scale
+    if (absVal > 0) {
+      for (let i = 0; i < AURUM_TIERS.length; i++) {
+        if (absVal >= AURUM_TIERS[i].min && absVal < AURUM_TIERS[i].max) { tierIdx = i; break; }
+        if (i === AURUM_TIERS.length - 1 && absVal >= AURUM_TIERS[i].min) tierIdx = i;
+      }
+      state.lastTier = tierIdx;
+    } else {
+      state.lastTier = 0; // collapse to ONES on a zero result
+    }
+
+    // Fraction button is offered only on non-integer numeric results
+    canShowFraction = isFinite(num) && !Number.isInteger(num);
+
+    if (state.showFraction && canShowFraction) {
+      const fr = decimalToFraction(num);
+      if (fr) {
+        const line = document.createElement('div');
+        line.className = 'line line-1';
+        renderFractionInto(line, fr[0], fr[1]);
+        resultEl.appendChild(line);
+      } else {
+        formatAurum(num).forEach(l => {
+          const div = document.createElement('div');
+          div.className = 'line ' + l.cls;
+          div.textContent = l.text;
+          resultEl.appendChild(div);
+        });
+      }
+    } else {
+      formatAurum(num).forEach(l => {
+        const div = document.createElement('div');
+        div.className = 'line ' + l.cls;
+        div.textContent = l.text;
+        resultEl.appendChild(div);
+      });
+    }
+
+    if (exprEl) exprEl.textContent = '';
+  } else if (state.expr.trim() !== '') {
+    // While typing, the BIG text mirrors the expression — no live computation.
+    // Cascade if too long (no decimal snap; just chunk by visual width).
+    cascadeChunks(prettyExpr(state.expr)).forEach(l => {
+      const div = document.createElement('div');
+      div.className = 'line ' + l.cls;
+      div.textContent = l.text;
+      resultEl.appendChild(div);
+    });
+    if (exprEl) exprEl.textContent = '';
+  } else {
+    const line = document.createElement('div');
+    line.className = 'line line-1';
+    line.textContent = '0';
+    resultEl.appendChild(line);
+    if (exprEl) exprEl.textContent = '';
+  }
+
+  // Side scale: persistent after first =.
+  const activeTier = state.justEvaluated
+    ? tierIdx
+    : (state.evaluatedOnce ? state.lastTier : -1);
+  document.querySelectorAll('.aurum-scale .tick').forEach((el, i) => {
+    el.classList.toggle('active', i === activeTier && activeTier >= 0);
+  });
+
+  // Fraction toggle visibility + active state
+  if (fracBtn) {
+    fracBtn.hidden = !canShowFraction;
+    fracBtn.classList.toggle('active', !!state.showFraction && canShowFraction);
+  }
+};
+
+// Bloom flash on the result when = is pressed
+const aurumBloom = () => {
+  const r = document.getElementById('aurum-result');
+  if (!r) return;
+  r.classList.remove('flash');
+  void r.offsetWidth;
+  r.classList.add('flash');
+};
+
+// No-op kept so old call sites don't crash; the bloom replaces the per-key ripple now.
+const aurumRipple = () => {};
+
+let altMode = false;
+
+// Build the AURUM header / stage / side scale, shared across basic/sci/prog modes.
+const buildAurumStage = ({ subtitle = 'Numbers, illuminated.', showFraction = true, scaleKind = 'magnitude' } = {}) => {
+  const header = document.createElement('div');
+  header.className = 'aurum-header';
+  header.innerHTML = `
+    <div class="aurum-brand">
+      <div class="title"><span class="ordinal">·</span>AURUM</div>
+      <div class="sub">${subtitle}</div>
+    </div>
+    <div class="aurum-expr" id="aurum-expr"></div>`;
+
+  const stage = document.createElement('div');
+  stage.className = 'aurum-stage';
+  stage.innerHTML = `
+    <div class="aurum-result" id="aurum-result"><div class="line line-1">0</div></div>
+    ${showFraction ? `<button class="aurum-fraction-toggle" id="aurum-frac-toggle" type="button" hidden>
+      <span>fraction</span>
+    </button>` : ''}`;
+  if (showFraction) {
+    stage.querySelector('#aurum-frac-toggle').addEventListener('click', () => {
+      state.showFraction = !state.showFraction;
+      haptic(6);
+      updateAurumDial();
+    });
+  }
+
+  const scale = document.createElement('div');
+  scale.className = 'aurum-scale';
+  scale.dataset.kind = scaleKind;
+  if (scaleKind === 'bases') {
+    // Cycle button lives in the header's expr slot so its position is keypad-independent
+    const BASES_ORDER = ['DEC','HEX','OCT','BIN'];
+    const cycleBtn = document.createElement('button');
+    cycleBtn.className = 'base-cycle-btn';
+    cycleBtn.id = 'base-cycle-btn';
+    cycleBtn.textContent = state.progBase;
+    cycleBtn.addEventListener('click', () => {
+      haptic();
+      const idx = BASES_ORDER.indexOf(state.progBase);
+      state.progBase = BASES_ORDER[(idx + 1) % BASES_ORDER.length];
+      persistState();
+      renderKeypad();
+      renderProgDisplay();
+    });
+    header.querySelector('#aurum-expr').appendChild(cycleBtn);
+  } else {
+    scale.innerHTML = AURUM_TIERS.map(t => `<span class="tick">${t.label}</span>`).join('');
+  }
+
+  return { header, stage, scale };
+};
+
+const renderKeypad = () => {
+  keypadWrap.innerHTML = '';
+  delete app.dataset.layout;
+
+  if (state.mode === 'basic') {
+    app.dataset.layout = 'aurum';
+    const { header, stage, scale } = buildAurumStage({ subtitle: 'Numbers, illuminated.' });
+
+    const keysRow = document.createElement('div');
+    keysRow.className = 'aurum-keys-row';
+
+    const leftPad = document.createElement('div');
+    leftPad.className = 'keypad-left';
+    HOURGLASS_LEFT_KEYS.forEach(k => leftPad.appendChild(makeKeyEl(k)));
+
+    const rightPad = document.createElement('div');
+    rightPad.className = 'keypad-right';
+    HOURGLASS_RIGHT_KEYS.forEach(k => rightPad.appendChild(makeKeyEl(k)));
+
+    keysRow.appendChild(leftPad);
+    keysRow.appendChild(rightPad);
+
+    keypadWrap.appendChild(header);
+    keypadWrap.appendChild(stage);
+    keypadWrap.appendChild(scale);
+    keypadWrap.appendChild(keysRow);
+
+    requestAnimationFrame(updateAurumDial);
+  } else if (state.mode === 'sci') {
+    app.dataset.layout = 'aurum-sci';
+    const { header, stage, scale } = buildAurumStage({ subtitle: 'Functions, illuminated.' });
+
+    // Sci-keys row (15 keys, 5×3)
+    const sciRow = document.createElement('div');
+    sciRow.className = 'aurum-sci-row';
+    SCI_KEYS.forEach(k => {
+      const view = altMode && k.alt ? { ...k, label: k.alt.label, data: k.alt.data } : k;
+      sciRow.appendChild(makeKeyEl(view));
+    });
+
+    // Same digit/operator keys as basic mode
+    const keysRow = document.createElement('div');
+    keysRow.className = 'aurum-keys-row';
+
+    const leftPad = document.createElement('div');
+    leftPad.className = 'keypad-left';
+    HOURGLASS_LEFT_KEYS.forEach(k => leftPad.appendChild(makeKeyEl(k)));
+
+    const rightPad = document.createElement('div');
+    rightPad.className = 'keypad-right';
+    HOURGLASS_RIGHT_KEYS.forEach(k => rightPad.appendChild(makeKeyEl(k)));
+
+    keysRow.appendChild(leftPad);
+    keysRow.appendChild(rightPad);
+
+    keypadWrap.appendChild(header);
+    keypadWrap.appendChild(stage);
+    keypadWrap.appendChild(scale);
+    keypadWrap.appendChild(sciRow);
+    keypadWrap.appendChild(keysRow);
+
+    requestAnimationFrame(updateAurumDial);
+  } else if (state.mode === 'prog') {
+    app.dataset.layout = 'aurum-prog';
+    const { header, stage, scale } = buildAurumStage({ subtitle: 'Bases, illuminated.', showFraction: false, scaleKind: 'bases' });
+
+    // Prog-ops row (AND / OR / XOR / NOT / <</>> / MOD / ⌫)
+    const progRow = document.createElement('div');
+    progRow.className = 'aurum-prog-row';
+    PROG_KEYS.forEach(k => progRow.appendChild(makeKeyEl(k)));
+
+    // Digit grid — only valid keys for the current base
+    const rowCounts = { HEX: 6, DEC: 4, OCT: 4, BIN: 2 };
+    const keysRow = document.createElement('div');
+    keysRow.className = 'aurum-keys-row';
+    const leftPad = document.createElement('div');
+    leftPad.className = 'keypad-left';
+    leftPad.style.gridTemplateRows = `repeat(${rowCounts[state.progBase]}, minmax(44px, 1fr))`;
+    const keys = PROG_DIGIT_KEYS[state.progBase] || PROG_DIGIT_KEYS['DEC'];
+    keys.forEach(k => {
+      const btn = makeKeyEl(k);
+      if (k.cls && k.cls.includes('span2')) btn.style.gridColumn = 'span 2';
+      leftPad.appendChild(btn);
+    });
+    keysRow.appendChild(leftPad);
+
+    keypadWrap.appendChild(header);
+    keypadWrap.appendChild(stage);
+    keypadWrap.appendChild(scale);
+    keypadWrap.appendChild(progRow);
+    keypadWrap.appendChild(keysRow);
+
+    requestAnimationFrame(updateAurumDial);
+  } else if (state.mode === 'convert') {
+    renderConvert();
+  } else if (state.mode === 'graph') {
+    renderGraph();
+  }
+  refreshOpHighlight();
+};
+
+/* ============================================================
+   BASIC / SCI MODE — DISPLAY & INPUT
+   ============================================================ */
+const exprEl = document.getElementById('expression');
+const resultEl = document.getElementById('result');
+const badgesEl = document.getElementById('badges');
+const displayEl = document.getElementById('display');
+
+const renderDisplay = () => {
+  // Badges: angle mode, memory, alt
+  badgesEl.innerHTML = '';
+  if (state.mode === 'sci') {
+    const ang = document.createElement('span');
+    ang.className = 'badge active';
+    ang.textContent = state.angleMode.toUpperCase();
+    badgesEl.appendChild(ang);
+    if (altMode) {
+      const alt = document.createElement('span');
+      alt.className = 'badge active';
+      alt.textContent = '2nd';
+      badgesEl.appendChild(alt);
+    }
+  }
+  if (state.mode === 'prog') {
+    const b = document.createElement('span');
+    b.className = 'badge active';
+    b.textContent = state.progBase;
+    badgesEl.appendChild(b);
+  }
+  if (state.memory !== 0) {
+    const m = document.createElement('span');
+    m.className = 'badge memory';
+    m.textContent = 'M ' + formatNumber(state.memory);
+    badgesEl.appendChild(m);
+  }
+
+  // Expression display (with caret)
+  const shown = state.expr.length ? state.expr : '0';
+  // Replace operators with pretty symbols for display
+  const pretty = shown
+    .replace(/\*/g, '×')
+    .replace(/\//g, '÷')
+    .replace(/\bsqrt\(/g, '√(')
+    .replace(/\bcbrt\(/g, '∛(')
+    .replace(/\bpi\b/g, 'π');
+  exprEl.innerHTML = '';
+  exprEl.appendChild(document.createTextNode(pretty));
+  const caret = document.createElement('span');
+  caret.className = 'caret';
+  exprEl.appendChild(caret);
+  // Scroll to right end (deferred to avoid forced synchronous layout)
+  const row = exprEl.parentElement;
+  requestAnimationFrame(() => { row.scrollLeft = row.scrollWidth; });
+
+  // Live result
+  if (state.expr.trim() === '') {
+    resultEl.classList.remove('error');
+    resultEl.textContent = '';
+  } else {
+    const v = liveEval(state.expr, { ans: state.ans, mem: state.memory });
+    if (v === null) {
+      resultEl.classList.remove('error');
+      resultEl.textContent = '';
+    } else {
+      resultEl.classList.remove('error');
+      resultEl.innerHTML = '<span class="equals">=</span>' + formatNumber(v);
+    }
+  }
+  updateAurumDial();
+};
+
+const refreshOpHighlight = () => {
+  // Highlight trailing operator key
+  const trail = state.expr.trim().slice(-1);
+  document.querySelectorAll('.key.op').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.data === trail);
+  });
+};
+
+const setExpr = (e) => {
+  state.expr = e;
+  renderDisplay();
+  refreshOpHighlight();
+};
+
+const appendExpr = (s) => setExpr(state.expr + s);
+
+const handleKey = (type, data) => {
+  haptic(state.mode === 'prog' ? 5 : 8);
+  if (state.mode === 'basic') aurumRipple();
+
+  if (state.mode === 'prog') return handleProgKey(type, data);
+  if (state.mode === 'convert' || state.mode === 'graph') return;
+
+  // After pressing =, the next digit/paren/fn/const starts a fresh expression;
+  // pressing an operator continues from the result.
+  if (state.justEvaluated && (type === 'digit' || type === 'paren' || type === 'fn' || type === 'const')) {
+    state.justEvaluated = false;
+    setExpr('');
+  } else if (state.justEvaluated && type === 'op') {
+    state.justEvaluated = false;
+    // expr is the result string; keep it and append op below
+  }
+
+  if (type === 'digit') {
+    appendExpr(data);
+    return;
+  }
+  if (type === 'op') {
+    if (data === '%') { appendExpr('%'); return; }
+    // Replace trailing operator with new one
+    const t = state.expr.trim();
+    if (/[+\-*/^]$/.test(t)) {
+      setExpr(t.slice(0, -1) + data);
+    } else if (!t.length && state.ans !== undefined) {
+      setExpr('ans' + data);
+    } else {
+      appendExpr(data);
+    }
+    return;
+  }
+  if (type === 'paren') { appendExpr(data); return; }
+  if (type === 'const') { appendExpr(data); return; }
+  if (type === 'fn') {
+    appendExpr(data + '(');
+    return;
+  }
+  if (type === 'sci') {
+    if (data === '^2') appendExpr('^2');
+    else if (data === '^3') appendExpr('^3');
+    else if (data === '^') appendExpr('^');
+    else if (data === 'exp') appendExpr('exp(');
+    else if (data === '10pow') { appendExpr('10^'); }
+    else if (data === 'yroot') {
+      // y√x is x^(1/y) — let user enter root then base: written as (x)^(1/y)
+      // For simplicity insert ^(1/) so user types denominator
+      appendExpr('^(1/');
+    } else if (data === 'sqrt') appendExpr('sqrt(');
+    else if (data === 'cbrt') appendExpr('cbrt(');
+    return;
+  }
+  if (type === 'action') {
+    if (data === 'del') {
+      if (state.justEvaluated) { state.justEvaluated = false; setExpr(''); return; }
+      setExpr(state.expr.slice(0, -1));
+      return;
+    }
+    if (data === 'clear') {
+      if (state.expr === '') { state.ans = 0; persistState(); toast('Cleared'); }
+      state.justEvaluated = false;
+      setExpr('');
+      return;
+    }
+    if (data === 'sign') {
+      // Toggle sign of trailing number
+      const m = state.expr.match(/(-?\d*\.?\d*)$/);
+      if (m && m[0]) {
+        const num = m[0];
+        const before = state.expr.slice(0, state.expr.length - num.length);
+        const flipped = num.startsWith('-') ? num.slice(1) : '-' + num;
+        setExpr(before + flipped);
+      } else if (state.expr === '') {
+        setExpr('-');
+      }
+      return;
+    }
+    if (data === 'equals') {
+      doEquals();
+      if (state.mode === 'basic') aurumBloom();
+      return;
+    }
+    if (data === 'alt') {
+      altMode = !altMode;
+      renderKeypad();
+      renderDisplay();
+      return;
+    }
+    if (data === 'back') {
+      setExpr(state.expr.slice(0, -1));
+      return;
+    }
+  }
+};
+
+const doEquals = () => {
+  if (!state.expr.trim()) return;
+  try {
+    const v = evaluate(state.expr, { ans: state.ans, mem: state.memory });
+    if (!Number.isFinite(v)) throw new Error('inf');
+    addHistory(state.expr, v);
+    state.ans = v;
+    state.justEvaluated = true;
+    state.evaluatedOnce = true;
+    state.showFraction = false; // always start back on decimal view after a new equals
+    persistState();
+    setExpr(formatNumber(v));
+    haptic(12);
+  } catch (e) {
+    resultEl.classList.add('error');
+    resultEl.textContent = 'Error';
+    haptic([10, 30, 10]);
+  }
+};
+
+/* ============================================================
+   PROGRAMMER MODE
+   ============================================================ */
+const fmtProg = (n, base) => {
+  let v = BigInt(n);
+  // Two's complement display for negative numbers
+  const mask = (1n << BigInt(state.progBitWidth)) - 1n;
+  if (v < 0n) v = (v & mask);
+  let str;
+  if (base === 'HEX') str = v.toString(16).toUpperCase();
+  else if (base === 'DEC') str = BigInt(n).toString(10);
+  else if (base === 'OCT') str = v.toString(8);
+  else if (base === 'BIN') str = v.toString(2);
+  return str;
+};
+const renderProgDisplay = () => {
+  // In AURUM-prog layout, the dial does the rendering.
+  if (app.dataset.layout === 'aurum-prog') { updateAurumDial(); return; }
+  exprEl.innerHTML = '';
+  exprEl.appendChild(document.createTextNode(fmtProg(state.progValue, state.progBase)));
+  exprEl.appendChild(Object.assign(document.createElement('span'), { className: 'caret' }));
+  // Show other bases below
+  const others = ['HEX','DEC','OCT','BIN'].filter(b => b !== state.progBase);
+  resultEl.classList.remove('error');
+  resultEl.innerHTML = others.map(b =>
+    `<span style="display:inline-block;margin-left:14px"><span class="equals">${b}</span>${fmtProg(state.progValue, b)}</span>`
+  ).join('');
+  badgesEl.innerHTML = '';
+  ['HEX','DEC','OCT','BIN'].forEach(b => {
+    const span = document.createElement('button');
+    span.className = 'badge' + (b === state.progBase ? ' active' : '');
+    span.style.cursor = 'pointer';
+    span.style.appearance = 'none';
+    span.style.font = 'inherit';
+    span.textContent = b;
+    span.onclick = () => { haptic(); state.progBase = b; renderKeypad(); renderProgDisplay(); };
+    badgesEl.appendChild(span);
+  });
+  // Scroll right
+  const row = exprEl.parentElement;
+  row.scrollLeft = row.scrollWidth;
+};
+let progAcc = null, progOp = null, progJustEq = false;
+const handleProgKey = (type, data) => {
+  if (type === 'digit' || /^[A-F]$/.test(data)) {
+    const baseN = state.progBase === 'HEX' ? 16 : state.progBase === 'DEC' ? 10 : state.progBase === 'OCT' ? 8 : 2;
+    const digit = parseInt(data, baseN);
+    if (isNaN(digit)) return;
+    if (progJustEq) { state.progValue = 0n; progJustEq = false; }
+    const cur = BigInt(state.progValue);
+    state.progValue = cur * BigInt(baseN) + BigInt(digit);
+    renderProgDisplay();
+    return;
+  }
+  if (type === 'op' || (type === 'prog' && '+-*/%&|<<>>'.includes(data))) {
+    progAcc = BigInt(state.progValue);
+    progOp = data === '×' ? '*' : data === '÷' ? '/' : data;
+    state.progValue = 0n;
+    progJustEq = false;
+    renderProgDisplay();
+    return;
+  }
+  if (type === 'prog' && data === '~') {
+    state.progValue = ~BigInt(state.progValue);
+    renderProgDisplay();
+    return;
+  }
+  if (type === 'prog' && data === '^') {
+    // XOR — same path as op
+    progAcc = BigInt(state.progValue);
+    progOp = '^';
+    state.progValue = 0n;
+    renderProgDisplay();
+    return;
+  }
+  if (type === 'action') {
+    if (data === 'clear') {
+      state.progValue = 0n; progAcc = null; progOp = null;
+      renderProgDisplay();
+      return;
+    }
+    if (data === 'equals') {
+      if (progAcc === null || progOp === null) return;
+      const a = BigInt(progAcc), b = BigInt(state.progValue);
+      let r;
+      try {
+        switch (progOp) {
+          case '+': r = a + b; break;
+          case '-': r = a - b; break;
+          case '*': r = a * b; break;
+          case '/': r = b === 0n ? 0n : a / b; break;
+          case '%': r = b === 0n ? 0n : a % b; break;
+          case '&': r = a & b; break;
+          case '|': r = a | b; break;
+          case '^': r = a ^ b; break;
+          case '<<': r = a << b; break;
+          case '>>': r = a >> b; break;
+          default: r = b;
+        }
+      } catch { r = 0n; }
+      state.progValue = r;
+      addHistory(`${fmtProg(a, state.progBase)} ${progOp} ${fmtProg(b, state.progBase)}`, Number(BigInt.asIntN(state.progBitWidth, r)));
+      progAcc = null; progOp = null; progJustEq = true;
+      renderProgDisplay();
+      haptic(12);
+      return;
+    }
+    if (data === 'back') {
+      const baseN = state.progBase === 'HEX' ? 16 : state.progBase === 'DEC' ? 10 : state.progBase === 'OCT' ? 8 : 2;
+      state.progValue = BigInt(state.progValue) / BigInt(baseN);
+      renderProgDisplay();
+      return;
+    }
+  }
+};
+
+/* ============================================================
+   CONVERT MODE
+   ============================================================ */
+const renderConvert = () => {
+  // AURUM-style header sits ABOVE the panel
+  const brand = document.createElement('div');
+  brand.className = 'aurum-brand-strip';
+  brand.innerHTML = `
+    <div class="aurum-brand">
+      <div class="title"><span class="ordinal">·</span>AURUM</div>
+      <div class="sub">Units, illuminated.</div>
+    </div>`;
+  keypadWrap.appendChild(brand);
+
+  const panel = document.createElement('section');
+  panel.className = 'convert-panel';
+
+  // Category tabs
+  const cats = document.createElement('div');
+  cats.className = 'convert-categories';
+  Object.entries(UNITS).forEach(([key, def]) => {
+    const b = document.createElement('button');
+    b.className = 'cat-tab' + (key === state.convCategory ? ' active' : '');
+    b.textContent = def.label;
+    b.onclick = () => { haptic(); state.convCategory = key; persistState(); renderKeypad(); };
+    cats.appendChild(b);
+  });
+  panel.appendChild(cats);
+
+  // From row
+  const fromKey = state.convFromUnit[state.convCategory];
+  const toKey = state.convToUnit[state.convCategory];
+  const fromUnit = UNITS[state.convCategory].units[fromKey];
+  const toUnit = UNITS[state.convCategory].units[toKey];
+
+  const fromRow = document.createElement('div');
+  fromRow.className = 'convert-row' + (state.convActive === 'from' ? ' active' : '');
+  const fromInput = document.createElement('input');
+  fromInput.className = 'convert-input';
+  fromInput.inputMode = 'decimal';
+  fromInput.placeholder = '0';
+  fromInput.value = state.convFromValue;
+  fromInput.readOnly = true; // we'll drive via custom keypad to keep mobile feel
+  fromInput.onclick = () => { state.convActive = 'from'; renderKeypad(); };
+  const fromUnitBtn = document.createElement('button');
+  fromUnitBtn.className = 'convert-unit-btn';
+  fromUnitBtn.innerHTML = `<span>${fromUnit.sym}</span><span style="opacity:0.6">▾</span>`;
+  fromUnitBtn.onclick = () => openUnitPicker('from');
+  fromRow.appendChild(fromInput);
+  fromRow.appendChild(fromUnitBtn);
+  panel.appendChild(fromRow);
+
+  // Swap
+  const swap = document.createElement('button');
+  swap.className = 'convert-swap';
+  swap.innerHTML = '⇅';
+  swap.onclick = () => {
+    haptic();
+    const t = state.convFromUnit[state.convCategory];
+    state.convFromUnit[state.convCategory] = state.convToUnit[state.convCategory];
+    state.convToUnit[state.convCategory] = t;
+    persistState();
+    renderKeypad();
+  };
+  panel.appendChild(swap);
+
+  // To row
+  const toRow = document.createElement('div');
+  toRow.className = 'convert-row';
+  const toInput = document.createElement('input');
+  toInput.className = 'convert-input convert-target';
+  toInput.readOnly = true;
+  const fromVal = parseFloat(state.convFromValue) || 0;
+  const result = convertUnit(fromVal, fromKey, toKey, state.convCategory);
+  toInput.value = formatNumber(result);
+  const toUnitBtn = document.createElement('button');
+  toUnitBtn.className = 'convert-unit-btn';
+  toUnitBtn.innerHTML = `<span>${toUnit.sym}</span><span style="opacity:0.6">▾</span>`;
+  toUnitBtn.onclick = () => openUnitPicker('to');
+  toRow.appendChild(toInput);
+  toRow.appendChild(toUnitBtn);
+  panel.appendChild(toRow);
+
+  // Copy result row
+  const copyRow = document.createElement('div');
+  copyRow.style.display = 'flex';
+  copyRow.style.gap = '8px';
+  copyRow.style.flexShrink = '0';
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'unit-pill';
+  copyBtn.style.flex = '1';
+  copyBtn.textContent = '📋 Copy result';
+  copyBtn.onclick = () => copyText(formatNumber(result));
+  copyRow.appendChild(copyBtn);
+  panel.appendChild(copyRow);
+
+  // Mini keypad for entering "from" value
+  const keypad = document.createElement('div');
+  keypad.className = 'convert-keypad';
+  const convKeys = [
+    {l:'7'},{l:'8'},{l:'9'},{l:'⌫', a:'back', cls:'fn'},
+    {l:'4'},{l:'5'},{l:'6'},{l:'±', a:'sign', cls:'fn'},
+    {l:'1'},{l:'2'},{l:'3'},{l:'.'},
+    {l:'0', span:true},{l:'AC', a:'clear', cls:'fn danger'},
+  ];
+  convKeys.forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'key ' + (k.cls || '') + (k.span ? ' span2' : '');
+    b.textContent = k.l;
+    b.onclick = () => {
+      haptic();
+      let v = state.convFromValue;
+      if (k.a === 'clear') v = '0';
+      else if (k.a === 'back') v = v.length > 1 ? v.slice(0, -1) : '0';
+      else if (k.a === 'sign') v = v.startsWith('-') ? v.slice(1) : (v === '0' ? '-0' : '-' + v);
+      else if (k.l === '.') { if (!v.includes('.')) v += '.'; }
+      else if (/^[0-9]$/.test(k.l)) { v = v === '0' ? k.l : v + k.l; }
+      state.convFromValue = v;
+      renderKeypad();
+    };
+    keypad.appendChild(b);
+  });
+  panel.appendChild(keypad);
+
+  keypadWrap.appendChild(panel);
+};
+
+const openUnitPicker = (side) => {
+  const picker = document.getElementById('unit-picker');
+  const card = document.getElementById('unit-picker-card');
+  card.innerHTML = '';
+  const h = document.createElement('h3');
+  h.textContent = side === 'from' ? 'Convert from' : 'Convert to';
+  card.appendChild(h);
+  const cat = UNITS[state.convCategory];
+  Object.entries(cat.units).forEach(([key, u]) => {
+    const b = document.createElement('button');
+    b.className = 'unit-option';
+    b.innerHTML = `<span>${u.name}</span><span class="sym">${u.sym}</span>`;
+    b.onclick = () => {
+      haptic();
+      if (side === 'from') state.convFromUnit[state.convCategory] = key;
+      else state.convToUnit[state.convCategory] = key;
+      persistState();
+      picker.classList.remove('open');
+      renderKeypad();
+    };
+    card.appendChild(b);
+  });
+  picker.classList.add('open');
+};
+document.getElementById('unit-picker').addEventListener('click', (e) => {
+  if (e.target.id === 'unit-picker') e.currentTarget.classList.remove('open');
+});
+
+/* ============================================================
+   GRAPH MODE
+   ============================================================ */
+let graphCanvas, graphCtx;
+let graphRafId = null;
+let graphResizeObs = null;
+let graphColors = { text: '#fff', dim: 'rgba(255,255,255,0.3)', accent: '#818cf8' };
+let _graphFnCache = { expr: null, fn: null };
+
+const cleanupGraph = () => {
+  if (graphRafId) { cancelAnimationFrame(graphRafId); graphRafId = null; }
+  if (graphResizeObs) { graphResizeObs.disconnect(); graphResizeObs = null; }
+  graphCanvas = null; graphCtx = null;
+  _graphFnCache = { expr: null, fn: null };
+};
+
+// Compile expression string to a native JS function for fast repeated evaluation.
+// Mirrors the recursive-descent parser but emits a JS string instead of computing.
+const compileGraphFn = (expr) => {
+  const tokens = tokenize(expr);
+  let pos = 0;
+  const peek = (o = 0) => tokens[pos + o];
+  const consume = () => tokens[pos++];
+  function emitExpr() { return emitAdd(); }
+  function emitAdd() {
+    let s = emitMul();
+    while (peek()?.type === 'op' && (peek().value === '+' || peek().value === '-')) {
+      const op = consume().value;
+      s = `(${s}${op}${emitMul()})`;
+    }
+    return s;
+  }
+  function emitMul() {
+    let s = emitPow();
+    while (peek()) {
+      const t = peek();
+      if (t.type === 'op' && (t.value === '*' || t.value === '/')) {
+        const op = consume().value;
+        s = `(${s}${op}${emitPow()})`;
+      } else if (t.type === 'num' || t.type === 'id' || (t.type === 'op' && t.value === '(')) {
+        s = `(${s}*${emitPow()})`;
+      } else break;
+    }
+    return s;
+  }
+  function emitPow() {
+    const s = emitUnary();
+    if (peek()?.type === 'op' && peek().value === '^') {
+      consume();
+      return `Math.pow(${s},${emitPow()})`;
+    }
+    return s;
+  }
+  function emitUnary() {
+    const t = peek();
+    if (t?.type === 'op' && (t.value === '-' || t.value === '+')) {
+      const op = consume().value;
+      return `(${op}${emitUnary()})`;
+    }
+    return emitPostfix();
+  }
+  function emitPostfix() {
+    let s = emitPrimary();
+    while (peek()?.type === 'op' && (peek().value === '!' || peek().value === '%')) {
+      const op = consume().value;
+      s = op === '!' ? `_f.fact(${s})` : `(${s}/100)`;
+    }
+    return s;
+  }
+  function emitPrimary() {
+    const t = peek();
+    if (!t) throw new Error('unexpected end');
+    if (t.type === 'num') { consume(); return String(t.value); }
+    if (t.type === 'op' && t.value === '(') {
+      consume();
+      const s = emitExpr();
+      if (peek()?.value !== ')') throw new Error('expected )');
+      consume();
+      return `(${s})`;
+    }
+    if (t.type === 'id') {
+      consume();
+      const name = t.value.toLowerCase();
+      if (peek()?.type === 'op' && peek().value === '(') {
+        consume();
+        const args = [];
+        if (!(peek()?.type === 'op' && peek().value === ')')) {
+          args.push(emitExpr());
+          while (peek()?.type === 'op' && peek().value === ',') { consume(); args.push(emitExpr()); }
+        }
+        if (peek()?.value !== ')') throw new Error('expected )');
+        consume();
+        if (!FUNCTIONS[name]) throw new Error('unknown fn: ' + name);
+        return `_f.${name}(${args.join(',')})`;
+      }
+      if (name === 'x') return 'x';
+      if (CONSTANTS[name] !== undefined) return String(CONSTANTS[name]);
+      if (t.value === 'π') return String(Math.PI);
+      throw new Error('unknown: ' + name);
+    }
+    throw new Error('unexpected: ' + t.value);
+  }
+  const jsStr = emitExpr();
+  if (pos < tokens.length) throw new Error('trailing input');
+  // eslint-disable-next-line no-new-func
+  return new Function('x', '_f', `"use strict"; return ${jsStr};`);
+};
+
+const getGraphFn = (expr) => {
+  if (!expr.trim()) return null;
+  if (_graphFnCache.expr === expr) return _graphFnCache.fn;
+  let fn = null;
+  try {
+    const compiled = compileGraphFn(expr);
+    fn = (x) => compiled(x, FUNCTIONS);
+  } catch { fn = null; }
+  _graphFnCache = { expr, fn };
+  return fn;
+};
+
+const renderGraph = () => {
+  cleanupGraph();
+
+  const brand = document.createElement('div');
+  brand.className = 'aurum-brand-strip';
+  brand.innerHTML = `
+    <div class="aurum-brand">
+      <div class="title"><span class="ordinal">·</span>AURUM</div>
+      <div class="sub">Curves, illuminated.</div>
+    </div>`;
+  keypadWrap.appendChild(brand);
+
+  const panel = document.createElement('section');
+  panel.className = 'graph-panel';
+
+  const row = document.createElement('div');
+  row.className = 'graph-input-row';
+  const yeq = document.createElement('span');
+  yeq.className = 'yeq';
+  yeq.textContent = 'y =';
+  const input = document.createElement('input');
+  input.className = 'graph-input';
+  input.type = 'text';
+  input.value = state.graphExpr;
+  input.placeholder = 'sin(x)';
+  input.spellcheck = false;
+  input.autocomplete = 'off';
+  const debouncedDraw = debounce(() => { _graphFnCache = { expr: null, fn: null }; scheduleDrawGraph(); }, 150);
+  input.oninput = () => {
+    state.graphExpr = input.value;
+    persistState();
+    debouncedDraw();
+  };
+  row.appendChild(yeq);
+  row.appendChild(input);
+  panel.appendChild(row);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'graph-canvas-wrap';
+  const canvas = document.createElement('canvas');
+  canvas.className = 'graph';
+  wrap.appendChild(canvas);
+
+  const controls = document.createElement('div');
+  controls.className = 'graph-controls';
+  const mkBtn = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; return b; };
+  controls.appendChild(mkBtn('+', () => zoomGraph(0.75)));
+  controls.appendChild(mkBtn('−', () => zoomGraph(1.5)));
+  controls.appendChild(mkBtn('⟲', () => {
+    state.graphXMin = -10; state.graphXMax = 10; state.graphYMin = -5; state.graphYMax = 5;
+    scheduleDrawGraph();
+  }));
+  wrap.appendChild(controls);
+  panel.appendChild(wrap);
+
+  const ex = document.createElement('div');
+  ex.style.cssText = 'display:flex;gap:6px;overflow-x:auto;flex-shrink:0';
+  ['sin(x)', 'cos(x)', 'x^2', 'x^3-3x', '1/x', 'sqrt(x)', 'exp(-x^2)', 'tan(x)', 'log(abs(x))'].forEach(e => {
+    const b = document.createElement('button');
+    b.className = 'unit-pill';
+    b.textContent = e;
+    b.onclick = () => {
+      state.graphExpr = e; persistState();
+      input.value = e;
+      _graphFnCache = { expr: null, fn: null };
+      scheduleDrawGraph();
+    };
+    ex.appendChild(b);
+  });
+  panel.appendChild(ex);
+  keypadWrap.appendChild(panel);
+
+  graphCanvas = canvas;
+  graphCtx = canvas.getContext('2d');
+
+  // ResizeObserver keeps canvas sized correctly whenever the container changes
+  graphResizeObs = new ResizeObserver(() => resizeGraph());
+  graphResizeObs.observe(canvas);
+
+  attachGraphInput(wrap);
+};
+
+const resizeGraph = () => {
+  if (!graphCanvas || !graphCtx) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = graphCanvas.clientWidth;
+  const h = graphCanvas.clientHeight;
+  if (!w || !h) return;
+  graphCanvas.width = Math.round(w * dpr);
+  graphCanvas.height = Math.round(h * dpr);
+  graphCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  scheduleDrawGraph();
+};
+
+const zoomGraph = (factor) => {
+  const cx = (state.graphXMin + state.graphXMax) / 2;
+  const cy = (state.graphYMin + state.graphYMax) / 2;
+  const w = (state.graphXMax - state.graphXMin) * factor;
+  const h = (state.graphYMax - state.graphYMin) * factor;
+  state.graphXMin = cx - w / 2; state.graphXMax = cx + w / 2;
+  state.graphYMin = cy - h / 2; state.graphYMax = cy + h / 2;
+  scheduleDrawGraph();
+};
+
+const attachGraphInput = (wrap) => {
+  let dragging = false, lx = 0, ly = 0;
+  let pinching = false, pinchDist = 0;
+
+  wrap.addEventListener('pointerdown', (e) => {
+    if (pinching) return;
+    dragging = true;
+    wrap.setPointerCapture(e.pointerId);
+    lx = e.clientX; ly = e.clientY;
+  });
+  wrap.addEventListener('pointermove', (e) => {
+    if (!dragging || pinching) return;
+    const rect = wrap.getBoundingClientRect();
+    const dx = (e.clientX - lx) / rect.width  * (state.graphXMax - state.graphXMin);
+    const dy = (e.clientY - ly) / rect.height * (state.graphYMax - state.graphYMin);
+    state.graphXMin -= dx; state.graphXMax -= dx;
+    state.graphYMin += dy; state.graphYMax += dy;
+    lx = e.clientX; ly = e.clientY;
+    scheduleDrawGraph();
+  });
+  wrap.addEventListener('pointerup',     () => { dragging = false; });
+  wrap.addEventListener('pointercancel', () => { dragging = false; });
+
+  wrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    zoomGraph(e.deltaY > 0 ? 1.1 : 0.9);
+  }, { passive: false });
+
+  // Pinch zoom — handled via touch events to avoid double-firing with pointer events
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      pinching = true; dragging = false;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchDist = Math.hypot(dx, dy);
+    }
+  }, { passive: true });
+  wrap.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 2 || !pinching) return;
+    e.preventDefault();
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const d = Math.hypot(dx, dy);
+    if (pinchDist && d) zoomGraph(pinchDist / d);
+    pinchDist = d;
+  }, { passive: false });
+  wrap.addEventListener('touchend',    () => { if (pinching) { pinching = false; pinchDist = 0; } });
+  wrap.addEventListener('touchcancel', () => { pinching = false; pinchDist = 0; });
+};
+
+const drawGraph = () => {
+  if (!graphCtx || !graphCanvas) return;
+  const w = graphCanvas.clientWidth, h = graphCanvas.clientHeight;
+  if (!w || !h) return;
+  const ctx = graphCtx;
+  ctx.clearRect(0, 0, w, h);
+
+  const xMin = state.graphXMin, xMax = state.graphXMax;
+  const yMin = state.graphYMin, yMax = state.graphYMax;
+  const xRange = xMax - xMin, yRange = yMax - yMin;
+  const xToPx = (x) => (x - xMin) / xRange * w;
+  const yToPx = (y) => h - (y - yMin) / yRange * h;
+
+  const { dim, accent } = graphColors;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  const xStep = niceStep(xRange / 10);
+  const yStep = niceStep(yRange / 6);
+  ctx.beginPath();
+  for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
+    const px = xToPx(x); ctx.moveTo(px, 0); ctx.lineTo(px, h);
+  }
+  for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+    const py = yToPx(y); ctx.moveTo(0, py); ctx.lineTo(w, py);
+  }
+  ctx.stroke();
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const y0 = yToPx(0), x0 = xToPx(0);
+  if (y0 >= 0 && y0 <= h) { ctx.moveTo(0, y0); ctx.lineTo(w, y0); }
+  if (x0 >= 0 && x0 <= w) { ctx.moveTo(x0, 0); ctx.lineTo(x0, h); }
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = dim;
+  ctx.font = '10px ui-monospace, monospace';
+  ctx.textBaseline = 'top';
+  for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
+    if (Math.abs(x) < xStep / 2) continue;
+    ctx.fillText(formatTick(x, xStep), xToPx(x) + 2, Math.min(Math.max(y0 + 2, 0), h - 12));
+  }
+  ctx.textAlign = 'right';
+  for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+    if (Math.abs(y) < yStep / 2) continue;
+    ctx.fillText(formatTick(y, yStep), Math.min(x0 - 4, w - 4), yToPx(y) + 2);
+  }
+  ctx.textAlign = 'left';
+
+  // Plot
+  const plotFn = getGraphFn(state.graphExpr);
+  if (plotFn) {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    const steps = Math.min(Math.max(Math.floor(w * 2), 400), 1200);
+    const discThreshold = yRange * 1.5;
+    let lastY = null, started = false;
+    for (let i = 0; i <= steps; i++) {
+      const x = xMin + (i / steps) * xRange;
+      let y;
+      try { y = plotFn(x); } catch { y = null; }
+      if (y === null || !isFinite(y)) { started = false; lastY = null; continue; }
+      if (started && lastY !== null && Math.abs(y - lastY) > discThreshold) { started = false; }
+      const px = xToPx(x), py = yToPx(y);
+      if (!started) { ctx.moveTo(px, py); started = true; }
+      else { ctx.lineTo(px, py); }
+      lastY = y;
+    }
+    ctx.stroke();
+  }
+};
+const niceStep = (raw) => {
+  if (raw <= 0) return 1;
+  const exp = Math.floor(Math.log10(raw));
+  const f = raw / Math.pow(10, exp);
+  let nice;
+  if (f < 1.5) nice = 1;
+  else if (f < 3) nice = 2;
+  else if (f < 7) nice = 5;
+  else nice = 10;
+  return nice * Math.pow(10, exp);
+};
+const formatTick = (v, step) => {
+  const decimals = Math.max(0, -Math.floor(Math.log10(step)) + 1);
+  return Math.abs(v) < 1e-12 ? '0' : v.toFixed(decimals).replace(/\.?0+$/, '');
+};
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+const addHistory = (expr, result) => {
+  state.history.unshift({ expr, result: typeof result === 'number' ? formatNumber(result) : String(result), ts: Date.now() });
+  state.history = state.history.slice(0, 200);
+  safeSave(HISTORY_KEY, state.history);
+};
+const renderHistory = () => {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  if (!state.history.length) {
+    const e = document.createElement('div');
+    e.className = 'history-empty';
+    e.textContent = 'No calculations yet';
+    list.appendChild(e);
+    return;
+  }
+  state.history.forEach((item) => {
+    const card = document.createElement('div');
+    card.className = 'history-item';
+    const ex = document.createElement('div');
+    ex.className = 'history-expr';
+    ex.textContent = item.expr.replace(/\*/g,'×').replace(/\//g,'÷');
+    const r = document.createElement('div');
+    r.className = 'history-result';
+    r.textContent = '= ' + item.result;
+    const t = document.createElement('div');
+    t.className = 'history-time';
+    t.textContent = new Date(item.ts).toLocaleString();
+    card.appendChild(ex);
+    card.appendChild(r);
+    card.appendChild(t);
+    card.onclick = () => {
+      // Tap = put result back into expression, switch to calc mode
+      if (state.mode === 'convert' || state.mode === 'graph') switchMode('basic');
+      setExpr(item.result);
+      closeDrawers();
+      haptic();
+    };
+    // Long-press = put expression back
+    let lpTimer;
+    card.addEventListener('pointerdown', () => {
+      lpTimer = setTimeout(() => {
+        if (state.mode === 'convert' || state.mode === 'graph') switchMode('basic');
+        setExpr(item.expr);
+        closeDrawers();
+        haptic(20);
+      }, 500);
+    });
+    card.addEventListener('pointerup', () => clearTimeout(lpTimer));
+    card.addEventListener('pointerleave', () => clearTimeout(lpTimer));
+    list.appendChild(card);
+  });
+};
+document.getElementById('history-clear').onclick = () => {
+  state.history = [];
+  safeSave(HISTORY_KEY, state.history);
+  renderHistory();
+  haptic();
+};
+
+/* ============================================================
+   DRAWERS
+   ============================================================ */
+const historyDrawer = document.getElementById('history-drawer');
+const settingsDrawer = document.getElementById('settings-drawer');
+const backdrop = document.getElementById('drawer-backdrop');
+const openDrawer = (which) => {
+  closeDrawers();
+  if (which === 'history') { renderHistory(); historyDrawer.classList.add('open'); historyDrawer.setAttribute('aria-hidden','false'); }
+  if (which === 'settings') { settingsDrawer.classList.add('open'); settingsDrawer.setAttribute('aria-hidden','false'); }
+  backdrop.classList.add('open');
+};
+const closeDrawers = () => {
+  historyDrawer.classList.remove('open');
+  settingsDrawer.classList.remove('open');
+  backdrop.classList.remove('open');
+};
+document.getElementById('btn-history').onclick = () => { haptic(); openDrawer('history'); };
+document.getElementById('btn-settings').onclick = () => { haptic(); openDrawer('settings'); };
+document.getElementById('settings-close').onclick = closeDrawers;
+backdrop.onclick = closeDrawers;
+
+/* ============================================================
+   SETTINGS WIRING
+   ============================================================ */
+document.getElementById('theme-grid').addEventListener('click', (e) => {
+  const b = e.target.closest('.theme-swatch'); if (!b) return;
+  haptic();
+  applyTheme(b.dataset.theme);
+});
+document.getElementById('angle-mode').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  haptic();
+  state.angleMode = b.dataset.val;
+  document.querySelectorAll('#angle-mode button').forEach(x => x.classList.toggle('active', x === b));
+  persistState();
+  renderDisplay();
+});
+document.getElementById('precision').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  haptic();
+  state.precision = parseInt(b.dataset.val, 10);
+  document.querySelectorAll('#precision button').forEach(x => x.classList.toggle('active', x === b));
+  persistState();
+  renderDisplay();
+});
+document.getElementById('toggle-haptic').onclick = (e) => {
+  state.haptic = !state.haptic;
+  e.currentTarget.classList.toggle('on', state.haptic);
+  persistState();
+  haptic();
+};
+document.getElementById('toggle-bg').onclick = (e) => {
+  state.bgAnim = !state.bgAnim;
+  e.currentTarget.classList.toggle('on', state.bgAnim);
+  persistState();
+  applyBg();
+};
+
+/* ============================================================
+   MODE SWITCHING
+   ============================================================ */
+const switchMode = (mode) => {
+  if (state.mode === 'graph') cleanupGraph();
+  state.mode = mode;
+  persistState();
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  altMode = false;
+  if (mode === 'prog' || mode === 'convert' || mode === 'graph') {
+    // hide normal display for graph/convert
+    displayEl.style.display = (mode === 'convert' || mode === 'graph') ? 'none' : '';
+  } else {
+    displayEl.style.display = '';
+  }
+  if (mode === 'prog') renderProgDisplay();
+  else if (mode === 'basic' || mode === 'sci') renderDisplay();
+  renderKeypad();
+};
+document.getElementById('mode-switcher').addEventListener('click', (e) => {
+  const t = e.target.closest('.mode-tab'); if (!t) return;
+  haptic();
+  switchMode(t.dataset.mode);
+});
+
+/* ============================================================
+   KEYPAD EVENT (delegated)
+   ============================================================ */
+keypadWrap.addEventListener('click', (e) => {
+  const btn = e.target.closest('.key'); if (!btn) return;
+  if (btn.disabled) return;
+  // Convert mode keys are handled inline above
+  if (state.mode === 'convert') return;
+  handleKey(btn.dataset.type || 'digit', btn.dataset.data ?? btn.textContent);
+});
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+   ============================================================ */
+window.addEventListener('keydown', (e) => {
+  // Don't intercept when an input has focus (graph input)
+  if (e.target.tagName === 'INPUT') return;
+  const k = e.key;
+  if (state.mode === 'prog') {
+    if (/^[0-9A-Fa-f]$/.test(k)) { handleProgKey('digit', k.toUpperCase()); return; }
+    if (k === '~') { handleProgKey('prog', '~'); return; }
+    if ('+-*/%&|^'.includes(k)) { handleProgKey('op', k); return; }
+    if (k === 'Enter' || k === '=') { e.preventDefault(); handleProgKey('action', 'equals'); return; }
+    if (k === 'Escape') { handleProgKey('action', 'clear'); return; }
+    if (k === 'Backspace') { handleProgKey('action', 'back'); return; }
+    return;
+  }
+  if (state.mode === 'convert' || state.mode === 'graph') return;
+
+  if (/^[0-9]$/.test(k)) { handleKey('digit', k); return; }
+  if (k === '.') { handleKey('digit', '.'); return; }
+  if (k === '+' || k === '-' || k === '*' || k === '/' || k === '^') { handleKey('op', k); return; }
+  if (k === '(' || k === ')') { handleKey('paren', k); return; }
+  if (k === '!') { handleKey('op', '!'); return; }
+  if (k === '%') { handleKey('op', '%'); return; }
+  if (k === 'Enter' || k === '=') { e.preventDefault(); handleKey('action', 'equals'); return; }
+  if (k === 'Escape') { handleKey('action', 'clear'); return; }
+  if (k === 'Backspace') { setExpr(state.expr.slice(0, -1)); return; }
+  // Letter shortcuts
+  if (/^[a-z]$/i.test(k)) {
+    // type letter — for entering function names like "sin"
+    if (state.expr.length < 100) {
+      appendExpr(k.toLowerCase());
+    }
+  }
+});
+
+/* ============================================================
+   COPY RESULT — tap-and-hold display
+   ============================================================ */
+let displayHoldTimer;
+displayEl.addEventListener('pointerdown', () => {
+  displayHoldTimer = setTimeout(() => {
+    const v = liveEval(state.expr, { ans: state.ans, mem: state.memory });
+    const txt = v === null ? state.expr : formatNumber(v);
+    if (txt) copyText(txt);
+    haptic(20);
+  }, 500);
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev =>
+  displayEl.addEventListener(ev, () => clearTimeout(displayHoldTimer))
+);
+// Single click on display: clear or focus
+displayEl.addEventListener('click', () => {
+  // optional: do nothing for now (long-press copies)
+});
+
+/* ============================================================
+   SWIPE TO BACKSPACE on display
+   ============================================================ */
+let sx = null;
+displayEl.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+displayEl.addEventListener('touchend', (e) => {
+  if (sx === null) return;
+  const ex = (e.changedTouches[0]||{}).clientX;
+  if (ex !== undefined && sx - ex > 50) {
+    if (state.mode === 'basic' || state.mode === 'sci') {
+      setExpr(state.expr.slice(0, -1));
+      haptic(10);
+    } else if (state.mode === 'prog') {
+      handleProgKey('action', 'back');
+    }
+  }
+  sx = null;
+});
+
+/* ============================================================
+   iOS INSTALL HINT
+   ============================================================ */
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.navigator.standalone === true;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+if (isIOS && !isStandalone() && !localStorage.getItem('calc.installDismissed')) {
+  setTimeout(() => document.getElementById('install-hint').classList.add('show'), 1500);
+}
+document.getElementById('dismiss-install').onclick = () => {
+  document.getElementById('install-hint').classList.remove('show');
+  try { localStorage.setItem('calc.installDismissed', '1'); } catch {}
+};
+
+/* ResizeObserver on the canvas handles graph resize — no window listener needed */
+
+/* ============================================================
+   INIT
+   ============================================================ */
+applyTheme(state.theme);
+applyBg();
+// Restore precision/angle buttons
+document.querySelectorAll('#angle-mode button').forEach(b => b.classList.toggle('active', b.dataset.val === state.angleMode));
+document.querySelectorAll('#precision button').forEach(b => b.classList.toggle('active', b.dataset.val === String(state.precision)));
+document.getElementById('toggle-haptic').classList.toggle('on', state.haptic);
+document.getElementById('toggle-bg').classList.toggle('on', state.bgAnim);
+
+switchMode(state.mode);
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+
+})();
+</script>
+</body>
+</html>

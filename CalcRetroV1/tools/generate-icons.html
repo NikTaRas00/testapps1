@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calc — icon generator</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; background: #0f1115; color: #f5f7fa; padding: 24px; }
+    h1 { margin-top: 0; }
+    .row { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; }
+    .card { background: #161a22; padding: 16px; border-radius: 12px; }
+    canvas { display: block; background: #000; border-radius: 8px; }
+    a.btn {
+      display: inline-block; margin-top: 12px; padding: 8px 14px;
+      background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;
+    }
+    p { color: #c8cdd6; line-height: 1.5; }
+    code { background: #1f2530; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Calc — icon generator</h1>
+  <p>Open this file in a browser, then click each <b>Download</b> button and save the three files into an <code>icons/</code> folder next to <code>index.html</code>:</p>
+  <ul>
+    <li><code>icons/icon-192.png</code></li>
+    <li><code>icons/icon-512.png</code></li>
+    <li><code>icons/apple-touch-icon.png</code> (180&times;180)</li>
+  </ul>
+
+  <div class="row" id="row"></div>
+
+  <script>
+    const SIZES = [
+      { size: 192, name: 'icon-192.png' },
+      { size: 512, name: 'icon-512.png' },
+      { size: 180, name: 'apple-touch-icon.png' },
+    ];
+
+    const draw = (ctx, size) => {
+      // Rounded-square background
+      const r = size * 0.22;
+      ctx.fillStyle = '#0f1115';
+      roundRect(ctx, 0, 0, size, size, r);
+      ctx.fill();
+
+      // Inner panel
+      ctx.fillStyle = '#161a22';
+      const pad = size * 0.12;
+      roundRect(ctx, pad, pad, size - pad * 2, size - pad * 2, r * 0.6);
+      ctx.fill();
+
+      // "=" glyph in accent blue
+      ctx.fillStyle = '#3b82f6';
+      const barW = size * 0.42;
+      const barH = size * 0.08;
+      const cx = size / 2 - barW / 2;
+      const gap = size * 0.08;
+      const cy = size / 2 - barH - gap / 2;
+      roundRect(ctx, cx, cy, barW, barH, barH / 2);
+      ctx.fill();
+      roundRect(ctx, cx, cy + barH + gap, barW, barH, barH / 2);
+      ctx.fill();
+
+      // small orange dot (operator accent)
+      ctx.fillStyle = '#f59e0b';
+      const dot = size * 0.06;
+      ctx.beginPath();
+      ctx.arc(size * 0.78, size * 0.22, dot, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const roundRect = (ctx, x, y, w, h, r) => {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    };
+
+    const row = document.getElementById('row');
+    for (const { size, name } of SIZES) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const previewSize = Math.min(192, size);
+      canvas.style.width = previewSize + 'px';
+      canvas.style.height = previewSize + 'px';
+      draw(canvas.getContext('2d'), size);
+
+      const link = document.createElement('a');
+      link.className = 'btn';
+      link.textContent = 'Download ' + name;
+      link.href = canvas.toDataURL('image/png');
+      link.download = name;
+
+      const label = document.createElement('p');
+      label.textContent = size + '×' + size;
+
+      card.appendChild(canvas);
+      card.appendChild(label);
+      card.appendChild(link);
+      row.appendChild(card);
+    }
+  </script>
+</body>
+</html>
