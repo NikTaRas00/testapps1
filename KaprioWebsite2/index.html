@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+
+  <title>Kapriol Bulgaria — Workwear, Footwear &amp; PPE | Official Distributor</title>
+  <meta name="description" content="Kapriol professional workwear, footwear and PPE, distributed exclusively in Bulgaria by ergotrade.bg. Built for work since 1974." />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="canonical" href="https://kapriol.bg/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Kapriol Bulgaria — Built for work. Made by Kapriol." />
+  <meta property="og:description" content="Premium workwear, footwear and PPE. Distributed exclusively in Bulgaria by ergotrade.bg." />
+  <meta property="og:url" content="https://kapriol.bg/" />
+  <meta property="og:image" content="https://kapriol.bg/assets/img/poster.jpg" />
+  <meta property="og:locale" content="en_US" />
+
+  <link rel="preload" as="image" href="assets/img/poster.jpg" />
+  <link rel="stylesheet" href="assets/css/style.css?v=4" />
+</head>
+<body>
+  <!-- Flip no-js -> js as early as possible so reveal/entrance states can apply without a flash.
+       Anything gated behind html.js stays visible if JS never runs. -->
+  <script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>
+
+  <a class="skip-link" href="#products">Skip to content</a>
+
+  <!-- ============================ NAV ============================ -->
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a class="nav__brand" href="#top" aria-label="Kapriol — home" data-copy="navBrand">KAPRIOL</a>
+
+      <nav class="nav__links" aria-label="Primary">
+        <a class="btn btn--outline" href="#products" data-copy="navProducts">Discover our products</a>
+        <a class="btn btn--outline" href="#contact"  data-copy="navContact">Contact us</a>
+        <a class="btn btn--outline" href="#about"    data-copy="navAbout">Who are we?</a>
+      </nav>
+
+      <button class="nav__toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Full-screen mobile overlay nav -->
+  <div class="mobile-nav" id="mobileNav" role="dialog" aria-modal="true" aria-label="Menu">
+    <button class="mobile-nav__close" id="navClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <nav class="mobile-nav__links" aria-label="Mobile">
+      <a href="#products" data-copy="navProducts">Discover our products</a>
+      <a href="#contact"  data-copy="navContact">Contact us</a>
+      <a href="#about"    data-copy="navAbout">Who are we?</a>
+    </nav>
+  </div>
+
+  <main id="top">
+
+    <!-- ============================ HERO ============================ -->
+    <section class="hero" id="hero">
+      <div class="hero__pin">
+        <!-- Stage holds the light "studio shaft" + the video. The video is set to
+             mix-blend-mode: multiply and blends with the shaft behind it, so the white
+             studio background dissolves and the man stays crisp. See style.css for the
+             --shaft-* tuning variables. -->
+        <div class="hero__stage" aria-hidden="true">
+          <video class="hero__video" id="heroVideo" muted playsinline preload="auto" poster="assets/img/poster.jpg">
+            <source src="assets/video/kapriol-hero.mp4" type="video/mp4" />
+          </video>
+        </div>
+
+        <div class="hero__vignette" aria-hidden="true"></div>
+
+        <div class="hero__content">
+          <div class="hero__text">
+            <p class="hero__label" data-copy="heroLabel">OFFICIAL BULGARIA DISTRIBUTOR</p>
+            <h1 class="hero__title" data-copy="heroH1">Built for work.<br>Made by Kapriol.</h1>
+            <p class="hero__sub" data-copy="heroSub">Premium workwear, footwear and PPE. Distributed exclusively in Bulgaria by ergotrade.bg.</p>
+            <div class="hero__actions">
+              <a class="btn btn--red"   href="#products" data-copy="heroCta">Discover the catalog</a>
+              <a class="btn btn--ghost" href="#about"    data-copy="heroGhost">Who are we?</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ ABOUT ============================ -->
+    <section class="section section--alt about" id="about">
+      <div class="container">
+        <div class="rule rule--red reveal" aria-hidden="true"></div>
+        <h2 class="section__title reveal" data-copy="aboutHeading">Who we are</h2>
+
+        <div class="about__grid">
+          <blockquote class="about__quote reveal" data-copy="aboutQuote">Kapriol has equipped professionals across Europe since 1974.</blockquote>
+          <div class="about__body reveal">
+            <p data-copy="aboutP1">Founded in Italy in 1974, Kapriol builds workwear, footwear and protective equipment for people who work with their hands. Five decades of field-tested gear, engineered to outlast the job.</p>
+            <p data-copy="aboutP2">In Bulgaria, Kapriol is distributed exclusively by ergotrade.bg. Every item in this catalog is sourced direct, held in local stock and backed by a team that knows the trades it supplies.</p>
+            <p data-copy="aboutP3">From the first layer to the last line of defence, the standard does not move.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ PRODUCTS ============================ -->
+    <section class="section products" id="products">
+      <div class="container">
+        <h2 class="section__title section__title--underline reveal" data-copy="productsHeading">Our Catalog</h2>
+        <!-- Categories + product cards are rendered by JS from the PRODUCTS array in main.js. -->
+        <div class="catalog" id="catalog"></div>
+      </div>
+    </section>
+
+    <!-- ============================ CONTACT ============================ -->
+    <section class="section section--alt contact" id="contact">
+      <div class="container">
+        <div class="rule rule--red reveal" aria-hidden="true"></div>
+        <h2 class="section__title reveal" data-copy="contactHeading">Get in touch</h2>
+
+        <div class="contact__grid">
+          <div class="contact__info reveal">
+            <p class="contact__lead" data-copy="contactLead">Questions on stock, pricing or becoming a reseller? Send a message and the ergotrade.bg team will get back to you.</p>
+
+            <div class="info-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+              <div>
+                <span class="info-row__label" data-copy="contactPhoneLabel">Phone</span>
+                <a class="info-row__value" href="tel:PHONE_PLACEHOLDER" data-copy="contactPhone">PHONE_PLACEHOLDER</a>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+              <div>
+                <span class="info-row__label" data-copy="contactEmailLabel">Email</span>
+                <a class="info-row__value" href="mailto:info@kapriol.bg" data-copy="contactEmail">info@kapriol.bg</a>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div>
+                <span class="info-row__label" data-copy="contactAddrLabel">Address</span>
+                <span class="info-row__value" data-copy="contactAddr">ADDRESS_PLACEHOLDER</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact__form-wrap reveal">
+            <form class="contact__form" id="contactForm" novalidate>
+              <!-- Honeypot: real users never see or fill this. If filled, the server returns
+                   success without sending. -->
+              <div class="hp" aria-hidden="true">
+                <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+              </div>
+
+              <div class="field">
+                <label for="cf-name" data-copy="formName">Name</label>
+                <input id="cf-name" name="name" type="text" autocomplete="name" required />
+              </div>
+              <div class="field">
+                <label for="cf-email" data-copy="formEmail">Email</label>
+                <input id="cf-email" name="email" type="email" autocomplete="email" required />
+              </div>
+              <div class="field">
+                <label for="cf-phone" data-copy="formPhone">Phone</label>
+                <input id="cf-phone" name="phone" type="tel" autocomplete="tel" required />
+              </div>
+              <div class="field">
+                <label for="cf-message" data-copy="formMessage">Message</label>
+                <textarea id="cf-message" name="message" rows="5" required></textarea>
+              </div>
+
+              <button class="btn btn--red btn--block" type="submit" data-copy="formSubmit">Send message</button>
+              <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+            </form>
+
+            <div class="form-success" id="formSuccess" role="status" aria-live="polite" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-copy="formSuccess">Thank you. We'll be in touch.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================ FOOTER ============================ -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div class="footer__brand">
+        <span class="footer__wordmark" data-copy="footerWordmark">KAPRIOL.BG</span>
+        <span class="footer__tag" data-copy="footerTag">Exclusive distributor for Bulgaria</span>
+      </div>
+      <nav class="footer__nav" aria-label="Footer">
+        <a href="#about"    data-copy="footerAbout">About</a>
+        <a href="#products" data-copy="footerProducts">Products</a>
+        <a href="#contact"  data-copy="footerContact">Contact</a>
+      </nav>
+      <div class="footer__copy" data-copy="footerCopy">© 2026 ergotrade.bg</div>
+    </div>
+    <div class="footer__powered" data-copy="footerPowered">Powered by ergotrade.bg</div>
+  </footer>
+
+  <script src="assets/js/main.js?v=3" defer></script>
+</body>
+</html>
