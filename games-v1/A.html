@@ -1,37 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Game Menu</title>
-</head>
-<body bgcolor="#000000" text="#FFFFFF" link="#00FF00" vlink="#008000" alink="#FF0000">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Index</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    <center>
-        <h1><u>MY GAMES</u></h1>
-        <p>Select a game to start playing:</p>
-        <hr width="50%" size="3" color="#FFFFFF">
-        <br>
+        body {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background-color: #f9f9fb;
+            color: #222222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
 
-        <table border="1" cellpadding="10" cellspacing="5" bgcolor="#222222">
-            <tr>
-                <td align="center">
-                    <font size="4"><b><a href="pong.html">PLAY PONG</a></b></font>
-                </td>
-            </tr>
-            <tr>
-                <td align="center">
-                    <font size="4"><b><a href="snake.html">PLAY SNAKE</a></b></font>
-                </td>
-            </tr>
-            <tr>
-                <td align="center">
-                    <font size="4"><b><a href="tetris.html">PLAY TETRIS</a></b></font>
-                </td>
-            </tr>
-        </table>
+        .container {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
 
-        <br><br>
-        <hr width="50%" size="3" color="#FFFFFF">
-    </center>
+        h1 {
+            font-size: 2rem;
+            font-weight: normal;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
 
-</body>
-</html>
+        p.subtitle {
+            font-family: Arial, sans-serif;
+            font-size: 0.95rem;
+            color: #666666;
+            margin-bottom: 30px;
+        }
+
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .game-btn {
+            font-family: Arial, sans-serif;
+            display: block;
+            padding: 14px 20px;
+            font-size: 1rem;
+            color: #2c3e50;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            text-decoration: none;
+            font
