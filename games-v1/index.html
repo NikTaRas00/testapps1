@@ -1,9 +1,9 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Launcher</title>
+    <title>Temporarily Closed for Updates</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,64 +12,149 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Subtle background glow */
+        .background-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            z-index: 2;
+            max-width: 500px;
+        }
+
+        /* Animated Icon */
+        .icon-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem auto;
+        }
+
+        .gear {
+            width: 100%;
+            height: 100%;
+            fill: #6366f1;
+            animation: rotate 8s linear infinite;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            border: 2px solid #6366f1;
+            border-radius: 50%;
+            animation: pulse 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+            opacity: 0;
         }
 
         h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #ffffff;
+            letter-spacing: -0.025em;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #9ca3af;
+            line-height: 1.6;
             margin-bottom: 2rem;
-            font-size: 2.5rem;
-            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
 
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 800px;
-        }
-
-        .game-btn {
+        /* Simple loading dots */
+        .loading-dots span {
             display: inline-block;
-            padding: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #f8fafc;
-            background-color: #1e293b;
-            border: 2px solid #334155;
-            border-radius: 12px;
-            text-decoration: none;
-            text-align: center;
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #6366f1;
+            margin: 0 4px;
+            animation: dot-pulse 1.5s infinite ease-in-out;
         }
 
-        .game-btn:hover {
-            background-color: #38bdf8;
-            color: #0f172a;
-            border-color: #38bdf8;
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        /* Animations */
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes dot-pulse {
+            0%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
         }
     </style>
 </head>
 <body>
 
-    <h1>🎮 Game Select</h1>
+    <div class="background-glow"></div>
 
-    <div class="game-grid">
-        <a  href="volt-v1.html" class="game-btn">Volt V1</a>
-        <a  href="tsubame-v1.html" class="game-btn">Tsubame V1</a>
-        <a  href="tangent-v1.html" class="game-btn">Tangent V1</a>
-        <a  href="tangent-v2.html" class="game-btn">Tangent V2</a>
+    <div class="container">
+        <div class="icon-container">
+            <div class="pulse-ring"></div>
+            <svg class="gear" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+            </svg>
+        </div>
+
+        <h1>We’ll Be Right Back</h1>
+        <p>Sorry for the inconvenience, but we are temporarily closed to perform some essential updates. We will be back online shortly.</p>
+
+        <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
     </div>
 
 </body>
