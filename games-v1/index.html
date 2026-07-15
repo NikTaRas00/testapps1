@@ -84,56 +84,33 @@
             background-color: #e8e8e5;
         }
 
-        /* --- SPECIAL 3D BUTTONS --- */
-
-        /* Red Button (Tactile 3D Lift) */
-        .game-link.red-btn {
-            background-color: #fce8e6; 
-            border: 1px solid #f5c2c2;     
-            color: #a8201a;            
+        /* --- STRONG 3D GREEN BUTTON (Only for Outerstellar) --- */
+        .game-link.special-3d-btn {
+            background-color: #10b981; /* Strong Emerald Green */
+            border: 1px solid #047857;     
+            color: #ffffff;            
+            font-weight: bold;
             
-            transform: translateY(-4px);
-            box-shadow: 0 4px 0 #e8b0ac; 
+            /* Shifts up/left, then casts a hard 3D shadow down & to the right */
+            transform: translate(-4px, -4px);
+            box-shadow: 4px 4px 0 #064e3b; 
             margin-top: 4px;
             margin-bottom: 4px;
         }
 
-        .game-link.red-btn:hover {
-            background-color: #fad2cf;
-            border-color: #e09494;
-            transform: translateY(-6px);
-            box-shadow: 0 6px 0 #e8b0ac;
+        .game-link.special-3d-btn:hover {
+            background-color: #059669;
+            border-color: #064e3b;
+            /* Lifts even further up and right */
+            transform: translate(-6px, -6px);
+            box-shadow: 6px 6px 0 #06241c;
         }
 
-        .game-link.red-btn:active {
-            background-color: #f5b0aa;
-            transform: translateY(0px);
-            box-shadow: 0 0px 0 #e8b0ac;
-        }
-
-        /* Blue Button (Tactile 3D Lift) */
-        .game-link.blue-btn {
-            background-color: #eef4fa; 
-            border: 1px solid #cce0f5;     
-            color: #1b4980;            
-            
-            transform: translateY(-4px);
-            box-shadow: 0 4px 0 #b9d2eb; 
-            margin-top: 4px;
-            margin-bottom: 4px;
-        }
-
-        .game-link.blue-btn:hover {
-            background-color: #dbe9f6;
-            border-color: #aacbec;
-            transform: translateY(-6px);
-            box-shadow: 0 6px 0 #b9d2eb;
-        }
-
-        .game-link.blue-btn:active {
-            background-color: #c7def2;
-            transform: translateY(0px);
-            box-shadow: 0 0px 0 #b9d2eb;
+        .game-link.special-3d-btn:active {
+            background-color: #047857;
+            /* Presses completely flat */
+            transform: translate(0px, 0px);
+            box-shadow: 0px 0px 0 #064e3b;
         }
     </style>
 </head>
@@ -145,10 +122,10 @@
 
         <nav class="game-list">
             <a href="volt-v1.html" class="game-link">Volt</a>
-            <a href="tsubame-v1.html" class="game-link blue-btn">Tsubame</a>
+            <a href="tsubame-v1.html" class="game-link">Tsubame</a>
             <a href="tangent-v1.html" class="game-link">Tangent I</a>
             <a href="tangent-v2.html" class="game-link">Tangent II</a>
-            <a href="outerstellar-v1.html" class="game-link red-btn">Outerstellar 3D</a>
+            <a href="outerstellar-v1.html" class="game-link special-3d-btn">Outerstellar 3D</a>
         </nav>
     </div>
 
