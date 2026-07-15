@@ -177,13 +177,49 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
 
 /* ---------- planetfall ---------- */
 #walk-ui{position:absolute;inset:0;pointer-events:none;z-index:3}
-.walk-hint{position:absolute;bottom:calc(var(--pad) + 4px);left:50%;transform:translateX(-50%);
-  font:800 var(--micro)/1 system-ui;letter-spacing:.22em;color:var(--dim);white-space:nowrap;
-  text-shadow:0 1px 6px #000;animation:hintfade 1s ease 6s forwards}
-@keyframes hintfade{to{opacity:.25}}
 .walk-leave{position:absolute;top:var(--pad);right:var(--pad);left:auto;bottom:auto;pointer-events:auto}
 #boot .ghost{margin-top:10px}
 
+/* top cluster: counters + current objective */
+.walk-top{position:absolute;top:var(--pad);left:0;right:0;display:flex;flex-direction:column;
+  align-items:center;gap:8px;padding:0 64px}
+.walk-quest{display:flex;gap:16px;font:900 13px/1 system-ui;letter-spacing:.12em;
+  color:var(--ink);text-shadow:0 1px 6px #000;font-variant-numeric:tabular-nums}
+#wq-shards{color:var(--hit)}
+#wq-rings{color:var(--perfect)}
+#wq-score{color:var(--ink)}
+.wq-objective{text-align:center;background:rgba(6,10,14,.5);border:1px solid var(--line);
+  border-radius:4px;padding:7px 16px;backdrop-filter:blur(4px);max-width:min(86vw,420px);
+  transition:opacity .3s}
+.wq-obj-label{font:800 var(--micro)/1 system-ui;letter-spacing:.28em;color:var(--dim);margin-bottom:4px}
+.wq-obj-text{font:700 13px/1.3 system-ui;letter-spacing:.02em;color:var(--ink)}
+.wq-objective.flash{animation:objflash .6s ease}
+@keyframes objflash{0%,100%{background:rgba(6,10,14,.5)}40%{background:rgba(127,214,255,.22)}}
+
+/* directional pointer */
+#compass{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  color:var(--hit);pointer-events:none;filter:drop-shadow(0 2px 8px rgba(0,0,0,.7));
+  display:flex;flex-direction:column;align-items:center;gap:2px;opacity:.9;transition:opacity .3s}
+#compass svg{display:block}
+#compass-dist{font:900 11px/1 system-ui;letter-spacing:.1em;color:var(--ink);
+  text-shadow:0 1px 4px #000;transform:rotate(0deg)}
+
+/* proximity hint */
+#walk-proximity{position:absolute;bottom:calc(var(--pad) + 132px);left:50%;transform:translateX(-50%);
+  font:800 var(--micro)/1 system-ui;letter-spacing:.2em;color:var(--hit);white-space:nowrap;
+  text-shadow:0 1px 8px #000;pointer-events:none;text-transform:uppercase}
+
+/* pickup banner */
+#walk-banner{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);
+  font:900 clamp(20px,5.4vmin,34px)/1.2 system-ui;letter-spacing:.06em;text-align:center;
+  color:var(--perfect);text-shadow:0 2px 20px rgba(255,215,107,.45),0 2px 8px #000;
+  animation:bannerpop 2.4s ease forwards;pointer-events:none;white-space:pre-line}
+@keyframes bannerpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.8)}
+  12%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
+  20%{transform:translate(-50%,-50%) scale(1)}
+  80%{opacity:1}100%{opacity:0}}
+
+/* joystick + jump */
 #joy-base{position:absolute;width:124px;height:124px;margin:-62px 0 0 -62px;border-radius:50%;
   border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.04);pointer-events:none}
 #joy-knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;
@@ -194,21 +230,28 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
   font:900 12px/1 system-ui;letter-spacing:.2em;backdrop-filter:blur(2px);
   transition:transform .08s,background .08s}
 #btn-jump:active{transform:scale(.92);background:rgba(255,255,255,.22)}
-.walk-hint{bottom:calc(var(--pad) + 130px)}
 
-.walk-quest{position:absolute;top:var(--pad);left:50%;transform:translateX(-50%);
-  display:flex;gap:18px;font:900 13px/1 system-ui;letter-spacing:.12em;
-  color:var(--ink);text-shadow:0 1px 6px #000;font-variant-numeric:tabular-nums}
-#wq-shards{color:var(--hit)}
-#wq-rings{color:var(--perfect)}
-#walk-banner{position:absolute;top:26%;left:50%;transform:translate(-50%,-50%);
-  font:900 clamp(20px,5.4vmin,34px)/1.2 system-ui;letter-spacing:.06em;text-align:center;
-  color:var(--perfect);text-shadow:0 2px 20px rgba(255,215,107,.45),0 2px 8px #000;
-  animation:bannerpop 2.4s ease forwards;pointer-events:none;white-space:pre-line}
-@keyframes bannerpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.8)}
-  12%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
-  20%{transform:translate(-50%,-50%) scale(1)}
-  80%{opacity:1}100%{opacity:0}}
+/* briefing + complete cards */
+.walk-card{position:absolute;inset:0;margin:auto;width:min(400px,90vw);height:max-content;
+  max-height:88vh;pointer-events:auto;background:linear-gradient(180deg,rgba(8,14,18,.94),rgba(4,8,10,.97));
+  border:1px solid var(--line);border-radius:8px;padding:26px 24px;text-align:center;
+  backdrop-filter:blur(6px);animation:fade .3s ease-out;overflow:auto}
+.wc-title{font:900 clamp(22px,5vmin,30px)/1.15 system-ui;letter-spacing:-.01em;margin:8px 0 20px}
+.wc-tasks{display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:20px}
+.wc-task{display:flex;gap:12px;align-items:flex-start}
+.wc-ic{flex:none;width:30px;height:30px;border-radius:6px;display:grid;place-items:center;
+  font-size:15px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.wc-ic.shard{color:var(--hit)}.wc-ic.ring{color:var(--perfect)}.wc-ic.gey{color:#8affd0}
+.wc-task b{display:block;font:800 13px/1.3 system-ui;letter-spacing:.01em;margin-bottom:2px}
+.wc-task span{font:500 12px/1.35 system-ui;color:var(--dim)}
+.wc-controls{font:700 var(--micro)/1.4 system-ui;letter-spacing:.14em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:18px}
+.wc-final{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0;
+  padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.wc-final span{font:800 var(--micro)/1 system-ui;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.wc-final b{font:900 32px/1 system-ui;font-variant-numeric:tabular-nums;color:var(--perfect)}
+.wc-best{font:800 var(--micro)/1 system-ui;letter-spacing:.22em;color:var(--hit);margin-bottom:18px;min-height:1em}
+.walk-card .primary{width:100%}
 
 </style>
 </head>
@@ -257,16 +300,52 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
 
   <!-- Planetfall walk mode -->
   <div id="walk-ui" class="hidden">
-    <div class="walk-quest">
-      <span id="wq-shards">&#9670; 0/12</span>
-      <span id="wq-rings">&#9678; 0/5</span>
-      <span id="wq-score">0</span>
+    <div class="walk-top">
+      <div class="walk-quest">
+        <span id="wq-shards">&#9670; 0/12</span>
+        <span id="wq-rings">&#9678; 0/5</span>
+        <span id="wq-score">0</span>
+      </div>
+      <div id="wq-objective" class="wq-objective">
+        <div class="wq-obj-label" id="wq-obj-label">OBJECTIVE</div>
+        <div class="wq-obj-text" id="wq-obj-text">Explore the surface</div>
+      </div>
     </div>
+
+    <!-- directional pointer to next goal -->
+    <div id="compass" class="hidden">
+      <svg viewBox="0 0 48 48" width="48" height="48"><path d="M24 4 L34 30 L24 24 L14 30 Z" fill="currentColor"/></svg>
+      <div id="compass-dist">0m</div>
+    </div>
+
+    <div id="walk-proximity" class="hidden"></div>
     <div id="walk-banner" class="hidden"></div>
-    <div class="walk-hint">LEFT: MOVE · RIGHT: LOOK · WASD + SPACE</div>
+
     <div id="joy-base" class="hidden"><div id="joy-knob"></div></div>
     <button id="btn-jump">JUMP</button>
     <button id="btn-exit-walk" class="ghost-btn walk-leave">LEAVE</button>
+
+    <!-- first-entry briefing -->
+    <div id="walk-intro" class="walk-card hidden">
+      <div class="eyebrow">Planetfall</div>
+      <h2 class="wc-title">You're down. Now explore.</h2>
+      <div class="wc-tasks">
+        <div class="wc-task"><span class="wc-ic shard">&#9670;</span><div><b>Collect 12 star shards</b><span>Follow the light pillars on the horizon</span></div></div>
+        <div class="wc-task"><span class="wc-ic ring">&#9678;</span><div><b>Clear 5 jump rings</b><span>Some need a geyser to launch you high enough</span></div></div>
+        <div class="wc-task"><span class="wc-ic gey">&#9650;</span><div><b>Ride the geysers</b><span>Step on a steam vent to blast into the sky</span></div></div>
+      </div>
+      <div class="wc-controls">Left side to move &middot; right side to look &middot; JUMP button</div>
+      <button id="btn-walk-go" class="primary">Head out</button>
+    </div>
+
+    <!-- mission complete -->
+    <div id="walk-done" class="walk-card hidden">
+      <div class="eyebrow">Survey complete</div>
+      <h2 class="wc-title">PLANET CHARTED</h2>
+      <div class="wc-final"><span>Exploration score</span><b id="wd-score">0</b></div>
+      <div class="wc-best" id="wd-best"></div>
+      <button id="btn-walk-stay" class="primary">Keep exploring</button>
+    </div>
   </div>
 
   <!-- Boot -->
@@ -993,7 +1072,7 @@ const WALK = (() => {
     const c = document.createElement('canvas');
     c.width = c.height = S;
     const g = c.getContext('2d');
-    g.fillStyle = '#24443f';
+    g.fillStyle = '#2f5a52';
     g.fillRect(0, 0, S, S);
     // mineral patches
     for (let i = 0; i < 70; i++) {
@@ -1022,34 +1101,114 @@ const WALK = (() => {
     const grp = new THREE.Group();
     grp.visible = false;
 
-    // --- terrain ---
-    const geo = new THREE.PlaneGeometry(SIZE, SIZE, 110, 110);
+    // --- sky dome: gradient from horizon haze to deep teal-black ---
+    const skyGeo = new THREE.SphereGeometry(600, 32, 20);
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      uniforms: {
+        top: { value: new THREE.Color('#0a1826') },
+        mid: { value: new THREE.Color('#1e4a3c') },
+        hor: { value: new THREE.Color('#4a8268') }
+      },
+      vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: [
+        'uniform vec3 top; uniform vec3 mid; uniform vec3 hor; varying vec3 vP;',
+        'void main(){',
+        '  float h = normalize(vP).y;',
+        '  vec3 c = h > 0.0 ? mix(mid, top, pow(h, 0.6)) : mix(mid, hor, pow(-h, 0.5));',
+        '  gl_FragColor = vec4(c, 1.0);',
+        '}'
+      ].join('\n')
+    });
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    grp.add(sky);
+
+    // --- terrain with elevation-based vertex color ---
+    const geo = new THREE.PlaneGeometry(SIZE, SIZE, 128, 128);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
+    const col = new Float32Array(pos.count * 3);
+    const cLow = new THREE.Color('#28524a');    // mossy valley
+    const cMid = new THREE.Color('#437267');    // slope
+    const cHigh = new THREE.Color('#8fb0a8');   // pale rock crest
+    const tmp = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
-      pos.setY(i, height(pos.getX(i), pos.getZ(i)));
+      const x = pos.getX(i), z = pos.getZ(i);
+      const y = height(x, z);
+      pos.setY(i, y);
+      const k = Math.max(0, Math.min(1, (y + 3.5) / 8));   // -3.5..4.5 -> 0..1
+      if (k < 0.5) tmp.copy(cLow).lerp(cMid, k * 2);
+      else tmp.copy(cMid).lerp(cHigh, (k - 0.5) * 2);
+      col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
     }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     geo.computeVertexNormals();
     const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-      map: groundTex(), roughness: 0.95, metalness: 0.02
+      map: groundTex(), vertexColors: true, roughness: 0.96, metalness: 0.02
     }));
     ground.receiveShadow = true;
     grp.add(ground);
 
-    // --- rocks ---
-    const rockMat = new THREE.MeshStandardMaterial({ color: '#3a5450', roughness: 0.9, metalness: 0.05 });
-    const rockMat2 = new THREE.MeshStandardMaterial({ color: '#2c3f3c', roughness: 0.95, metalness: 0.02 });
-    for (let i = 0; i < 46; i++) {
-      const r = 0.4 + Math.random() * 2.4;
+    // --- distant ridgeline: silhouette ring for horizon depth ---
+    const ridgeMat = new THREE.MeshStandardMaterial({
+      color: '#14312a', roughness: 1, metalness: 0, fog: true
+    });
+    for (let ring = 0; ring < 2; ring++) {
+      const rad = SIZE / 2 + 40 + ring * 55;
+      const segs = 40;
+      for (let i = 0; i < segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        const peak = new THREE.Mesh(
+          new THREE.ConeGeometry(14 + Math.random() * 10, 22 + Math.random() * 34, 5),
+          ridgeMat
+        );
+        peak.position.set(Math.cos(a) * rad, -2 - ring * 3, Math.sin(a) * rad);
+        peak.rotation.y = Math.random() * 3;
+        grp.add(peak);
+      }
+    }
+
+    // --- rocks (recorded as colliders: circle in XZ + top height for jump-over) ---
+    const rockMat = new THREE.MeshStandardMaterial({ color: '#46635e', roughness: 0.9, metalness: 0.05 });
+    const rockMat2 = new THREE.MeshStandardMaterial({ color: '#38504b', roughness: 0.95, metalness: 0.02 });
+    const colliders = [];
+    for (let i = 0; i < 52; i++) {
+      const r = 0.4 + Math.random() * 2.6;
       const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), Math.random() < 0.5 ? rockMat : rockMat2);
       const a = Math.random() * Math.PI * 2;
       const d = 8 + Math.random() * (SIZE / 2 - 22);
       const x = Math.cos(a) * d, z = Math.sin(a) * d;
-      rock.position.set(x, height(x, z) + r * 0.25, z);
+      const y0 = height(x, z);
+      rock.position.set(x, y0 + r * 0.25, z);
       rock.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
-      rock.scale.y = 0.55 + Math.random() * 0.5;
+      const sy = 0.55 + Math.random() * 0.5;
+      rock.scale.y = sy;
       rock.castShadow = true;
       grp.add(rock);
+      colliders.push({ x, z, r: r * 0.82, top: y0 + r * sy * 0.9 });
+    }
+
+    // --- alien flora: glowing spore stalks, scattered ---
+    const stalkMat = new THREE.MeshStandardMaterial({ color: '#1d3b34', roughness: 0.8 });
+    const budMat = new THREE.MeshStandardMaterial({
+      color: '#8affd0', emissive: '#2fae7e', emissiveIntensity: 0.9, roughness: 0.5
+    });
+    const flora = [];
+    for (let i = 0; i < 40; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = 10 + Math.random() * (SIZE / 2 - 20);
+      const x = Math.cos(a) * d, z = Math.sin(a) * d;
+      const y0 = height(x, z);
+      const stem = new THREE.Group();
+      const h = 0.7 + Math.random() * 1.1;
+      const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.06, h, 6), stalkMat);
+      stalk.position.y = h / 2;
+      const bud = new THREE.Mesh(new THREE.SphereGeometry(0.11 + Math.random() * 0.08, 8, 6), budMat);
+      bud.position.y = h;
+      stem.add(stalk, bud);
+      stem.position.set(x, y0, z);
+      grp.add(stem);
+      flora.push({ stem, ph: Math.random() * 6, h });
     }
 
     // --- landing flag ---
@@ -1221,6 +1380,37 @@ const WALK = (() => {
       banner,
       shardTotal: shards.length,
       ringTotal: rings.length,
+      colliders,
+
+      // nearest still-active objective to (x,z); returns {x,z,y,kind} or null
+      nearestGoal(px, pz) {
+        let best = null, bd = Infinity;
+        for (const s of shards) {
+          if (s.taken) continue;
+          const d = (px - s.x) * (px - s.x) + (pz - s.z) * (pz - s.z);
+          if (d < bd) { bd = d; best = { x: s.x, z: s.z, y: s.y0, kind: 'shard' }; }
+        }
+        // if all shards gone, point at remaining rings
+        if (!best) {
+          for (const r of rings) {
+            if (r.passed) continue;
+            const d = (px - r.x) * (px - r.x) + (pz - r.z) * (pz - r.z);
+            if (d < bd) { bd = d; best = { x: r.x, z: r.z, y: r.y, kind: 'ring' }; }
+          }
+        }
+        if (best) best.dist = Math.sqrt(bd);
+        return best;
+      },
+
+      // nearest geyser to (x,z) within range, for proximity hints
+      nearestGeyser(px, pz) {
+        let best = null, bd = Infinity;
+        for (const gy of geysers) {
+          const d = Math.hypot(px - gy.x, pz - gy.z);
+          if (d < bd) { bd = d; best = { x: gy.x, z: gy.z, dist: d }; }
+        }
+        return best;
+      },
 
       resetQuest() {
         shards.forEach((s) => { s.taken = false; s.node.visible = true; });
@@ -1309,7 +1499,13 @@ const WALK = (() => {
         return ev;
       },
 
-      update(t) { banner.rotation.y = Math.sin(t * 1.4) * 0.22; }
+      update(t) {
+        banner.rotation.y = Math.sin(t * 1.4) * 0.22;
+        for (const f of flora) {
+          f.stem.rotation.z = Math.sin(t * 1.1 + f.ph) * 0.12;
+          f.stem.rotation.x = Math.cos(t * 0.9 + f.ph) * 0.08;
+        }
+      }
     };
   }
 
@@ -2327,6 +2523,30 @@ const CUSTOMIZER = (() => {
   const space = SPACE.build(scene);
   const surface = WALK.build(scene);
 
+  // dedicated surface lighting rig — warm low sun + cool sky fill + ground bounce
+  const walkSun = new THREE.DirectionalLight(0xffe4c0, 0.0);
+  walkSun.position.set(-40, 34, -30);
+  walkSun.castShadow = true;
+  walkSun.shadow.mapSize.set(1024, 1024);
+  walkSun.shadow.camera.near = 1;
+  walkSun.shadow.camera.far = 140;
+  walkSun.shadow.camera.left = -60;
+  walkSun.shadow.camera.right = 60;
+  walkSun.shadow.camera.top = 60;
+  walkSun.shadow.camera.bottom = -60;
+  walkSun.shadow.bias = -0.0006;
+  scene.add(walkSun);
+  const walkSky = new THREE.HemisphereLight(0x9fd4c8, 0x1a2b26, 0.0);   // sky / ground bounce
+  scene.add(walkSky);
+  const walkRim = new THREE.DirectionalLight(0x6fa8ff, 0.0);
+  walkRim.position.set(30, 8, 40);
+  scene.add(walkRim);
+  function setWalkLights(on) {
+    walkSun.intensity = on ? 2.9 : 0;
+    walkSky.intensity = on ? 1.25 : 0;
+    walkRim.intensity = on ? 0.65 : 0;
+  }
+
   // ---------- actors ----------
   let cfg = CUSTOMIZER.load();
   let ship = null, astro = null, bossModel = null, bossCtl = null;
@@ -2609,7 +2829,7 @@ const CUSTOMIZER = (() => {
     keys: { x: 0, y: 0 },
     savedFog: null,
     score: 0, shards: 0, ringsHit: 0, travel: 0, best: 0,
-    doneShards: false, doneRings: false
+    doneShards: false, doneRings: false, introSeen: false, paused: false
   };
   try { W.best = parseInt(localStorage.getItem('outerstellar.walkbest') || '0', 10) || 0; } catch (e) {}
 
@@ -2635,29 +2855,62 @@ const CUSTOMIZER = (() => {
     $('wq-rings').textContent = '\u25ce ' + W.ringsHit + '/' + surface.ringTotal;
     $('wq-score').textContent = W.score.toLocaleString();
   }
+
+  // ----- objective flow: what the player should do right now -----
+  function setObjective(label, text, flash) {
+    $('wq-obj-label').textContent = label;
+    $('wq-obj-text').textContent = text;
+    if (flash) {
+      const o = $('wq-objective');
+      o.classList.remove('flash'); void o.offsetWidth; o.classList.add('flash');
+    }
+  }
+  function refreshObjective() {
+    const sLeft = surface.shardTotal - W.shards;
+    const rLeft = surface.ringTotal - W.ringsHit;
+    if (sLeft > 0) {
+      setObjective('OBJECTIVE \u00b7 1 OF 2',
+        'Collect star shards \u2014 ' + sLeft + ' left. Follow the light beams.');
+    } else if (rLeft > 0) {
+      setObjective('OBJECTIVE \u00b7 2 OF 2',
+        'Clear the jump rings \u2014 ' + rLeft + ' left. Use geysers to reach the high ones.');
+    } else {
+      setObjective('COMPLETE', 'Planet fully charted. Roam free.');
+    }
+  }
   const JOY_R = 46;   // knob travel in px
 
   function startWalk() {
+    const firstTime = !W.introSeen;
     state = S.WALK;
     guard('walk-ui', () => {
       ['boot', 'hangar', 'intro', 'results', 'fail', 'tally', 'hud'].forEach((id) => $(id).classList.add('hidden'));
       $('walk-ui').classList.remove('hidden');
+      $('walk-done').classList.add('hidden');
+      $('walk-intro').classList.toggle('hidden', !firstTime);
     });
     guard('walk-env', () => {
       surface.group.visible = true;
       space.planet.visible = false;               // we're standing on it now
+      space.group.visible = false;                // hide the space starfield behind our sky dome
+      setWalkLights(true);
+      renderer.toneMappingExposure = 1.28;
       if (scene.fog) {
         W.savedFog = { d: scene.fog.density };
-        scene.fog.density = 0.011;
-        if (scene.fog.color && scene.fog.color.setHex) scene.fog.color.setHex(0x0a1714);
+        scene.fog.density = 0.0042;               // gentle depth haze matching the sky horizon
+        if (scene.fog.color && scene.fog.color.setHex) scene.fog.color.setHex(0x2c5a48);
       }
     });
     guard('walk-quest', () => {
       surface.resetQuest();
       W.score = 0; W.shards = 0; W.ringsHit = 0; W.travel = 0;
       W.doneShards = false; W.doneRings = false;
+      W.paused = firstTime;                       // hold movement until briefing dismissed
       walkHud();
+      refreshObjective();
       $('walk-banner').classList.add('hidden');
+      $('walk-proximity').classList.add('hidden');
+      $('compass').classList.add('hidden');
     });
     guard('walk-actors', () => {
       W.pos.set(0, surface.height(0, 4) , 4);
@@ -2670,6 +2923,7 @@ const CUSTOMIZER = (() => {
       shipRoot.rotation.set(0, 0.7, 0);
       const sx = 7, sz = -9;
       shipRoot.position.set(sx, surface.height(sx, sz) + (ship ? ship.length / 2 + 0.55 : 2.1), sz);
+      W.shipCol = { x: sx, z: sz, r: 1.15 };
       if (ship) { ship.setThrottle(0); ship.setDamage(0); }
     });
     AUDIO.ui();
@@ -2679,6 +2933,9 @@ const CUSTOMIZER = (() => {
     guard('walk-exit', () => {
       surface.group.visible = false;
       space.planet.visible = true;
+      space.group.visible = true;
+      setWalkLights(false);
+      renderer.toneMappingExposure = 1.05;
       if (scene.fog && W.savedFog) {
         scene.fog.density = W.savedFog.d;
         if (scene.fog.color && scene.fog.color.setHex) scene.fog.color.setHex(0x03050a);
@@ -2772,9 +3029,9 @@ const CUSTOMIZER = (() => {
   function layoutWalk(dt) {
     surface.update(tGlobal);
 
-    // input vector (screen space) -> world, relative to camera yaw
-    const jx = Math.max(-1, Math.min(1, W.joy.x + W.keys.x));
-    const jy = Math.max(-1, Math.min(1, W.joy.y + W.keys.y));
+    // paused (briefing open): keep the world alive but freeze the astronaut
+    const jx = W.paused ? 0 : Math.max(-1, Math.min(1, W.joy.x + W.keys.x));
+    const jy = W.paused ? 0 : Math.max(-1, Math.min(1, W.joy.y + W.keys.y));
     const mag = Math.min(1, Math.hypot(jx, jy));
 
     if (mag > 0.08) {
@@ -2790,6 +3047,30 @@ const CUSTOMIZER = (() => {
       // keep on the map
       const r = Math.hypot(W.pos.x, W.pos.z);
       if (r > surface.bound) { W.pos.x *= surface.bound / r; W.pos.z *= surface.bound / r; }
+      // solid rocks: push out of any collider circle unless jumped above its top
+      guard('collide', () => {
+        for (const c of surface.colliders) {
+          if (W.pos.y > c.top) continue;               // airborne above it — clears
+          const ddx = W.pos.x - c.x, ddz = W.pos.z - c.z;
+          const d2 = ddx * ddx + ddz * ddz;
+          if (d2 < c.r * c.r && d2 > 0.0001) {
+            const d = Math.sqrt(d2);
+            W.pos.x = c.x + (ddx / d) * c.r;
+            W.pos.z = c.z + (ddz / d) * c.r;
+          }
+        }
+        // the parked rocket is solid too
+        if (W.shipCol) {
+          const c = W.shipCol;
+          const ddx = W.pos.x - c.x, ddz = W.pos.z - c.z;
+          const d2 = ddx * ddx + ddz * ddz;
+          if (d2 < c.r * c.r && d2 > 0.0001) {
+            const d = Math.sqrt(d2);
+            W.pos.x = c.x + (ddx / d) * c.r;
+            W.pos.z = c.z + (ddz / d) * c.r;
+          }
+        }
+      });
       const target = Math.atan2(dx, dz);
       let dh = target - W.heading;
       while (dh > Math.PI) dh -= Math.PI * 2;
@@ -2822,6 +3103,7 @@ const CUSTOMIZER = (() => {
         W.shards++;
         walkScore(250);
         walkHud();
+        refreshObjective();
         FX.burst(ev.shard, '#7fd6ff', 30, 5);
         AUDIO.perfect(W.shards);
         if (!W.doneShards && ev.shardsLeft === 0) {
@@ -2829,8 +3111,10 @@ const CUSTOMIZER = (() => {
           walkScore(2000);
           surface.igniteAurora();
           walkBanner('CONSTELLATION COMPLETE\n+2000');
+          setObjective('OBJECTIVE \u00b7 2 OF 2', 'Now clear the jump rings. Geysers launch you to the high ones.', true);
           AUDIO.fanfare(true);
           setTimeout(() => guard('aur-boom', () => AUDIO.boom()), 400);
+          checkAllDone();
         } else if (ev.shardsLeft > 0) {
           walkBanner('+250');
         }
@@ -2839,6 +3123,7 @@ const CUSTOMIZER = (() => {
         W.ringsHit++;
         walkScore(400);
         walkHud();
+        refreshObjective();
         FX.burst(ev.ring, '#ffd76b', 26, 4);
         AUDIO.hit(W.ringsHit + 3);
         if (!W.doneRings && ev.ringsLeft === 0) {
@@ -2846,6 +3131,7 @@ const CUSTOMIZER = (() => {
           walkScore(1500);
           walkBanner('TRIAL MASTER\n+1500');
           AUDIO.fanfare(true);
+          checkAllDone();
         } else if (ev.ringsLeft > 0) {
           walkBanner('+400');
         }
@@ -2887,6 +3173,55 @@ const CUSTOMIZER = (() => {
     camera.position.y += (cy - camera.position.y) * Math.min(1, dt * 5);
     camera.position.z += (cz - camera.position.z) * Math.min(1, dt * 5);
     camera.lookAt(W.pos.x, W.pos.y + 1.5, W.pos.z);
+
+    // ----- directional pointer to nearest objective -----
+    guard('compass', () => {
+      const comp = $('compass');
+      const goal = surface.nearestGoal(W.pos.x, W.pos.z);
+      if (!goal || W.paused) { comp.classList.add('hidden'); }
+      else {
+        comp.classList.remove('hidden');
+        // world bearing relative to where the camera faces
+        const bearing = Math.atan2(goal.x - W.pos.x, goal.z - W.pos.z);
+        const rel = bearing - W.camYaw;
+        // place the arrow on a ring around screen center, rotate it to point outward
+        const R = Math.min(window.innerWidth, window.innerHeight) * 0.28;
+        const sx = Math.sin(rel) * R, sy = -Math.cos(rel) * R;
+        comp.style.transform = 'translate(calc(-50% + ' + sx.toFixed(0) + 'px), calc(-50% + ' + sy.toFixed(0) + 'px)) rotate(' + rel.toFixed(3) + 'rad)';
+        const distEl = $('compass-dist');
+        distEl.textContent = Math.round(goal.dist) + 'm';
+        distEl.style.transform = 'rotate(' + (-rel).toFixed(3) + 'rad)';   // keep text upright
+        comp.style.color = goal.kind === 'ring' ? 'var(--perfect)' : 'var(--hit)';
+      }
+    });
+
+    // ----- proximity hint: near a geyser you haven't used -----
+    guard('proximity', () => {
+      const prox = $('walk-proximity');
+      const gy = surface.nearestGeyser(W.pos.x, W.pos.z);
+      const ringsLeft = surface.ringTotal - W.ringsHit;
+      if (!W.paused && gy && gy.dist < 5 && !W.air && ringsLeft > 0) {
+        prox.textContent = 'Step on the vent to launch \u2191';
+        prox.classList.remove('hidden');
+      } else if (!W.paused && W.air && ringsLeft > 0) {
+        prox.textContent = 'Steer with the stick \u2014 aim for a ring';
+        prox.classList.remove('hidden');
+      } else {
+        prox.classList.add('hidden');
+      }
+    });
+  }
+
+  function checkAllDone() {
+    if (W.doneShards && W.doneRings) {
+      setTimeout(() => guard('walk-complete', () => {
+        $('wd-score').textContent = '0';
+        FX.countUp($('wd-score'), W.score, 800);
+        const isBest = W.score >= W.best;
+        $('wd-best').textContent = isBest ? 'NEW EXPLORATION BEST' : 'Best \u00b7 ' + W.best.toLocaleString();
+        $('walk-done').classList.remove('hidden');
+      }), 1600);
+    }
   }
 
   // ---------- input ----------
@@ -2898,6 +3233,7 @@ const CUSTOMIZER = (() => {
 
   // ---------- buttons ----------
   $('btn-start').onclick = () => guard('btn', () => {
+    if (state !== S.BOOT) return;
     AUDIO.unlock(); AUDIO.ui();
     $('boot').classList.add('hidden');
     $('hangar').classList.remove('hidden');
@@ -2908,15 +3244,17 @@ const CUSTOMIZER = (() => {
     else if (key === 'suit' || key === 'visor' || key === 'acc') rebuildAstro();
   }));
   $('btn-launch').onclick = () => guard('btn', () => {
+    if (state !== S.HANGAR) return;
     AUDIO.ui();
     $('hangar').classList.add('hidden');
     stageIdx = 0; results.length = 0; runScore = 0;
     showIntro();
   });
-  $('btn-next').onclick = () => guard('btn', () => { AUDIO.ui(); nextStage(); });
-  $('btn-retry').onclick = () => guard('btn', () => { AUDIO.ui(); startStage(); });
-  $('btn-fail-retry').onclick = () => guard('btn', () => { AUDIO.ui(); startStage(); });
+  $('btn-next').onclick = () => guard('btn', () => { if (state !== S.RESULTS) return; AUDIO.ui(); nextStage(); });
+  $('btn-retry').onclick = () => guard('btn', () => { if (state !== S.RESULTS) return; AUDIO.ui(); startStage(); });
+  $('btn-fail-retry').onclick = () => guard('btn', () => { if (state !== S.FAIL) return; AUDIO.ui(); startStage(); });
   $('btn-again').onclick = () => guard('btn', () => {
+    if (state !== S.TALLY) return;
     AUDIO.ui();
     $('tally').classList.add('hidden');
     $('hangar').classList.remove('hidden');
@@ -2931,6 +3269,15 @@ const CUSTOMIZER = (() => {
   $('btn-explore').onclick = () => guard('btn', () => { AUDIO.unlock(); startWalk(); });
   $('btn-walk').onclick = () => guard('btn', () => startWalk());
   $('btn-exit-walk').onclick = () => guard('btn', () => exitWalk());
+  $('btn-walk-go').onclick = () => guard('btn', () => {
+    AUDIO.ui();
+    W.introSeen = true; W.paused = false;
+    $('walk-intro').classList.add('hidden');
+  });
+  $('btn-walk-stay').onclick = () => guard('btn', () => {
+    AUDIO.ui();
+    $('walk-done').classList.add('hidden');
+  });
 
   // ---------- per-state layouts ----------
   function layoutHangar(dt) {
