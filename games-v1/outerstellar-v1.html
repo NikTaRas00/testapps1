@@ -31,10 +31,15 @@ body{
 /* ---------- typographic HUD ---------- */
 .hidden{display:none !important}
 #hud{position:absolute;inset:0;pointer-events:none;padding:var(--pad);
-  display:flex;flex-direction:column;justify-content:space-between}
+  display:flex;flex-direction:column;gap:0}
 .hud-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.hud-row.mid{justify-content:center;flex:1;align-items:flex-start;padding-top:2vh}
-.hud-row.bottom{align-items:flex-end}
+.hud-row.top{justify-content:center}
+.hud-stage{text-align:center;display:flex;flex-direction:column;gap:2px;
+  background:rgba(4,8,12,.35);border:1px solid var(--line);border-radius:5px;
+  padding:6px 16px;backdrop-filter:blur(3px)}
+.hud-stage .lbl{font-size:var(--micro);letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.hud-stage .val{font-size:clamp(13px,2vmin,17px);font-weight:900;letter-spacing:.18em}
+.hud-row.mid{justify-content:center;flex:1;align-items:flex-start;padding-top:2vh;padding-bottom:110px}
 .hud-block{min-width:78px}
 .hud-block.center{text-align:center;flex:1}
 .hud-block.right{text-align:right}
@@ -50,16 +55,30 @@ body{
 .boss-fill{height:100%;width:100%;background:var(--warn);transform-origin:left;transition:width .18s ease-out}
 .boss-phase{font-size:var(--micro);letter-spacing:.22em;color:var(--dim);margin-top:6px;font-weight:700;min-height:1em}
 
-.hull{width:min(30%,150px)}
-.hull-track{height:4px;background:rgba(255,255,255,.1);margin-top:5px}
-.hull-fill{height:100%;width:100%;background:var(--hit);transition:width .25s}
+.hull{width:100%}
+.hull-track{height:6px;border-radius:4px;background:rgba(255,255,255,.1);margin-top:5px;overflow:hidden}
+.hull-fill{height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,#3aa5e0,var(--hit));transition:width .25s}
 .hull-fill.low{background:var(--miss)}
-.progress{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(255,255,255,.08)}
-.progress-fill{height:100%;width:0;background:var(--ink);opacity:.55;transition:width .2s linear}
+.hud-dock{position:absolute;left:0;right:0;bottom:0;padding:0 var(--pad);
+  padding-bottom:calc(var(--pad) + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;gap:12px}
+.scorebar{width:100%}
+.scorebar-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;
+  font:800 var(--micro)/1 system-ui;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+#scorebar-num{color:var(--hit);font-variant-numeric:tabular-nums}
+.progress{position:relative;height:8px;border-radius:5px;background:rgba(255,255,255,.09);
+  overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.progress-fill{height:100%;width:0;border-radius:5px;
+  background:linear-gradient(90deg,#3aa5e0,var(--hit));
+  box-shadow:0 0 12px rgba(127,214,255,.6);transition:width .25s cubic-bezier(.2,.8,.2,1)}
+.progress-fill.full{background:linear-gradient(90deg,var(--perfect),#fff);
+  box-shadow:0 0 18px rgba(255,215,107,.8)}
+.goalsuffix{font-size:.5em;letter-spacing:0;color:var(--dim);margin-left:.15em;font-weight:700}
 
-.ghost-btn{position:absolute;right:var(--pad);bottom:var(--pad);
-  pointer-events:auto;background:none;border:1px solid var(--line);color:var(--dim);
-  font:800 var(--micro)/1 system-ui;letter-spacing:.2em;padding:7px 11px;cursor:pointer;opacity:.6}
+.ghost-btn{pointer-events:auto;background:rgba(4,8,12,.4);border:1px solid var(--line);color:var(--dim);
+  font:800 var(--micro)/1 system-ui;letter-spacing:.2em;padding:6px 10px;cursor:pointer;opacity:.6;
+  border-radius:4px;backdrop-filter:blur(3px)}
+#mute.ghost-btn{position:absolute;right:var(--pad);top:calc(var(--pad) + 64px);bottom:auto}
 .ghost-btn:hover{color:var(--ink);border-color:var(--ink)}
 
 /* ---------- QTE prompts ---------- */
@@ -92,6 +111,7 @@ body{
 .overlay{position:absolute;inset:0;display:grid;place-items:center;padding:24px;
   background:radial-gradient(ellipse at 50% 50%,rgba(4,6,12,.72),rgba(0,0,0,.92));
   backdrop-filter:blur(2px);z-index:5;animation:fade .3s ease-out}
+.overlay.solid{background:radial-gradient(ellipse at 50% 30%,#0b1420,#04070c 70%);backdrop-filter:none}
 @keyframes fade{from{opacity:0}}
 .eyebrow{font-size:var(--micro);letter-spacing:.34em;text-transform:uppercase;color:var(--dim);font-weight:800}
 .eyebrow.warn{color:var(--miss)}
@@ -138,6 +158,18 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
 .radio:before{content:"“"}.radio:after{content:"”"}
 
 /* results */
+.results-card{width:min(400px,90vw);background:linear-gradient(180deg,rgba(14,22,32,.96),rgba(6,11,16,.98));
+  border:1px solid var(--line);border-radius:12px;padding:22px 22px 20px;
+  box-shadow:0 24px 60px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.res-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+.res-head .eyebrow{text-align:left;flex:1}
+.res-grade-badge{flex:none;width:64px;height:64px;border-radius:12px;display:grid;place-items:center;
+  font-size:38px;font-weight:900;letter-spacing:-.04em;
+  background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.res-grade-badge[data-g="S"]{color:var(--perfect);border-color:rgba(255,215,107,.5);box-shadow:0 0 24px rgba(255,215,107,.25)}
+.res-grade-badge[data-g="A"]{color:var(--hit);border-color:rgba(127,214,255,.5);box-shadow:0 0 24px rgba(127,214,255,.2)}
+.res-grade-badge[data-g="B"]{color:var(--ink)}
+.res-grade-badge[data-g="C"]{color:var(--dim)}
 .results-inner{text-align:center;width:min(420px,90vw)}
 .results-inner.wide{width:min(520px,92vw)}
 .grade{font-size:clamp(80px,17vmin,150px);font-weight:900;line-height:.9;margin:6px 0 18px;letter-spacing:-.05em}
@@ -253,11 +285,17 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
 .wc-best{font:800 var(--micro)/1 system-ui;letter-spacing:.22em;color:var(--hit);margin-bottom:18px;min-height:1em}
 .walk-card .primary{width:100%}
 
+/* ---------- stage 5: orbital approach ---------- */
+#orbitcv{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+
+.buildtag{margin-top:14px;font:800 9px/1 system-ui;letter-spacing:.3em;color:var(--dim);opacity:.55}
+
 </style>
 </head>
 <body>
 <div id="stage">
   <canvas id="view"></canvas>
+  <canvas id="orbitcv" class="hidden"></canvas>
   <div id="grain"></div>
   <div id="vignette"></div>
 
@@ -268,18 +306,12 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
   <!-- HUD -->
   <div id="hud" class="hidden">
     <div class="hud-row top">
-      <div class="hud-block">
-        <div class="lbl">Score</div>
-        <div class="val" id="hud-score">0</div>
+      <div class="hud-stage">
+        <span class="lbl" id="hud-stage-lbl">Stage 1</span>
+        <span class="val small" id="hud-stage-name">IGNITION</span>
       </div>
-      <div class="hud-block center">
-        <div class="lbl" id="hud-stage-lbl">Stage 1</div>
-        <div class="val small" id="hud-stage-name">IGNITION</div>
-      </div>
-      <div class="hud-block right">
-        <div class="lbl">Combo</div>
-        <div class="val" id="hud-combo">0<span class="mult" id="hud-mult">×1</span></div>
-      </div>
+      <span id="hud-score" class="hidden"></span>
+      <span id="hud-combo" class="hidden"><span id="hud-mult"></span></span>
     </div>
     <div class="hud-row mid">
       <div id="boss-bar" class="hidden">
@@ -288,12 +320,15 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
         <div class="boss-phase" id="boss-phase"></div>
       </div>
     </div>
-    <div class="hud-row bottom">
+    <div class="hud-dock">
       <div class="hull">
-        <div class="lbl">Hull</div>
+        <div class="lbl">Life <span id="life-count">4</span>/4</div>
         <div class="hull-track"><div class="hull-fill" id="hull-fill"></div></div>
       </div>
-      <div class="progress"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="scorebar">
+        <div class="scorebar-label"><span>Progress</span><span id="scorebar-num">0 / 1000</span></div>
+        <div class="progress"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
     </div>
     <button id="mute" class="ghost-btn" aria-label="Toggle sound">SOUND ON</button>
   </div>
@@ -357,6 +392,7 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
       <button id="btn-start" class="primary">Begin descent</button>
       <button id="btn-explore" class="ghost">Skip to the planet</button>
       <div class="hint">Tap, swipe, hold, mash. Keyboard: Enter · Arrows · Space</div>
+      <div class="buildtag">BUILD · APPROACH-1 · 5 STAGES</div>
     </div>
   </div>
 
@@ -393,26 +429,28 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
   </div>
 
   <!-- Results -->
-  <div id="results" class="overlay hidden">
-    <div class="results-inner">
-      <div class="eyebrow" id="res-stage">Stage 1 clear</div>
-      <div class="grade" id="res-grade">S</div>
+  <div id="results" class="overlay solid hidden">
+    <div class="results-card">
+      <div class="res-head">
+        <div class="eyebrow" id="res-stage">Stage 1 clear</div>
+        <div class="res-grade-badge" id="res-grade" data-g="S">S</div>
+      </div>
       <dl class="stats">
         <div><dt>Perfect</dt><dd id="res-perfect">0</dd></div>
         <div><dt>Hit</dt><dd id="res-hit">0</dd></div>
         <div><dt>Miss</dt><dd id="res-miss">0</dd></div>
-        <div><dt>Best combo</dt><dd id="res-combo">0</dd></div>
+        <div><dt>Points</dt><dd id="res-combo">0</dd></div>
       </dl>
-      <div class="score-line"><span>Score</span><b id="res-score">0</b></div>
+      <div class="score-line"><span>Stage score</span><b id="res-score">0</b></div>
       <div class="btn-row">
-        <button id="btn-retry" class="ghost">Retry stage</button>
+        <button id="btn-retry" class="ghost">Retry</button>
         <button id="btn-next" class="primary">Continue</button>
       </div>
     </div>
   </div>
 
   <!-- Fail -->
-  <div id="fail" class="overlay hidden">
+  <div id="fail" class="overlay solid hidden">
     <div class="results-inner">
       <div class="eyebrow warn">Hull breached</div>
       <h2 class="intro-name">DRIFT</h2>
@@ -422,7 +460,7 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
   </div>
 
   <!-- Final tally -->
-  <div id="tally" class="overlay hidden">
+  <div id="tally" class="overlay solid hidden">
     <div class="results-inner wide">
       <div class="eyebrow">Touchdown</div>
       <h2 class="intro-name">YOU MADE IT</h2>
@@ -453,19 +491,19 @@ const CFG = {
   },
 
   score: {
-    hit: 100, perfect: 250, miss: -100,
-    comboStep: 0.25, comboCap: 12, multCap: 4
+    goal: 1000,        // points needed to clear a stage
+    perfectBonus: 0.15 // a perfect is worth 15% more than the per-action share
   },
 
   grade: { S: 95, A: 85, B: 70 },
 
   tempo: { start: 1600, end: 700 },   // beat interval eases across the run
 
-  hull: { max: 5 },                    // misses tolerated per stage before DRIFT
+  hull: { max: 4 },                    // life out of 4, persists across stages; 0 = full restart
 
   boss: {
     magpie: { hp: 8,  telegraphStart: 900, telegraphEnd: 550, volley: 3 },
-    warden: { hp: [10, 12, 14], telegraphStart: 900, telegraphEnd: 500, volley: 3 }
+    warden: { hp: [6, 8], telegraphStart: 850, telegraphEnd: 520, volley: 2 }
   },
 
   palettes: {
@@ -1371,6 +1409,54 @@ const WALK = (() => {
     }
     let auroraOn = false;
 
+    // ============ ENDGAME (unlocks after both tasks) ============
+    // find the highest terrain point on a coarse grid for the summit monument
+    let sx0 = 0, sz0 = 0, sh0 = -Infinity;
+    for (let gx = -SIZE / 2 + 20; gx <= SIZE / 2 - 20; gx += 8) {
+      for (let gz = -SIZE / 2 + 20; gz <= SIZE / 2 - 20; gz += 8) {
+        const hh = height(gx, gz);
+        if (hh > sh0) { sh0 = hh; sx0 = gx; sz0 = gz; }
+      }
+    }
+    const monument = new THREE.Group();
+    const obeliskMat = new THREE.MeshStandardMaterial({
+      color: '#2a3a52', emissive: '#12408a', emissiveIntensity: 0.35, metalness: 0.7, roughness: 0.3
+    });
+    const obelisk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.55, 4.2, 4), obeliskMat);
+    obelisk.position.y = 2.1;
+    obelisk.rotation.y = Math.PI / 4;
+    monument.add(obelisk);
+    const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 1),
+      new THREE.MeshStandardMaterial({ color: '#ffe08a', emissive: '#ff9b2e', emissiveIntensity: 0.4, metalness: 0.4, roughness: 0.2 }));
+    orb.position.y = 4.6;
+    monument.add(orb);
+    monument.add(glowSprite('rgba(255,180,80,.5)', 4.5));
+    monument.position.set(sx0, sh0, sz0);
+    monument.visible = false;
+    grp.add(monument);
+    let monReached = false, monLit = 0;
+
+    // 5 relics — glowing artifacts scattered far and wide, appear post-completion
+    const relicMat = new THREE.MeshStandardMaterial({
+      color: '#ff8ad0', emissive: '#e83fa8', emissiveIntensity: 1.4, metalness: 0.3, roughness: 0.2
+    });
+    const relics = [];
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + 0.6;
+      const d = 40 + (i % 2) * 30;
+      const x = Math.cos(a) * d, z = Math.sin(a) * d;
+      const y0 = height(x, z);
+      const node = new THREE.Group();
+      const gem = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 0), relicMat);
+      node.add(gem);
+      node.add(glowSprite('rgba(255,138,208,.7)', 2.4));
+      node.position.set(x, y0 + 1.0, z);
+      node.visible = false;
+      grp.add(node);
+      relics.push({ node, gem, x, z, y0, taken: false, ph: i * 1.3 });
+    }
+    let endgameOn = false;
+
     scene.add(grp);
 
     return {
@@ -1398,6 +1484,18 @@ const WALK = (() => {
             if (d < bd) { bd = d; best = { x: r.x, z: r.z, y: r.y, kind: 'ring' }; }
           }
         }
+        // endgame: relics, then the summit monument
+        if (!best && endgameOn) {
+          for (const rl of relics) {
+            if (rl.taken) continue;
+            const d = (px - rl.x) * (px - rl.x) + (pz - rl.z) * (pz - rl.z);
+            if (d < bd) { bd = d; best = { x: rl.x, z: rl.z, y: rl.y0, kind: 'relic' }; }
+          }
+          if (!best && !monReached) {
+            const d = (px - sx0) * (px - sx0) + (pz - sz0) * (pz - sz0);
+            bd = d; best = { x: sx0, z: sz0, y: sh0, kind: 'summit' };
+          }
+        }
         if (best) best.dist = Math.sqrt(bd);
         return best;
       },
@@ -1418,9 +1516,22 @@ const WALK = (() => {
         prints.forEach((p) => { p.mesh.visible = false; });
         auroraOn = false;
         auroras.forEach((a) => { a.material.opacity = 0; });
+        endgameOn = false;
+        monReached = false; monLit = 0;
+        monument.visible = false;
+        relics.forEach((r) => { r.taken = false; r.node.visible = false; });
       },
 
       igniteAurora() { auroraOn = true; },
+
+      // called once both tasks are done — reveals relics + summit monument
+      unlockEndgame() {
+        endgameOn = true;
+        monument.visible = true;
+        relics.forEach((r) => { r.node.visible = true; });
+        return { summit: { x: monument.position.x, z: monument.position.z, y: sh0 }, relicTotal: relics.length };
+      },
+      get summit() { return { x: sx0, z: sz0, y: sh0 }; },
 
       print(x, z, angle) {
         const p = prints[printHead++ % PRINTS];
@@ -1433,7 +1544,7 @@ const WALK = (() => {
 
       // returns events that happened this frame
       quest(px, py, pz, air, dt, t) {
-        const ev = { shard: null, ring: null, geyser: false, shardsLeft: 0, ringsLeft: 0 };
+        const ev = { shard: null, ring: null, geyser: false, shardsLeft: 0, ringsLeft: 0, relic: null, relicsLeft: 0, summit: false };
 
         for (const s of shards) {
           if (s.taken) { ev.shardsLeft += 0; } else ev.shardsLeft++;
@@ -1489,6 +1600,38 @@ const WALK = (() => {
           if (p.t > 9) p.mesh.visible = false;
         }
 
+        if (endgameOn) {
+          for (const rl of relics) {
+            if (!rl.taken) ev.relicsLeft++;
+            if (!rl.node.visible) continue;
+            rl.node.rotation.y += dt * 1.8;
+            rl.gem.rotation.x += dt * 1.2;
+            rl.node.position.y = rl.y0 + 1.0 + Math.sin(t * 2.2 + rl.ph) * 0.22;
+            if (!rl.taken) {
+              const d = Math.hypot(px - rl.x, pz - rl.z);
+              if (d < 1.6 && Math.abs(py - rl.y0) < 2.4) {
+                rl.taken = true;
+                rl.node.visible = false;
+                ev.relic = rl.node.position;
+                ev.relicsLeft--;
+              }
+            }
+          }
+          // summit monument: reach the top, orb lights up
+          orb.rotation.y += dt * 0.7;
+          if (!monReached) {
+            const d = Math.hypot(px - monument.position.x, pz - monument.position.z);
+            if (d < 3.2 && Math.abs(py - sh0) < 3.5) {
+              monReached = true;
+              ev.summit = true;
+            }
+          } else {
+            monLit = Math.min(1, monLit + dt * 0.7);
+            orb.material.emissiveIntensity = 0.4 + monLit * 2.6 + Math.sin(t * 4) * 0.3 * monLit;
+            obeliskMat.emissiveIntensity = 0.35 + monLit * 1.4;
+          }
+        }
+
         if (auroraOn) {
           auroras.forEach((a, i) => {
             a.material.opacity = Math.min(0.75, a.material.opacity + dt * 0.25);
@@ -1510,6 +1653,320 @@ const WALK = (() => {
   }
 
   return { build, height };
+})();
+
+/* ===== src/orbit.js ===== */
+/* APPROACH — stage 5 orbital descent. TANGENT's gameplay (orbit → tangent release →
+   capture, sweet-spot perfects, decaying orbits, burn/void deaths) reskinned for
+   OUTERSTELLAR: transparent 2D canvas over the live 3D starfield. 10 captures = landing. */
+const ORBIT = (() => {
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+  const angDiff = (x) => { x = (x % TAU + TAU) % TAU; return x > Math.PI ? x - TAU : x; };
+
+  const CYAN = '127,214,255', GOLD = '255,215,107', REDC = '255,95,107', INKC = '242,244,247';
+
+  function create(canvas, hooks) {
+    const cx = canvas.getContext('2d');
+    let W = 0, H = 0, DPR = 1;
+    const TARGET = 10;
+
+    let running = false, done = false, dead = false;
+    let wells = [], camY = 0;
+    const player = { mode: 'orbit', wi: 0, th: -Math.PI / 2, r: 60, dirO: 1, x: 0, y: 0, vx: 0, vy: 0 };
+    let lastWell = -1, releasedOnce = false;
+    let hops = 0, perfect = 0, perfStreak = 0;
+    let freeze = 0, shake = 0, tGlob = 0, doneAt = 0;
+    let parts = [], rings = [], trail = [];
+
+    const omega = () => Math.min(3.8, 2.3 + hops * 0.13);
+    const decay = () => Math.min(24, 11 + hops * 1.3);
+
+    function resize() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W * DPR; canvas.height = H * DPR;
+    }
+    window.addEventListener('resize', () => { if (running) resize(); });
+
+    function makeWell(x, y) {
+      return {
+        x0: x, x, y,
+        ringR: clamp(60 - hops * 1.2, 46, 60) * (0.92 + Math.random() * 0.16),
+        coreR: 10, sweetA: Math.random() * TAU,
+        swAmp: hops >= 6 ? 12 + Math.random() * 16 : 0,
+        swSp: 0.5 + Math.random() * 0.5, ph: Math.random() * TAU
+      };
+    }
+    function topWellY() {
+      let m = 1e9;
+      for (const w of wells) m = Math.min(m, w.y);
+      return m === 1e9 ? 0 : m;
+    }
+    function spawnAhead() {
+      while (wells.length === 0 || topWellY() > camY - H * 1.2) {
+        if (wells.length === 0) { wells.push(makeWell(W / 2, 0)); continue; }
+        let prev = null, py = 1e9;
+        for (const w of wells) if (w.y < py) { py = w.y; prev = w; }
+        const dy = 160 + Math.random() * 80, dx = (Math.random() * 2 - 1) * 160;
+        wells.push(makeWell(clamp(prev.x0 + dx, 72, W - 72), prev.y - dy));
+      }
+      for (let i = wells.length - 1; i >= 0; i--) {
+        if (wells[i].y > camY + H * 1.7 && i !== player.wi && wells.length > 3) {
+          wells.splice(i, 1);
+          if (player.wi > i) player.wi--;
+          if (lastWell > i) lastWell--; else if (lastWell === i) lastWell = -1;
+        }
+      }
+    }
+    const curWell = () => wells[player.wi];
+    function syncOrbitPos() {
+      const w = curWell();
+      player.x = w.x + Math.cos(player.th) * player.r;
+      player.y = w.y + Math.sin(player.th) * player.r;
+    }
+
+    function burst(x, y, n, col, spd) {
+      const nn = CFG.reduced ? Math.floor(n / 3) : n;
+      for (let i = 0; i < nn; i++) {
+        const a = Math.random() * TAU, s = spd * (0.3 + Math.random() * 0.7);
+        parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: 0, tt: 0.35 + Math.random() * 0.4, r: 1.2 + Math.random() * 1.8, c: col });
+      }
+    }
+    const ringFx = (x, y, c, sp) => rings.push({ x, y, c, sp, t: 0 });
+
+    function start() {
+      resize();
+      wells = []; camY = -H * 0.58;
+      hops = 0; perfect = 0; perfStreak = 0;
+      done = false; dead = false; freeze = 0; shake = 0;
+      parts = []; rings = []; trail = [];
+      lastWell = -1; releasedOnce = false;
+      spawnAhead();
+      player.mode = 'orbit'; player.wi = 0; player.th = -Math.PI / 2;
+      player.dirO = Math.random() < 0.5 ? 1 : -1; player.r = wells[0].ringR;
+      syncOrbitPos();
+      running = true;
+    }
+    function stop() { running = false; }
+
+    function release() {
+      const v = clamp(omega() * player.r, 160, 330);
+      player.vx = -Math.sin(player.th) * v * player.dirO;
+      player.vy = Math.cos(player.th) * v * player.dirO;
+      player.mode = 'fly';
+      lastWell = player.wi;
+      releasedOnce = true;
+      burst(player.x, player.y, 6, CYAN, 120);
+      AUDIO.whoosh();
+    }
+
+    function capture(i, dist) {
+      const w = wells[i];
+      const rx = player.x - w.x, ry = player.y - w.y;
+      player.dirO = (rx * player.vy - ry * player.vx) >= 0 ? 1 : -1;
+      player.th = Math.atan2(ry, rx);
+      player.r = Math.max(dist, w.coreR + 10);
+      player.mode = 'orbit'; player.wi = i;
+      syncOrbitPos();
+
+      const isPerf = Math.abs(angDiff(player.th - w.sweetA)) < 0.38;
+      hops++;
+      if (isPerf) { perfect++; perfStreak++; } else perfStreak = 0;
+
+      freeze = isPerf ? 0.09 : 0.05;
+      shake = Math.min(9, shake + (isPerf ? 4.5 : 2.2) * (CFG.reduced ? 0.3 : 1));
+      burst(player.x, player.y, isPerf ? 15 : 8, isPerf ? GOLD : CYAN, 220);
+      ringFx(w.x, w.y, isPerf ? GOLD : INKC, isPerf ? 300 : 220);
+      if (isPerf) AUDIO.perfect(hops); else AUDIO.hit(hops);
+      hooks.onCapture && hooks.onCapture(isPerf, hops, perfStreak,
+        { x: player.x, y: player.y - camY });
+
+      if (hops >= TARGET) {
+        done = true; doneAt = 0;
+        burst(player.x, player.y, 40, GOLD, 300);
+        ringFx(player.x, player.y, GOLD, 460);
+        AUDIO.fanfare(true);
+      }
+    }
+
+    function die(kind) {
+      if (dead || done) return;
+      dead = true;
+      burst(player.x, player.y, 26, REDC, 320);
+      burst(player.x, player.y, 12, INKC, 220);
+      ringFx(player.x, player.y, REDC, 300);
+      shake = Math.min(15, 13 * (CFG.reduced ? 0.3 : 1));
+      AUDIO.miss(); AUDIO.boom();
+      hooks.onDead && hooks.onDead(kind);
+    }
+
+    function tap() {
+      if (!running || done || dead) return;
+      if (player.mode === 'orbit') release();
+    }
+
+    function update(dt) {
+      if (!running) return;
+      tGlob += dt;
+      shake *= Math.pow(0.0005, dt);
+      for (const w of wells) {
+        w.x = w.x0 + (w.swAmp ? Math.sin(tGlob * w.swSp + w.ph) * w.swAmp : 0);
+      }
+      for (let i = trail.length - 1; i >= 0; i--) { trail[i].t += dt; if (trail[i].t > 0.3) trail.splice(i, 1); }
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const p = parts[i]; p.t += dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.vx *= Math.exp(-dt * 3); p.vy *= Math.exp(-dt * 3);
+        if (p.t > p.tt) parts.splice(i, 1);
+      }
+      for (let i = rings.length - 1; i >= 0; i--) { rings[i].t += dt; if (rings[i].t > 0.5) rings.splice(i, 1); }
+
+      if (done) {
+        doneAt += dt;
+        if (doneAt > 1.1) { running = false; hooks.onDone && hooks.onDone({ hops, perfect }); }
+        return;
+      }
+      if (dead) return;
+      if (freeze > 0) { freeze -= dt; return; }
+
+      if (player.mode === 'orbit') {
+        player.th += omega() * player.dirO * dt;
+        if (releasedOnce) player.r -= decay() * dt;
+        syncOrbitPos();
+        if (player.r <= curWell().coreR + 4) { die('burn'); return; }
+      } else {
+        player.x += player.vx * dt;
+        player.y += player.vy * dt;
+        let bi = -1, bd = 1e9;
+        for (let i = 0; i < wells.length; i++) {
+          if (i === lastWell) continue;
+          const d = Math.hypot(player.x - wells[i].x, player.y - wells[i].y);
+          if (d < bd) { bd = d; bi = i; }
+        }
+        if (bi >= 0) {
+          const w = wells[bi];
+          if (bd < w.coreR + 5) { die('burn'); return; }
+          if (bd < w.ringR + 20) capture(bi, bd);
+        }
+        if (player.x < -40 || player.x > W + 40 || player.y > camY + H + 50 || bd > H * 1.5) { die('void'); return; }
+      }
+
+      trail.push({ x: player.x, y: player.y, t: 0 });
+      if (trail.length > 24) trail.shift();
+
+      const desired = player.y - H * 0.58;
+      if (desired < camY) camY += (desired - camY) * (1 - Math.exp(-dt * 6));
+      spawnAhead();
+    }
+
+    function render() {
+      if (!running && !dead) return;
+      cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      cx.clearRect(0, 0, W, H);   // transparent — 3D space shows through
+
+      cx.save();
+      const sh = CFG.reduced ? 0 : shake;
+      cx.translate((Math.random() * 2 - 1) * sh, (Math.random() * 2 - 1) * sh - camY);
+
+      // wells
+      for (let i = 0; i < wells.length; i++) {
+        const w = wells[i];
+        if (w.y < camY - 120 || w.y > camY + H + 120) continue;
+        const active = i === player.wi && player.mode === 'orbit';
+
+        // orbit ring
+        cx.strokeStyle = 'rgba(' + CYAN + ',' + (active ? 0.9 : 0.45) + ')';
+        cx.lineWidth = active ? 2 : 1.3;
+        cx.shadowColor = 'rgba(' + CYAN + ',.8)';
+        cx.shadowBlur = active ? 14 : 6;
+        cx.beginPath(); cx.arc(w.x, w.y, w.ringR, 0, TAU); cx.stroke();
+        cx.shadowBlur = 0;
+
+        // decayed orbit (player's actual radius, when shrunk)
+        if (active && releasedOnce && player.r < w.ringR - 2) {
+          cx.strokeStyle = 'rgba(' + REDC + ',.5)';
+          cx.setLineDash([3, 5]);
+          cx.beginPath(); cx.arc(w.x, w.y, player.r, 0, TAU); cx.stroke();
+          cx.setLineDash([]);
+        }
+
+        // burn core
+        const g = cx.createRadialGradient(w.x, w.y, 0, w.x, w.y, w.coreR * 2.2);
+        g.addColorStop(0, 'rgba(' + REDC + ',.95)');
+        g.addColorStop(0.5, 'rgba(' + REDC + ',.35)');
+        g.addColorStop(1, 'rgba(' + REDC + ',0)');
+        cx.fillStyle = g;
+        cx.beginPath(); cx.arc(w.x, w.y, w.coreR * 2.2, 0, TAU); cx.fill();
+
+        // sweet mark — gold arc + tick
+        cx.strokeStyle = 'rgba(' + GOLD + ',.95)';
+        cx.lineWidth = 3;
+        cx.shadowColor = 'rgba(' + GOLD + ',.9)'; cx.shadowBlur = 10;
+        cx.beginPath(); cx.arc(w.x, w.y, w.ringR, w.sweetA - 0.3, w.sweetA + 0.3); cx.stroke();
+        cx.shadowBlur = 0;
+        const mx = w.x + Math.cos(w.sweetA) * w.ringR, my = w.y + Math.sin(w.sweetA) * w.ringR;
+        cx.fillStyle = 'rgba(' + GOLD + ',1)';
+        cx.beginPath(); cx.arc(mx, my, 3.4, 0, TAU); cx.fill();
+      }
+
+      // tangent guide while orbiting
+      if (player.mode === 'orbit' && !done && !dead) {
+        const tx = -Math.sin(player.th) * player.dirO, ty = Math.cos(player.th) * player.dirO;
+        cx.strokeStyle = 'rgba(' + INKC + ',.35)';
+        cx.lineWidth = 1.2;
+        cx.setLineDash([2, 8]);
+        cx.beginPath();
+        cx.moveTo(player.x + tx * 12, player.y + ty * 12);
+        cx.lineTo(player.x + tx * 230, player.y + ty * 230);
+        cx.stroke();
+        cx.setLineDash([]);
+      }
+
+      // trail
+      for (const t of trail) {
+        const a = 1 - t.t / 0.3;
+        cx.fillStyle = 'rgba(' + CYAN + ',' + (a * 0.5) + ')';
+        cx.beginPath(); cx.arc(t.x, t.y, 2.2 * a, 0, TAU); cx.fill();
+      }
+
+      // particles
+      for (const p of parts) {
+        const a = 1 - p.t / p.tt;
+        cx.fillStyle = 'rgba(' + p.c + ',' + a + ')';
+        cx.beginPath(); cx.arc(p.x, p.y, p.r * a + 0.4, 0, TAU); cx.fill();
+      }
+      // expanding rings
+      for (const r of rings) {
+        const k = r.t / 0.5;
+        cx.strokeStyle = 'rgba(' + r.c + ',' + (1 - k) + ')';
+        cx.lineWidth = 2 * (1 - k) + 0.5;
+        cx.beginPath(); cx.arc(r.x, r.y, r.sp * r.t + 6, 0, TAU); cx.stroke();
+      }
+
+      // player
+      cx.fillStyle = 'rgba(' + INKC + ',1)';
+      cx.shadowColor = 'rgba(' + CYAN + ',1)'; cx.shadowBlur = 12;
+      cx.beginPath(); cx.arc(player.x, player.y, 4.2, 0, TAU); cx.fill();
+      cx.shadowBlur = 0;
+
+      cx.restore();
+    }
+
+    return {
+      start, stop, update, render, tap, resize,
+      get done() { return done; },
+      get dead() { return dead; },
+      get running() { return running; },
+      get stats() { return { hops, perfect, target: TARGET, streak: perfStreak }; },
+      // test hooks
+      _player: player,
+      _wells: () => wells,
+      _cam: () => camY
+    };
+  }
+
+  return { create };
 })();
 
 /* ===== src/ship.js ===== */
@@ -2168,36 +2625,30 @@ const LEVELS = (() => {
     {
       n: 1, name: 'IGNITION', kind: 'run',
       radio: 'Ignition in three. Two. …I forgot one. Just hit the beats.',
-      beats: () => make(1, 18, ['tap', 'tap', 'tap', 'hold'], 11, 0.00, 0.14),
+      beats: () => make(1, 5, ['tap', 'tap', 'hold'], 11, 0.00, 0.22),
       cam: { z: 8.5, y: 1.2 }
     },
     {
       n: 2, name: 'DEBRIS BELT', kind: 'run',
       radio: "Rock field. Big ones, small ones. Mostly big ones. Swipe or become debris.",
-      beats: () => make(2, 26, ['swipe', 'swipe', 'tap', 'tap', 'sequence'], 23, 0.14, 0.36),
+      beats: () => make(2, 5, ['swipe', 'swipe', 'tap', 'tap'], 23, 0.22, 0.5),
       cam: { z: 9.5, y: 0.8 }
     },
     {
-      n: 3, name: 'MAGPIE', kind: 'boss', boss: 'magpie',
-      radio: "Salvage drone. It thinks you're scrap. It is *slightly* right.",
-      cam: { z: 10, y: 1.0 }
-    },
-    {
-      n: 4, name: 'GRAVITY SLING', kind: 'run',
-      radio: 'Ride the well. Hold the burn. Let go too soon and we sightsee forever.',
-      beats: () => make(4, 24, ['hold', 'sequence', 'tap', 'hold'], 37, 0.42, 0.64),
-      cam: { z: 9, y: 1.4 }
-    },
-    {
-      n: 5, name: 'RE-ENTRY', kind: 'run',
+      n: 3, name: 'RE-ENTRY', kind: 'run',
       radio: "Heat shield is 'optional' according to the manual. The manual is on fire.",
-      beats: () => make(5, 28, ['mash', 'tap', 'tap', 'swipe'], 53, 0.64, 0.9),
+      beats: () => make(3, 5, ['mash', 'tap', 'tap', 'swipe'], 53, 0.5, 0.78),
       cam: { z: 8, y: 0.6 }
     },
     {
-      n: 6, name: 'WARDEN', kind: 'boss', boss: 'warden',
+      n: 4, name: 'WARDEN', kind: 'boss', boss: 'warden',
       radio: 'Orbital guardian. Old. Patient. Extremely armed. Be rude.',
       cam: { z: 11, y: 1.2 }
+    },
+    {
+      n: 5, name: 'APPROACH', kind: 'orbit',
+      radio: 'Ten gravity wells between you and the ground. Tap to let go on the tangent. Miss and the sky keeps you.',
+      cam: { z: 9, y: 1.0 }
     }
   ];
 
@@ -2523,6 +2974,35 @@ const CUSTOMIZER = (() => {
   const space = SPACE.build(scene);
   const surface = WALK.build(scene);
 
+  // stage 5 orbital-approach minigame (2D canvas over the 3D starfield)
+  let orbitGame = null;
+  function orbitOn() {
+    $('orbitcv').classList.remove('hidden');
+    if (!orbitGame) {
+      orbitGame = ORBIT.create($('orbitcv'), {
+        onCapture: (isPerf, hops, streak, px) => guard('orbit-score', () => {
+          const share = CFG.score.goal / 10;
+          const gain = Math.round(isPerf ? share * (1 + CFG.score.perfectBonus) : share);
+          stageScore = Math.min(CFG.score.goal, stageScore + gain);
+          updateScoreBar();
+          FX.float(px.x, px.y - 18, '+' + gain + (isPerf ? ' PERFECT' : ''), isPerf ? 'perfect' : 'hit');
+        }),
+        onDone: () => guard('orbit-done', () => { if (state === S.PLAY) endStage(true); }),
+        onDead: () => guard('orbit-dead', () => {
+          // a crash costs a life, not the run; only 0 life ends it
+          if (state !== S.PLAY) return;
+          loseLife();
+          if (hull > 0 && orbitGame) orbitGame.start();   // respawn on the approach
+        })
+      });
+    }
+    orbitGame.start();
+  }
+  function orbitOff() {
+    if (orbitGame) orbitGame.stop();
+    $('orbitcv').classList.add('hidden');
+  }
+
   // dedicated surface lighting rig — warm low sun + cool sky fill + ground bounce
   const walkSun = new THREE.DirectionalLight(0xffe4c0, 0.0);
   walkSun.position.set(-40, 34, -30);
@@ -2605,7 +3085,7 @@ const CUSTOMIZER = (() => {
   const S = { BOOT: 0, HANGAR: 1, INTRO: 2, PLAY: 3, RESULTS: 4, FAIL: 5, TALLY: 6, WALK: 7 };
   let state = S.BOOT;
   let stageIdx = 0;
-  let stageScore = 0, runScore = 0, hull = CFG.hull.max;
+  let stageScore = 0, runScore = 0, hull = CFG.hull.max, stageActions = 5;
   let sessionBest = 0;
   try { sessionBest = parseInt(localStorage.getItem('outerstellar.best') || '0', 10) || 0; } catch (e) {}
   const results = [];
@@ -2626,22 +3106,17 @@ const CUSTOMIZER = (() => {
     const s = CFG.score;
     let gain = 0;
     if (kind === 'miss') {
-      gain = s.miss;                       // never multiplied
-      hull = Math.max(0, hull - 1);
-      updateHull();
-      if (ship) ship.setDamage(1 - hull / CFG.hull.max);
+      loseLife();
+      gain = 0;
     } else {
-      const base = kind === 'perfect' ? s.perfect : s.hit;
-      gain = Math.round(base * qte.mult());
+      const share = CFG.score.goal / stageActions;      // points per action
+      gain = Math.round(kind === 'perfect' ? share * (1 + CFG.score.perfectBonus) : share);
     }
     stageScore = Math.max(0, stageScore + gain);
-    $('hud-score').textContent = stageScore.toLocaleString();
-    $('hud-combo').textContent = meta.combo;
-    $('hud-mult').textContent = '\u00d7' + qte.mult().toFixed(2).replace(/\.?0+$/, '');
-    $('hud-combo').classList.toggle('hot', meta.combo >= 8);
+    updateScoreBar();
 
     const p = beat.px || project(SLOTS[0]);
-    FX.float(p.x, p.y - 30, (gain > 0 ? '+' : '') + gain,
+    FX.float(p.x, p.y - 30, (gain > 0 ? '+' + gain : 'MISS'),
       kind === 'perfect' ? 'perfect' : kind === 'hit' ? 'hit' : 'miss');
     if (kind !== 'miss') {
       FX.burst(beat.target || SLOTS[0],
@@ -2649,14 +3124,44 @@ const CUSTOMIZER = (() => {
         kind === 'perfect' ? 34 : 20);
     }
     if (bossCtl) bossCtl.onResolve(kind, beat);
-    if (hull <= 0 && state === S.PLAY) endStage(false);
   }
 
+  // ---- life (out of 4, persists across stages) ----
+  function loseLife() {
+    hull = Math.max(0, hull - 1);
+    updateHull();
+    if (ship) ship.setDamage(1 - hull / CFG.hull.max);
+    FX.kick(0.4); FX.flash(0.18, 130);
+    if (hull <= 0 && state === S.PLAY) gameOver();
+  }
   function updateHull() {
     const k = hull / CFG.hull.max;
     const f = $('hull-fill');
     f.style.width = (k * 100) + '%';
-    f.classList.toggle('low', k <= 0.4);
+    f.classList.toggle('low', hull <= 1);
+    $('life-count').textContent = hull;
+  }
+
+  // ---- score bar: fills toward the 1000 goal, wired to the number ----
+  function updateScoreBar() {
+    const shown = Math.min(stageScore, CFG.score.goal);
+    $('hud-score').textContent = stageScore.toLocaleString();
+    $('hud-mult').textContent = shown.toLocaleString();
+    $('scorebar-num').textContent = shown.toLocaleString() + ' / ' + CFG.score.goal;
+    const pct = Math.min(100, (stageScore / CFG.score.goal) * 100);
+    $('progress-fill').style.width = pct + '%';
+    $('progress-fill').classList.toggle('full', stageScore >= CFG.score.goal);
+  }
+
+  // ---- game over: life hit 0 → restart the whole run ----
+  function gameOver() {
+    if (state !== S.PLAY) return;
+    qte.stop(); AUDIO.droneOff();
+    if (typeof orbitOff === 'function') orbitOff();
+    state = S.FAIL;
+    $('hud').classList.add('hidden');
+    $('fail').classList.remove('hidden');
+    AUDIO.fanfare(false);
   }
 
   // ---------- stage flow ----------
@@ -2673,32 +3178,40 @@ const CUSTOMIZER = (() => {
 
   // The only thing a stage strictly needs: beats in the engine.
   function armStage(st) {
-    if (st.kind === 'boss') { qte.reset([]); return; }   // boss injects live
+    if (st.kind === 'boss' || st.kind === 'orbit') { qte.reset([]); return; }   // boss/orbit own their beats
     const beats = st.beats().map((b) => Object.assign(b, { target: slotTarget(b.slot || 0) }));
     qte.reset(beats);
+  }
+
+  // how many scoring actions a stage needs (to divide the 1000-point goal)
+  function actionsFor(st) {
+    if (st.kind === 'orbit') return 10;
+    if (st.kind === 'boss') return CFG.boss[st.boss].hp.reduce ? CFG.boss[st.boss].hp.reduce((a, b) => a + b, 0) : CFG.boss[st.boss].hp;
+    return st.beats().length;
   }
 
   function startStage() {
     const st = LEVELS.STAGES[stageIdx];
     state = S.PLAY;
-    stageScore = 0; hull = CFG.hull.max; playT = 0; healT = 0;
+    stageScore = 0; playT = 0; healT = 0;      // life (hull) persists — NOT reset here
     bossCtl = null; bossModel = null;
+    stageActions = actionsFor(st);
 
     guard('arm', () => armStage(st));
 
     guard('hud', () => {
       updateHull();
-      if (ship) ship.setDamage(0);
+      if (ship) ship.setDamage(1 - hull / CFG.hull.max);
       $('intro').classList.add('hidden');
       $('results').classList.add('hidden');
       $('fail').classList.add('hidden');
       $('hud').classList.remove('hidden');
       $('hud-score').textContent = '0';
-      $('hud-combo').textContent = '0';
-      $('hud-mult').textContent = '\u00d71';
+      $('hud-mult').textContent = '0';
       $('hud-stage-lbl').textContent = 'Stage ' + st.n;
       $('hud-stage-name').textContent = st.name;
       $('progress-fill').style.width = '0%';
+      $('progress-fill').classList.remove('full');
       $('boss-bar').classList.toggle('hidden', st.kind !== 'boss');
     });
 
@@ -2709,8 +3222,15 @@ const CUSTOMIZER = (() => {
     });
 
     guard('boss-clear', () => clear(bossRoot));
+    guard('orbit-reset', () => { if (st.kind !== 'orbit') orbitOff(); });
 
-    if (st.kind === 'boss') {
+    if (st.kind === 'orbit') {
+      guard('orbit-start', () => {
+        $('boss-bar').classList.add('hidden');
+        $('hud-mult').textContent = '0';
+        orbitOn();
+      });
+    } else if (st.kind === 'boss') {
       guard('boss-init', () => {
         bossCtl = BOSS.fight(st.boss, qte, {
           onDamage: (d, k) => guard('boss-dmg', () => {
@@ -2748,8 +3268,15 @@ const CUSTOMIZER = (() => {
     if (state !== S.PLAY) return;
     qte.stop();
     AUDIO.droneOff();
-    const t = qte.tally;
     const st = LEVELS.STAGES[stageIdx];
+    let t = qte.tally;
+    let orbitRate = null;
+    if (st.kind === 'orbit' && orbitGame) {
+      const os = orbitGame.stats;
+      t = { perfect: os.perfect, hit: os.hops - os.perfect, miss: cleared ? 0 : 1, total: os.target };
+      orbitRate = os.perfect >= 8 ? 96 : os.perfect >= 5 ? 86 : os.perfect >= 2 ? 72 : 55;
+      orbitOff();
+    }
 
     if (!cleared) {
       state = S.FAIL;
@@ -2759,7 +3286,7 @@ const CUSTOMIZER = (() => {
       return;
     }
 
-    const rate = qte.hitRate();
+    const rate = orbitRate !== null ? orbitRate : qte.hitRate();
     const g = rate >= CFG.grade.S ? 'S' : rate >= CFG.grade.A ? 'A' : rate >= CFG.grade.B ? 'B' : 'C';
 
     state = S.RESULTS;
@@ -2770,7 +3297,7 @@ const CUSTOMIZER = (() => {
     $('res-perfect').textContent = t.perfect;
     $('res-hit').textContent = t.hit;
     $('res-miss').textContent = t.miss;
-    $('res-combo').textContent = qte.bestCombo;
+    $('res-combo').textContent = stageScore.toLocaleString();
     $('res-score').textContent = '0';
     $('results').classList.remove('hidden');
     FX.countUp($('res-score'), stageScore, 650);
@@ -2823,13 +3350,14 @@ const CUSTOMIZER = (() => {
   // ---------- planetfall (free walk) ----------
   const W = {
     pos: new THREE.Vector3(0, 0, 4),
-    vy: 0, heading: 0, camYaw: 0, cycle: 0, air: false,
+    vy: 0, heading: 0, camYaw: 0, cycle: 0, air: false, jumpSquash: 0, landRecover: 0,
     joy: { id: null, ox: 0, oy: 0, x: 0, y: 0 },
     look: { id: null, lx: 0 },
     keys: { x: 0, y: 0 },
     savedFog: null,
     score: 0, shards: 0, ringsHit: 0, travel: 0, best: 0,
-    doneShards: false, doneRings: false, introSeen: false, paused: false
+    doneShards: false, doneRings: false, introSeen: false, paused: false,
+    endgame: false, endgameDone: false, relics: 0, relicTotal: 5, summitDone: false
   };
   try { W.best = parseInt(localStorage.getItem('outerstellar.walkbest') || '0', 10) || 0; } catch (e) {}
 
@@ -2851,8 +3379,13 @@ const CUSTOMIZER = (() => {
     }
   }
   function walkHud() {
-    $('wq-shards').textContent = '\u25c6 ' + W.shards + '/' + surface.shardTotal;
-    $('wq-rings').textContent = '\u25ce ' + W.ringsHit + '/' + surface.ringTotal;
+    if (W.endgame && !W.endgameDone) {
+      $('wq-shards').textContent = '\u25c6 ' + W.shards + '/' + surface.shardTotal;
+      $('wq-rings').textContent = '\u2726 ' + W.relics + '/' + W.relicTotal;
+    } else {
+      $('wq-shards').textContent = '\u25c6 ' + W.shards + '/' + surface.shardTotal;
+      $('wq-rings').textContent = '\u25ce ' + W.ringsHit + '/' + surface.ringTotal;
+    }
     $('wq-score').textContent = W.score.toLocaleString();
   }
 
@@ -2874,6 +3407,17 @@ const CUSTOMIZER = (() => {
     } else if (rLeft > 0) {
       setObjective('OBJECTIVE \u00b7 2 OF 2',
         'Clear the jump rings \u2014 ' + rLeft + ' left. Use geysers to reach the high ones.');
+    } else if (W.endgame && !W.endgameDone) {
+      const relLeft = W.relicTotal - W.relics;
+      if (relLeft > 0) {
+        setObjective('BONUS \u00b7 RELICS',
+          'Recover ' + relLeft + ' alien relic' + (relLeft > 1 ? 's' : '') + ' scattered across the wilds.');
+      } else if (!W.summitDone) {
+        setObjective('BONUS \u00b7 SUMMIT',
+          'Climb to the glowing monument at the highest peak.');
+      }
+    } else if (W.endgameDone) {
+      setObjective('LEGEND', 'Everything found. This world is yours.');
     } else {
       setObjective('COMPLETE', 'Planet fully charted. Roam free.');
     }
@@ -2905,6 +3449,7 @@ const CUSTOMIZER = (() => {
       surface.resetQuest();
       W.score = 0; W.shards = 0; W.ringsHit = 0; W.travel = 0;
       W.doneShards = false; W.doneRings = false;
+      W.endgame = false; W.endgameDone = false; W.relics = 0; W.summitDone = false;
       W.paused = firstTime;                       // hold movement until briefing dismissed
       walkHud();
       refreshObjective();
@@ -2915,6 +3460,7 @@ const CUSTOMIZER = (() => {
     guard('walk-actors', () => {
       W.pos.set(0, surface.height(0, 4) , 4);
       W.vy = 0; W.heading = Math.PI; W.camYaw = Math.PI; W.cycle = 0;
+      W.air = false; W.jumpSquash = 0; W.landRecover = 0; astroRoot.scale.setScalar(1);
       astroRoot.visible = true;
       astroRoot.scale.setScalar(1);
       // the rocket you rode in, parked at the landing site
@@ -2972,7 +3518,14 @@ const CUSTOMIZER = (() => {
   }
 
   function doJump() {
-    if (state === S.WALK && !W.air) { W.vy = 5.0; W.air = true; AUDIO.whoosh(); }
+    if (state === S.WALK && !W.air) {
+      W.vy = 8.4;                 // stronger pop
+      W.air = true;
+      W.jumpSquash = -1;          // negative = stretch up on launch
+      W.landRecover = 0;
+      AUDIO.whoosh();
+      FX.kick(0.12);
+    }
   }
 
   stageEl.addEventListener('pointerdown', (e) => {
@@ -3081,11 +3634,29 @@ const CUSTOMIZER = (() => {
       W.cycle += dt * 0.6;   // idle sway
     }
 
-    // low gravity
+    // jump physics with weight: lighter on the way up + a hang at the apex,
+    // heavier on the way down so the arc reads as real, not floaty.
     const groundY = surface.height(W.pos.x, W.pos.z);
-    W.vy -= 7.5 * dt;
+    let g;
+    if (W.vy > 3) g = 13;              // rising fast — light
+    else if (W.vy > -3) g = 9;         // near apex — hang time
+    else g = 22;                        // falling — snappy, weighty
+    W.vy -= g * dt;
     W.pos.y += W.vy * dt;
-    if (W.pos.y <= groundY) { W.pos.y = groundY; W.vy = 0; W.air = false; }
+    if (W.pos.y <= groundY) {
+      const impact = -W.vy;
+      W.pos.y = groundY;
+      W.vy = 0;
+      if (W.air) {                      // just landed
+        W.landRecover = Math.min(1, impact / 9);   // squash amount from impact speed
+        if (impact > 4) { FX.kick(0.18); AUDIO.mash(); }
+        if (impact > 2) surface.print(W.pos.x, W.pos.z, W.heading);
+      }
+      W.air = false;
+    }
+    // ease squash/stretch springs back toward neutral
+    W.jumpSquash = (W.jumpSquash || 0) * Math.pow(0.001, dt);
+    W.landRecover = (W.landRecover || 0) * Math.pow(0.0002, dt);
 
     // footprints while grounded and moving
     if (!W.air && mag > 0.08) {
@@ -3137,11 +3708,42 @@ const CUSTOMIZER = (() => {
         }
       }
       if (ev.geyser) {
-        W.vy = 9.2; W.air = true;
+        W.vy = 14; W.air = true; W.jumpSquash = -1; W.landRecover = 0;
         walkScore(50);
         FX.kick(0.35);
         AUDIO.whoosh();
         setTimeout(() => guard('gey2', () => AUDIO.whoosh()), 120);
+      }
+      if (ev.relic) {
+        W.relics++;
+        walkScore(600);
+        walkHud();
+        refreshObjective();
+        FX.burst(ev.relic, '#ff8ad0', 34, 6);
+        FX.flash(0.14, 90);
+        AUDIO.perfect(W.relics + 4);
+        if (ev.relicsLeft === 0) {
+          walkScore(3000);
+          walkBanner('ALL RELICS RECOVERED\n+3000');
+          setObjective('BONUS \u00b7 SUMMIT', 'Now climb to the monument on the highest peak.', true);
+          AUDIO.fanfare(true);
+        } else {
+          walkBanner('RELIC \u2726 +600');
+        }
+      }
+      if (ev.summit) {
+        W.summitDone = true;
+        walkScore(5000);
+        walkHud();
+        FX.burst({ x: W.pos.x, y: W.pos.y + 2, z: W.pos.z }, '#ffe08a', 90, 12, 1.4);
+        FX.flash(0.7, 500);
+        FX.kick(1.0);
+        walkBanner('SUMMIT REACHED\nWORLD MASTERED \u2014 +5000');
+        AUDIO.fanfare(true);
+        setTimeout(() => guard('sum-boom', () => AUDIO.boom()), 400);
+        W.endgameDone = true;
+        refreshObjective();
+        checkFullClear();
       }
     });
 
@@ -3149,13 +3751,30 @@ const CUSTOMIZER = (() => {
     astroRoot.position.set(W.pos.x, W.pos.y + 1.0, W.pos.z);
     astroRoot.rotation.set(0, W.heading, 0);
     if (astro) {
-      const sw = mag > 0.08 ? Math.sin(W.cycle * 4.4) * 0.62 : Math.sin(W.cycle * 2) * 0.05;
-      if (astro.legL) astro.legL.rotation.x = sw;
-      if (astro.legR) astro.legR.rotation.x = -sw;
-      astro.armL.rotation.x = -sw * 0.8;
-      astro.armR.rotation.x = sw * 0.8;
-      astro.armL.rotation.z = 0.34; astro.armR.rotation.z = -0.34;
-      astroRoot.position.y += Math.abs(Math.sin(W.cycle * 4.4)) * 0.06 * mag;
+      if (W.air) {
+        // in-flight tuck: legs bend up, arms out for balance, lean into velocity
+        const rising = W.vy > 0;
+        const tuck = rising ? 0.5 : 0.9;
+        if (astro.legL) astro.legL.rotation.x = tuck;
+        if (astro.legR) astro.legR.rotation.x = tuck * 0.7;
+        astro.armL.rotation.x = rising ? -1.1 : -0.4;
+        astro.armR.rotation.x = rising ? -1.1 : -0.4;
+        astro.armL.rotation.z = 0.6; astro.armR.rotation.z = -0.6;
+      } else {
+        const sw = mag > 0.08 ? Math.sin(W.cycle * 4.4) * 0.62 : Math.sin(W.cycle * 2) * 0.05;
+        if (astro.legL) astro.legL.rotation.x = sw;
+        if (astro.legR) astro.legR.rotation.x = -sw;
+        astro.armL.rotation.x = -sw * 0.8;
+        astro.armR.rotation.x = sw * 0.8;
+        astro.armL.rotation.z = 0.34; astro.armR.rotation.z = -0.34;
+        astroRoot.position.y += Math.abs(Math.sin(W.cycle * 4.4)) * 0.06 * mag;
+      }
+      // squash & stretch: stretch on launch/rise, squash on landing
+      const stretch = W.air ? (W.vy > 0 ? 0.14 : 0.06) : 0;
+      const squash = (W.landRecover || 0) * 0.4;
+      const sy = 1 + stretch - squash;
+      const sxz = 1 - stretch * 0.6 + squash * 0.5;
+      astroRoot.scale.set(sxz, Math.max(0.4, sy), sxz);
     }
 
     // chase camera
@@ -3191,7 +3810,10 @@ const CUSTOMIZER = (() => {
         const distEl = $('compass-dist');
         distEl.textContent = Math.round(goal.dist) + 'm';
         distEl.style.transform = 'rotate(' + (-rel).toFixed(3) + 'rad)';   // keep text upright
-        comp.style.color = goal.kind === 'ring' ? 'var(--perfect)' : 'var(--hit)';
+        comp.style.color = goal.kind === 'ring' ? 'var(--perfect)'
+          : goal.kind === 'relic' ? '#ff8ad0'
+          : goal.kind === 'summit' ? '#ffe08a'
+          : 'var(--hit)';
       }
     });
 
@@ -3213,22 +3835,45 @@ const CUSTOMIZER = (() => {
   }
 
   function checkAllDone() {
-    if (W.doneShards && W.doneRings) {
-      setTimeout(() => guard('walk-complete', () => {
-        $('wd-score').textContent = '0';
-        FX.countUp($('wd-score'), W.score, 800);
-        const isBest = W.score >= W.best;
-        $('wd-best').textContent = isBest ? 'NEW EXPLORATION BEST' : 'Best \u00b7 ' + W.best.toLocaleString();
-        $('walk-done').classList.remove('hidden');
-      }), 1600);
+    if (W.doneShards && W.doneRings && !W.endgame) {
+      W.endgame = true;
+      guard('unlock-endgame', () => {
+        const info = surface.unlockEndgame();
+        W.relicTotal = info.relicTotal;
+        W.relics = 0;
+      });
+      walkHud();
+      setTimeout(() => guard('endgame-reveal', () => {
+        walkBanner('WILDS UNLOCKED\nRelics + a summit await');
+        setObjective('BONUS \u00b7 RELICS', 'Recover ' + W.relicTotal + ' alien relics scattered across the wilds.', true);
+        AUDIO.fanfare(true);
+      }), 1800);
     }
+  }
+
+  function checkFullClear() {
+    setTimeout(() => guard('walk-complete', () => {
+      $('wd-score').textContent = '0';
+      FX.countUp($('wd-score'), W.score, 900);
+      const isBest = W.score >= W.best;
+      $('wd-best').textContent = isBest ? 'NEW EXPLORATION BEST' : 'Best \u00b7 ' + W.best.toLocaleString();
+      $('walk-done').querySelector('.wc-title').textContent = 'WORLD MASTERED';
+      $('walk-done').classList.remove('hidden');
+    }), 1800);
   }
 
   // ---------- input ----------
   INPUT.attach($('stage'));
   INPUT.on((kind, data) => {
     if (state !== S.PLAY) return;
-    guard('input', () => qte.handle(kind, data));
+    guard('input', () => {
+      const st = LEVELS.STAGES[stageIdx];
+      if (st && st.kind === 'orbit') {
+        if (kind === 'down') orbitGame && orbitGame.tap();
+        return;
+      }
+      qte.handle(kind, data);
+    });
   });
 
   // ---------- buttons ----------
@@ -3248,11 +3893,19 @@ const CUSTOMIZER = (() => {
     AUDIO.ui();
     $('hangar').classList.add('hidden');
     stageIdx = 0; results.length = 0; runScore = 0;
+    hull = CFG.hull.max;                 // full life at the start of a run
     showIntro();
   });
   $('btn-next').onclick = () => guard('btn', () => { if (state !== S.RESULTS) return; AUDIO.ui(); nextStage(); });
   $('btn-retry').onclick = () => guard('btn', () => { if (state !== S.RESULTS) return; AUDIO.ui(); startStage(); });
-  $('btn-fail-retry').onclick = () => guard('btn', () => { if (state !== S.FAIL) return; AUDIO.ui(); startStage(); });
+  // life hit 0 → restart the WHOLE run from stage 1 with full life
+  $('btn-fail-retry').onclick = () => guard('btn', () => {
+    if (state !== S.FAIL) return;
+    AUDIO.ui();
+    stageIdx = 0; results.length = 0; runScore = 0;
+    hull = CFG.hull.max;
+    showIntro();
+  });
   $('btn-again').onclick = () => guard('btn', () => {
     if (state !== S.TALLY) return;
     AUDIO.ui();
@@ -3359,15 +4012,26 @@ const CUSTOMIZER = (() => {
       }
 
       guard('stage', () => {
+        const stg = LEVELS.STAGES[stageIdx];
+        if (stg && stg.kind === 'orbit') {
+          shipRoot.visible = false;              // the dot IS the ship now
+          if (orbitGame) {
+            orbitGame.update(dt);
+            orbitGame.render();
+          }
+          return;
+        }
         if (bossCtl) {
           const add = bossCtl.update(dt, qte.clock);
           if (add) qte.push(add);
-          $('progress-fill').style.width = ((1 - bossCtl.hp / bossCtl.maxHp) * 100) + '%';
+          // boss: score fills toward 1000 as HP drops
+          stageScore = Math.round((1 - bossCtl.hp / bossCtl.maxHp) * CFG.score.goal);
+          updateScoreBar();
+          // clear is triggered by the boss's own onDeath hook (with its FX delay)
         } else {
-          const t = qte.tally;
-          const done = t.perfect + t.hit + t.miss;
-          $('progress-fill').style.width = (t.total ? (done / t.total) * 100 : 0) + '%';
-          if (qte.finished()) endStage(true);
+          // run stage: clears the instant score reaches the 1000 goal
+          if (stageScore >= CFG.score.goal) endStage(true);
+          else if (qte.finished()) endStage(false);   // ran out of beats short of goal
         }
       });
     } else if (state === S.WALK) {
