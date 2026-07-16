@@ -452,9 +452,9 @@ button:focus-visible,.tab:focus-visible,.sw:focus-visible,.chip:focus-visible{ou
   <!-- Fail -->
   <div id="fail" class="overlay solid hidden">
     <div class="results-inner">
-      <div class="eyebrow warn">Hull breached</div>
+      <div class="eyebrow warn">Out of lives</div>
       <h2 class="intro-name">DRIFT</h2>
-      <p class="radio">The rocket won't take another hit. Run it back.</p>
+      <p class="radio">Life's spent. Retry this stage with a full reset.</p>
       <button id="btn-fail-retry" class="primary">Retry stage</button>
     </div>
   </div>
@@ -2975,24 +2975,19 @@ const CUSTOMIZER = (() => {
   const surface = WALK.build(scene);
 
   // stage 5 orbital-approach minigame (2D canvas over the 3D starfield)
+  // pure skill gauntlet — no score, no life cost; a crash just respawns you on the approach
   let orbitGame = null;
   function orbitOn() {
     $('orbitcv').classList.remove('hidden');
     if (!orbitGame) {
       orbitGame = ORBIT.create($('orbitcv'), {
-        onCapture: (isPerf, hops, streak, px) => guard('orbit-score', () => {
-          const share = CFG.score.goal / 10;
-          const gain = Math.round(isPerf ? share * (1 + CFG.score.perfectBonus) : share);
-          stageScore = Math.min(CFG.score.goal, stageScore + gain);
-          updateScoreBar();
-          FX.float(px.x, px.y - 18, '+' + gain + (isPerf ? ' PERFECT' : ''), isPerf ? 'perfect' : 'hit');
+        onCapture: (isPerf, hops, streak, px) => guard('orbit-fx', () => {
+          FX.float(px.x, px.y - 18, isPerf ? 'PERFECT' : hops + '/10', isPerf ? 'perfect' : 'hit');
         }),
         onDone: () => guard('orbit-done', () => { if (state === S.PLAY) endStage(true); }),
         onDead: () => guard('orbit-dead', () => {
-          // a crash costs a life, not the run; only 0 life ends it
           if (state !== S.PLAY) return;
-          loseLife();
-          if (hull > 0 && orbitGame) orbitGame.start();   // respawn on the approach
+          if (orbitGame) orbitGame.start();   // clean respawn — no penalty, no lost life
         })
       });
     }
@@ -3223,11 +3218,12 @@ const CUSTOMIZER = (() => {
 
     guard('boss-clear', () => clear(bossRoot));
     guard('orbit-reset', () => { if (st.kind !== 'orbit') orbitOff(); });
+    guard('dock-default', () => $('hud-dock').classList.remove('hidden'));
 
     if (st.kind === 'orbit') {
       guard('orbit-start', () => {
         $('boss-bar').classList.add('hidden');
-        $('hud-mult').textContent = '0';
+        $('hud-dock').classList.add('hidden');   // no score, no life on the tangent-style approach
         orbitOn();
       });
     } else if (st.kind === 'boss') {
@@ -3297,10 +3293,15 @@ const CUSTOMIZER = (() => {
     $('res-perfect').textContent = t.perfect;
     $('res-hit').textContent = t.hit;
     $('res-miss').textContent = t.miss;
-    $('res-combo').textContent = stageScore.toLocaleString();
-    $('res-score').textContent = '0';
+    const noScore = st.kind === 'orbit';
+    $('res-combo').closest('div').classList.toggle('hidden', noScore);
+    $('results').querySelector('.score-line').classList.toggle('hidden', noScore);
+    if (!noScore) {
+      $('res-combo').textContent = stageScore.toLocaleString();
+      $('res-score').textContent = '0';
+      FX.countUp($('res-score'), stageScore, 650);
+    }
     $('results').classList.remove('hidden');
-    FX.countUp($('res-score'), stageScore, 650);
     AUDIO.fanfare(g === 'S' || g === 'A');
 
     results[stageIdx] = { name: st.name, n: st.n, grade: g, score: stageScore, rate };
@@ -3898,13 +3899,12 @@ const CUSTOMIZER = (() => {
   });
   $('btn-next').onclick = () => guard('btn', () => { if (state !== S.RESULTS) return; AUDIO.ui(); nextStage(); });
   $('btn-retry').onclick = () => guard('btn', () => { if (state !== S.RESULTS) return; AUDIO.ui(); startStage(); });
-  // life hit 0 → restart the WHOLE run from stage 1 with full life
+  // life hit 0 → retry the CURRENT stage only, life refilled; run/progress untouched
   $('btn-fail-retry').onclick = () => guard('btn', () => {
     if (state !== S.FAIL) return;
     AUDIO.ui();
-    stageIdx = 0; results.length = 0; runScore = 0;
     hull = CFG.hull.max;
-    showIntro();
+    startStage();
   });
   $('btn-again').onclick = () => guard('btn', () => {
     if (state !== S.TALLY) return;
