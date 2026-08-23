@@ -32,6 +32,7 @@ const KEYS = [
   ['R', 'rewind the loop early'],
   ['Esc', 'pause'],
   ['M', 'mute'],
+  ['I', 'invert look'],
 ];
 
 /* ------------------------------------------------------------------- setup */
@@ -103,6 +104,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyF') toggleVehicle();
   if (e.code === 'KeyR') endLoop('rewind');
   if (e.code === 'KeyM'){ sound.setMuted(!sound.muted); toast(sound.muted ? 'Muted' : 'Sound on'); }
+  if (e.code === 'KeyI'){ setInvert(!invertY); toast('Invert look: ' + (invertY ? 'on' : 'off')); }
 });
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
@@ -122,6 +124,19 @@ addEventListener('resize', () => {
 
 /* ---------------------------------------------------------- touch controls */
 
+
+/* Vertical look. The natural convention is: drag/move up => look up, which
+   means the camera pitch goes DOWN. Some people want the opposite, so it is a
+   remembered preference rather than a hard-coded choice. */
+let invertY = false;
+try { invertY = localStorage.getItem('echocity.invertY') === '1'; } catch {}
+
+function setInvert(v){
+  invertY = v;
+  try { localStorage.setItem('echocity.invertY', v ? '1' : '0'); } catch {}
+  for (const b of document.querySelectorAll('[data-tog="invert"]'))
+    b.innerHTML = 'Invert look: <b>' + (v ? 'on' : 'off') + '</b>';
+}
 
 const touch = { x: 0, y: 0, brake: false, active: false };
 const stickEl = document.getElementById('stick');
@@ -189,6 +204,7 @@ if (TOUCH){
   bind('tb-brake', () => { touch.brake = true; }, () => { touch.brake = false; });
   bind('tb-car',   () => { if (S.mode === 'play') toggleVehicle(); });
   bind('tb-rew',   () => { if (S.mode === 'play') endLoop('rewind'); });
+  bind('tb-pause', () => { if (S.mode === 'play') pause(); else if (S.mode === 'paused') resume(); });
 }
 
 const held = c => keys.has(c);
@@ -598,6 +614,10 @@ function resume(){
   showScreen(null);
   lockPointer();
 }
+for (const b of document.querySelectorAll('[data-tog="invert"]'))
+  b.onclick = () => setInvert(!invertY);
+setInvert(invertY);
+
 el('btn-start').onclick = startGame;
 el('btn-again').onclick = startGame;
 el('btn-resume').onclick = resume;
@@ -776,7 +796,7 @@ function update(dt){
   /* ---- camera look ---- */
   const sens = 0.0022;
   player.camYaw   -= mouseDX * sens;
-  player.camPitch -= mouseDY * sens;
+  player.camPitch += (invertY ? -mouseDY : mouseDY) * sens;
   player.camPitch = THREE.MathUtils.clamp(player.camPitch, -.42, .78);
   mouseDX = mouseDY = 0;
 

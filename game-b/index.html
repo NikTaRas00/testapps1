@@ -129,6 +129,8 @@
     -webkit-user-select:none;user-select:none;touch-action:none;
     display:flex;align-items:center;justify-content:center;text-align:center}
   .tb.wide{border-radius:999px;width:96px;height:52px;font-size:.54rem}
+  .tb.small{position:absolute;top:calc(var(--pad) + 2px);left:50%;transform:translateX(-50%);
+    width:46px;height:46px;font-size:.7rem;letter-spacing:.05em}
   .tb:active,.tb.held{background:#0a86ad;border-color:#0a86ad;color:#fff}
   #tb-rew:active,#tb-rew.held{background:#6b3fc4;border-color:#6b3fc4;color:#fff}
 
@@ -185,6 +187,13 @@
   .k{display:flex;align-items:center;gap:9px;font-size:.68rem;color:var(--dim);letter-spacing:.04em}
   .k kbd{font:inherit;font-size:.63rem;background:#fff;border:1px solid var(--line);
     border-bottom-width:2px;border-radius:5px;padding:3px 7px;color:var(--ink);min-width:26px;text-align:center}
+  .opts{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+  .tog{pointer-events:auto;cursor:pointer;font:inherit;font-size:.66rem;letter-spacing:.08em;
+    color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;
+    padding:9px 16px;transition:background .15s,color .15s}
+  .tog:hover{background:rgba(18,24,34,.05);color:var(--ink)}
+  .tog b{color:var(--cyan);font-weight:700;text-transform:uppercase}
+
   .btn{margin-top:26px;display:inline-flex;align-items:center;gap:11px;cursor:pointer;
     pointer-events:auto;background:#0a86ad;color:#fff;border:0;border-radius:999px;
     padding:13px 30px;font:inherit;font-size:.8rem;font-weight:700;letter-spacing:.15em;
@@ -256,6 +265,7 @@
   <!-- touch controls (shown only on coarse-pointer devices) -->
   <div id="touch">
     <div id="stick"><div id="knob"></div></div>
+    <button class="tb small" id="tb-pause">II</button>
     <div id="tbtns">
       <button class="tb wide" id="tb-brake">BRAKE</button>
       <button class="tb" id="tb-car">GET<br>IN</button>
@@ -279,6 +289,9 @@
       </p>
       <hr>
       <div class="keys" id="keylist"></div>
+      <div class="opts">
+        <button class="tog" data-tog="invert">Invert look: <b>off</b></button>
+      </div>
       <button class="btn" id="btn-start">Start the job</button>
       <div class="foot">Best with sound · Click to lock the mouse</div>
     </div>
@@ -290,6 +303,9 @@
       <h1 style="font-size:clamp(1.8rem,7vmin,3rem)">PAUSED</h1>
       <div class="tag">The loop is holding</div>
       <div class="keys" id="keylist2" style="margin-top:24px"></div>
+      <div class="opts">
+        <button class="tog" data-tog="invert">Invert look: <b>off</b></button>
+      </div>
       <button class="btn" id="btn-resume">Resume</button>
       <button class="btn ghost" id="btn-quit">Abandon job</button>
     </div>

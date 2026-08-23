@@ -49,11 +49,15 @@ Root Directory is set to `game-b`. If instead you deploy the whole repo, the gam
 | `R` | rewind the loop early |
 | `Esc` | pause |
 | `M` | mute |
+| `I` | invert vertical look |
 
 On a phone or tablet the game switches to touch controls automatically: a virtual
 stick appears wherever you press on the left half (push it to the edge to sprint),
 drag anywhere on the right half to look around, and the buttons handle **BRAKE** /
-handbrake, **GET IN / GET OUT** and **REWIND**. The scene is also lightened a little
+handbrake, **GET IN / GET OUT**, **REWIND** and pause.
+
+Dragging up looks up. If you want it the other way, the **Invert look** toggle on the
+title and pause screens flips it, and the choice is remembered on that device. The scene is also lightened a little
 and the camera widens for portrait framing.
 
 ## How the job works
