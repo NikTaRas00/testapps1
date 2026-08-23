@@ -37,7 +37,18 @@ const KEYS = [
 /* ------------------------------------------------------------------- setup */
 
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+} catch (err){
+  window.__echoFail?.('This browser can\'t open a WebGL context',
+    'ECHO CITY renders in 3D and needs WebGL. The browser reported: <code>' +
+    (err && err.message ? err.message : String(err)) + '</code>',
+    'Usually this means hardware acceleration is switched off, or the GPU is blocklisted. ' +
+    'Check chrome://gpu (or about:support in Firefox).');
+  throw err;
+}
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;

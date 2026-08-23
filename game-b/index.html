@@ -140,8 +140,14 @@
   .stat div .n{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums}
   .stat div .l{font-size:.58rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-top:3px}
   .loading{position:absolute;inset:0;display:grid;place-items:center;background:#05060c;z-index:9;
-    font-size:.68rem;letter-spacing:.32em;color:var(--dim);text-transform:uppercase}
+    font-size:.68rem;letter-spacing:.32em;color:var(--dim);text-transform:uppercase;padding:var(--pad)}
   .loading.off{display:none}
+  .fail{max-width:min(560px,92vw);text-align:left;text-transform:none;letter-spacing:normal}
+  .fail b{display:block;font-size:1.05rem;letter-spacing:-.01em;color:var(--red);margin-bottom:12px}
+  .fail p{font-size:.82rem;line-height:1.7;color:#c3ccdf}
+  .fail code{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:4px;
+    padding:2px 6px;font-size:.9em;color:var(--cyan);white-space:nowrap}
+  .fail .hint{margin-top:14px;font-size:.72rem;color:var(--dim)}
   @media (max-width:560px){ #objs{display:none} }
 </style>
 </head>
@@ -237,6 +243,49 @@
 
 <script type="importmap">
 { "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<script>
+/* Startup guard: the loading screen must never sit there silently.
+   This is a classic script so it still runs if the module fails to load. */
+(function(){
+  var box = document.getElementById('loading'), shown = false;
+  function fail(title, detail, hint){
+    if (shown || box.classList.contains('off')) return;
+    shown = true;
+    box.classList.remove('off');
+    box.innerHTML = '<div class="fail"><b>' + title + '</b><p>' + detail + '</p>' +
+      (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
+  }
+  window.__echoFail = fail;
+
+  if (location.protocol === 'file:'){
+    fail('This page has to be served over HTTP',
+         'ECHO CITY is built from ES modules, and browsers refuse to load those from a ' +
+         '<code>file://</code> path for security reasons. Opening index.html by double-clicking ' +
+         'it will always hang here.',
+         'Fix: run <code>python3 -m http.server 8000</code> inside the game-b folder, then open ' +
+         '<code>http://localhost:8000/</code>');
+    return;
+  }
+  addEventListener('error', function(e){
+    if (e.target && e.target.tagName === 'SCRIPT'){
+      fail('Could not load the game code',
+           'The browser failed to fetch <code>' + (e.target.src || 'a script') + '</code>.',
+           'If this is a deployment, check that game.js and vendor/three.module.js were uploaded ' +
+           'and are served with a JavaScript content type.');
+    } else if (e.message){
+      fail('The city failed to build', e.message);
+    }
+  }, true);
+  addEventListener('unhandledrejection', function(e){
+    fail('The city failed to build', String((e.reason && e.reason.message) || e.reason));
+  });
+  setTimeout(function(){
+    fail('This is taking much longer than it should',
+         'The city normally builds in about a second. Something is stuck rather than slow.',
+         'Open the browser console (F12) — the actual error will be there.');
+  }, 20000);
+})();
 </script>
 <script type="module" src="./game.js"></script>
 </body>
