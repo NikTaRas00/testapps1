@@ -4,7 +4,7 @@
    have four passes at the same eighty seconds. */
 
 import * as THREE from 'three';
-import { CFG, buildCity, roadCenter, snapToRoad, mulberry, sunDir } from './world.js';
+import { CFG, buildCity, roadCenter, snapToRoad, mulberry, sunDir, groundY } from './world.js';
 import {
   Car, Traffic, Police, Ped, makeCar, makePerson, animatePerson,
   makeRelay, makeVault, makeLoot, makeMarker, angleDelta,
@@ -13,10 +13,10 @@ import { Sound } from './audio.js';
 
 /* ------------------------------------------------------------------ config */
 
-const LOOP_LEN   = 80;      // seconds per loop
+const LOOP_LEN   = 115;     // seconds per loop — the map is 1.3km across
 const MAX_LOOPS  = 6;
 const REC_HZ     = 20;
-const RELAY_R    = 3.2;     // radius you must stand inside
+const RELAY_R    = 4.0;     // radius you must stand inside
 const VAULT_HOLD = 1.6;     // seconds to crack it once all relays are live
 const LOOT_HOLD  = 1.2;
 const BUST_R     = 8.5;
@@ -63,7 +63,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0xbcc9d4, 0.0019);   // daylight haze, thin enough to see the skyline
+scene.fog = new THREE.FogExp2(0xc2ced9, 0.00115);  // daylight haze over a 1.3km city
 
 const camera = new THREE.PerspectiveCamera(64, innerWidth / innerHeight, 0.25, CFG.WORLD * 1.3);
 camera.position.set(0, 8, 20);
@@ -243,13 +243,14 @@ const parked = [];      // Car instances sitting at the kerb, free to steal
 let rnd = mulberry(WORLD_SEED);
 
 const trafficBase = [];
-for (let i = 0; i < (TOUCH ? 13 : 22); i++) trafficBase.push(new Traffic(scene, mulberry(WORLD_SEED + i * 77)));
-for (let i = 0; i < (TOUCH ? 18 : 34); i++) peds.push(new Ped(scene, mulberry(WORLD_SEED + 5000 + i * 31)));
+for (let i = 0; i < (TOUCH ? 20 : 38); i++) trafficBase.push(new Traffic(scene, mulberry(WORLD_SEED + i * 77)));
+for (let i = 0; i < (TOUCH ? 20 : 40); i++) peds.push(new Ped(scene, mulberry(WORLD_SEED + 5000 + i * 31)));
 
 const parkedBase = [];
-for (let i = 0; i < 20; i++){
-  const hue = [0x7a2f3a, 0x243f6b, 0x2c5a45, 0x5c5f6a, 0x6f5a2a, 0x40315c];
-  const c = new Car(makeCar({ body: hue[i % hue.length], roof: 0x151922 }), {});
+for (let i = 0; i < (TOUCH ? 22 : 34); i++){
+  const hue = [0x7a2f3a, 0x243f6b, 0x2c5a45, 0x5c5f6a, 0x6f5a2a, 0x40315c,
+               0x8c8f94, 0x1f2b3a, 0x94734a];
+  const c = new Car(makeCar({ body: hue[i % hue.length] }), {});
   scene.add(c.mesh);
   parkedBase.push(c);
 }
@@ -260,7 +261,7 @@ const relayColors = [0x39e6ff, 0xb56bff, 0x5dffa8];
 const relays = [];
 for (let k = 0; k < 3; k++){
   const a = (k / 3) * Math.PI * 2 + Math.PI / 2;
-  const R = 148;
+  const R = 330;
   const x = snapToRoad(P.x + Math.cos(a) * R);
   const z = snapToRoad(P.z + Math.sin(a) * R);
   const mesh = makeRelay(relayColors[k]);
@@ -280,8 +281,8 @@ loot.visible = false;
 scene.add(loot);
 
 /* getaway van + zone, out at the southern edge — also where each loop starts */
-const vanX = snapToRoad(P.x + 34), vanZ = snapToRoad(P.z + 228);
-const van = makeCar({ body: 0x21313f, roof: 0x141b24, van: true });
+const vanX = snapToRoad(P.x + 92), vanZ = snapToRoad(P.z + 414);
+const van = makeCar({ body: 0x21313f, van: true });
 van.position.set(vanX, 0, vanZ);
 van.rotation.y = Math.PI;
 scene.add(van);
@@ -302,7 +303,7 @@ class Echo {
     this.frames = frames;
     this.index = index;
     this.person = makePerson({ shirt: 0x2f6f8f, pants: 0x1b2430, ghost: true });
-    this.car = makeCar({ body: 0x1d5f7a, roof: 0x123044, ghost: true });
+    this.car = makeCar({ body: 0x1d5f7a, ghost: true });
     scene.add(this.person, this.car);
     this.pos = new THREE.Vector3();
     this.inCar = false;
@@ -344,7 +345,7 @@ class Echo {
     m.rotation.y = s.yaw;
     if (!this.inCar && !past){
       const sp = Math.hypot(s.x - this.px || 0, s.z - this.pz || 0) / Math.max(dt, .001);
-      animatePerson(this.person, Math.min(6, sp), dt);
+      animatePerson(this.person, Math.min(6, sp), dt, groundY(s.x, s.z));
     }
     this.px = s.x; this.pz = s.z;
 
@@ -426,8 +427,8 @@ function resetLoop(){
   // parked cars along the kerb, same spots every loop
   const pr = mulberry(WORLD_SEED + 999);
   for (const c of parked){
-    if (c === parked[0]){          // a getaway car waiting at the van, every loop
-      c.pos.set(vanX - 4.2, 0, vanZ + 6);
+    if (c === parked[0]){          // the car you start each loop in
+      c.pos.set(vanX - 5.2, 0, vanZ + 9);
       c.yaw = Math.PI;
       c.vel.set(0, 0); c.spin = 0;
       c.mesh.visible = true;
@@ -449,13 +450,17 @@ function resetLoop(){
     c.applyToMesh(0.016, {});
   }
 
-  // player starts on foot at the van, every single loop
-  player.car = null;
-  player.pos.set(vanX + 4.5, 0, vanZ + 5.5);
+  // Every loop begins behind the wheel of the getaway car, rolling.
+  // This is a driving game; walking is what you do at the relays.
+  player.car = parked[0];
+  player.car.pos.set(vanX - 5.2, 0, vanZ + 9);
+  player.car.yaw = Math.PI;
+  player.car.vel.set(0, 0);
+  player.pos.copy(player.car.pos);
   player.yaw = Math.PI;
-  player.camYaw = Math.PI;
-  player.camPitch = .18;
-  playerMesh.visible = true;
+  player.camYaw = 0;
+  player.camPitch = .17;
+  playerMesh.visible = false;
 
   liveEchoes = S.echoes.slice();
   for (const e of liveEchoes) e.reset();
@@ -685,10 +690,40 @@ let last = performance.now();
 let shake = 0;
 let crashFlash = 0;
 
+/* Adaptive quality: a 1.3km city with shadows is a lot to ask of a phone.
+   If we can't hold frame rate, step the cost down rather than stutter. */
+const QUALITY = [
+  { pr: TOUCH ? 1.5 : 2,   shadow: true,  span: TOUCH ? 60 : 95 },
+  { pr: TOUCH ? 1.15 : 1.4, shadow: true,  span: 55 },
+  { pr: 0.95,              shadow: false, span: 55 },
+];
+let qLevel = 0, fpsAcc = 0, fpsN = 0, qTimer = 0;
+
+function applyQuality(){
+  const q = QUALITY[qLevel];
+  renderer.setPixelRatio(Math.min(devicePixelRatio, q.pr));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = q.shadow;
+  sun.castShadow = q.shadow;
+  sun.shadow.camera.left = -q.span; sun.shadow.camera.right = q.span;
+  sun.shadow.camera.top = q.span;   sun.shadow.camera.bottom = -q.span;
+  sun.shadow.camera.updateProjectionMatrix();
+  scene.traverse(o => { if (o.isMesh && o.material) o.material.needsUpdate = true; });
+}
+
 function frame(now){
   requestAnimationFrame(frame);
   let dt = Math.min(.05, (now - last) / 1000);
   last = now;
+
+  if (dt > 0.0005 && S.mode === 'play'){
+    fpsAcc += 1 / dt; fpsN++; qTimer += dt;
+    if (qTimer > 3){
+      const fps = fpsAcc / fpsN;
+      if (fps < 34 && qLevel < QUALITY.length - 1){ qLevel++; applyQuality(); }
+      fpsAcc = 0; fpsN = 0; qTimer = 0;
+    }
+  }
 
   if (S.mode === 'play') update(dt);
   else { drift(dt); }
@@ -717,7 +752,7 @@ function animateProps(dt, t){
     const s = lit ? 1.25 + Math.sin(t * 9) * .12 : 1;
     u.lamp.scale.setScalar(s);
     u.ring.material.color.setHex(lit ? 0x5dffa8 : r.color);
-    u.beam.material.opacity = lit ? .16 + Math.sin(t * 7) * .04 : .055;
+    u.beam.material.opacity = lit ? .13 + Math.sin(t * 7) * .03 : .05;
     u.beam.material.color.setHex(lit ? 0x5dffa8 : r.color);
   }
   const vu = vault.userData;
@@ -731,8 +766,8 @@ function animateProps(dt, t){
   loot.rotation.y += dt * 1.6;
   loot.position.y = 1.4 + Math.sin(t * 2.2) * .16;
   loot.userData.halo.scale.setScalar(1 + Math.sin(t * 3) * .08);
-  vanZone.userData.disc.material.opacity = S.hasLoot ? .3 + Math.sin(t * 5) * .1 : .12;
-  vaultZone.userData.disc.material.opacity = mission.open > .5 ? .3 : .12;
+  vanZone.userData.fill.material.opacity = S.hasLoot ? .26 + Math.sin(t * 5) * .09 : .10;
+  vaultZone.userData.fill.material.opacity = mission.open > .5 ? .26 : .10;
 }
 
 function update(dt){
@@ -786,7 +821,7 @@ function update(dt){
     world.resolve(player.pos, .5);
     playerMesh.position.copy(player.pos);
     playerMesh.rotation.y = player.yaw;
-    animatePerson(playerMesh, player.speed, dt);
+    animatePerson(playerMesh, player.speed, dt, groundY(player.pos.x, player.pos.z));
   }
 
   /* ---- record this frame for the next loop's echo ---- */
@@ -978,8 +1013,8 @@ function updateCamera(dt){
 
   const tall = camera.aspect < 1;
   const back = tall ? 1.28 : 1;
-  const dist = (inCar ? 9.2 + Math.min(4, player.speed * .12) : 6.0) * back;
-  const height = (inCar ? 3.5 : 3.0) * (tall ? 1.15 : 1);
+  const dist = (inCar ? 10.4 + Math.min(5.5, player.speed * .16) : 6.0) * back;
+  const height = (inCar ? 4.3 : 3.0) * (tall ? 1.15 : 1);
   const pitch = player.camPitch;
 
   tmp.set(
@@ -1013,7 +1048,7 @@ function updateCamera(dt){
     shake = Math.max(0, shake - dt * 2.2);
   }
 
-  camLook.lerp(tmp.set(target.x, target.y + (inCar ? 1.6 : 1.5), target.z), Math.min(1, dt * 14));
+  camLook.lerp(tmp.set(target.x, target.y + (inCar ? 2.1 : 1.5), target.z), Math.min(1, dt * 14));
   camera.lookAt(camLook);
 
   const wantFov = (camera.aspect < 1 ? 78 : 62) + Math.min(24, player.speed * .72);

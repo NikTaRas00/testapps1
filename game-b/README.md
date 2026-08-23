@@ -70,20 +70,25 @@ and the camera widens for portrait framing.
 5. When all three are live, be standing at the vault. It cracks in about a second and a half.
 6. **Take the case, get it to the van.** Five stars will be on you by then.
 
-You get six loops. Fail and the echoes keep repeating your mistakes forever.
+The map is about 1.3km across and each loop is 115 seconds, so routing between the three
+relays is most of the puzzle. You get six loops. Fail and the echoes keep repeating your mistakes forever.
 
 ## Under the hood
 
 Everything is generated at runtime — no models, no textures, no audio files.
 
-- `world.js` — procedural city. The street network (asphalt, kerbs, lane dashes, crosswalks) is
-  painted into one 2048² canvas texture. A daytime sky is drawn to an equirectangular canvas and
-  run through `PMREMGenerator`, so it lights the scene and glass genuinely reflects it. Buildings
-  are boxes whose UVs are scaled to their real dimensions, so window rows never stretch, then
-  merged by material into a handful of draw calls. One sun casts real shadows from a small
-  frustum that follows the player. Colliders go into a uniform grid for broad-phase lookup.
+- `world.js` — a 1.3km procedural city. Nothing is baked into one giant ground texture: at city
+  scale that gives ~3 pixels per metre and reads as mush. Instead the tarmac, pavement and grass
+  use **tiling detail textures** (8m asphalt tile at 512px = 64 px/m), kerbs are real raised
+  geometry, and every road marking is a painted quad sitting on the surface. A daytime sky is
+  drawn to an equirectangular canvas and run through `PMREMGenerator`, so it lights the scene and
+  glass genuinely reflects it. Buildings carry a storefront band at street level and UV-scaled
+  facades above. Static geometry is merged per material **and per district chunk**, so both the
+  camera and the shadow pass frustum-cull whole neighbourhoods.
 - `actors.js` — arcade car physics (longitudinal/lateral velocity split, so you can drift on the
-  handbrake), plus box-built cars and people, traffic that navigates the road grid, pedestrians
+  handbrake). Cars are built by tapering box volumes into a real silhouette — raked greenhouse,
+  bonnet and boot decks, arches, bumpers, separate tyres and rims. People are capsule-built with
+  swinging feet. Plus traffic that navigates the road grid, pedestrians
   that flinch out of the way, and police that bias onto the street grid when pursuing from far off.
 - `game.js` — the loop machinery. Player state is recorded at 20 Hz into a ring of frames; each
   finished run becomes an `Echo` that resamples and interpolates those frames on the next loop's
