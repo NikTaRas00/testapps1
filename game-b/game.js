@@ -4,7 +4,7 @@
    have four passes at the same eighty seconds. */
 
 import * as THREE from 'three';
-import { CFG, buildCity, roadCenter, snapToRoad, mulberry } from './world.js';
+import { CFG, buildCity, roadCenter, snapToRoad, mulberry, sunDir } from './world.js';
 import {
   Car, Traffic, Police, Ped, makeCar, makePerson, animatePerson,
   makeRelay, makeVault, makeLoot, makeMarker, angleDelta,
@@ -57,34 +57,35 @@ try {
 renderer.setPixelRatio(Math.min(devicePixelRatio, TOUCH ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.06;
+renderer.toneMappingExposure = 0.98;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x070a16, 0.0046);
+scene.fog = new THREE.FogExp2(0xbcc9d4, 0.0019);   // daylight haze, thin enough to see the skyline
 
 const camera = new THREE.PerspectiveCamera(64, innerWidth / innerHeight, 0.25, CFG.WORLD * 1.3);
 camera.position.set(0, 8, 20);
 
-scene.add(new THREE.HemisphereLight(0x2a3a68, 0x0a0c14, 0.85));
-const moonLight = new THREE.DirectionalLight(0x9fb4ff, 0.55);
-moonLight.position.set(-160, 220, -140);
-scene.add(moonLight);
-const cityGlow = new THREE.PointLight(0xff9a6a, 420, 95, 1.6);
-scene.add(cityGlow);
+/* Midday rig: sky fill from the environment map, plus one hard sun that
+   actually casts shadows. The shadow camera is small and follows the player,
+   so a 700m city gets sharp shadows from a single 2k map. */
+scene.add(new THREE.HemisphereLight(0xbcd6f2, 0x8d8578, 0.55));
 
-const world = buildCity(scene);
+const sun = new THREE.DirectionalLight(0xfff4e0, 2.5);
+sun.castShadow = true;
+const SHADOW_SPAN = TOUCH ? 60 : 95;
+sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
+sun.shadow.camera.left = -SHADOW_SPAN; sun.shadow.camera.right = SHADOW_SPAN;
+sun.shadow.camera.top  =  SHADOW_SPAN; sun.shadow.camera.bottom = -SHADOW_SPAN;
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 520;
+sun.shadow.bias = -0.0006;
+sun.shadow.normalBias = 0.9;
+scene.add(sun, sun.target);
+
+const world = buildCity(scene, renderer);
 const P = world.plaza;
-
-/* headlights that actually light the road ahead of the player */
-const beamTarget = new THREE.Object3D();
-scene.add(beamTarget);
-const headlight = new THREE.SpotLight(0xfff0d0, 0, 62, 0.62, 0.55, 1.4);
-headlight.position.set(0, 1, 0);
-headlight.target = beamTarget;
-scene.add(headlight);
-const torch = new THREE.PointLight(0xbcd4ff, 0, 26, 1.7);
-scene.add(torch);
 
 const sound = new Sound();
 
@@ -492,7 +493,7 @@ function drawTimeline(){
   tg.clearRect(0, 0, W, H);
   for (let k = 0; k < relays.length; k++){
     const y = k * (rowH + gap);
-    tg.fillStyle = 'rgba(255,255,255,.07)';
+    tg.fillStyle = 'rgba(18,24,34,.10)';
     tg.fillRect(0, y, W, rowH);
     tg.fillStyle = '#' + relays[k].color.toString(16).padStart(6, '0');
     for (let b = 0; b < COV_N; b++){
@@ -500,11 +501,11 @@ function drawTimeline(){
       tg.fillRect(b / COV_N * W, y, Math.ceil(W / COV_N) + .5, rowH);
     }
     // live state ticks on the left edge
-    tg.fillStyle = relays[k].held ? '#5dffa8' : 'rgba(255,255,255,.18)';
+    tg.fillStyle = relays[k].held ? '#12805a' : 'rgba(18,24,34,.25)';
     tg.fillRect(0, y, 3, rowH);
   }
   const px = S.t / LOOP_LEN * W;
-  tg.fillStyle = '#ffffff';
+  tg.fillStyle = '#12161d';
   tg.fillRect(px - 1, 0, 2, relays.length * (rowH + gap) - gap);
 }
 
@@ -732,7 +733,6 @@ function animateProps(dt, t){
   loot.userData.halo.scale.setScalar(1 + Math.sin(t * 3) * .08);
   vanZone.userData.disc.material.opacity = S.hasLoot ? .3 + Math.sin(t * 5) * .1 : .12;
   vaultZone.userData.disc.material.opacity = mission.open > .5 ? .3 : .12;
-  world.stars.rotation.y += dt * .004;
 }
 
 function update(dt){
@@ -770,10 +770,17 @@ function update(dt){
     const sprint = held('ShiftLeft') || held('ShiftRight') || Math.hypot(touch.x, touch.y) > .92;
     const spd = sprint ? 7.6 : 4.3;
     if (ax || ay){
-      const a = Math.atan2(ax, ay) + player.camYaw;
-      player.pos.x += Math.sin(a) * spd * dt;
-      player.pos.z += Math.cos(a) * spd * dt;
-      player.yaw = THREE.MathUtils.lerp(player.yaw, player.yaw + angleDelta(player.yaw, a), Math.min(1, dt * 12));
+      // The camera sits at target + (sin c, cos c) * dist, so that vector points
+      // BACK at the camera. Screen-forward is its negative; screen-right is
+      // perpendicular to it. Build the basis explicitly rather than by angle.
+      const c = player.camYaw, sc = Math.sin(c), cc = Math.cos(c);
+      const mx = ax * cc - ay * sc;
+      const mz = -ax * sc - ay * cc;
+      const m = Math.hypot(mx, mz) || 1;
+      player.pos.x += mx / m * spd * dt;
+      player.pos.z += mz / m * spd * dt;
+      const a = Math.atan2(mx, mz);
+      player.yaw += angleDelta(player.yaw, a) * Math.min(1, dt * 12);
       player.speed = spd;
     } else player.speed = 0;
     world.resolve(player.pos, .5);
@@ -1015,22 +1022,12 @@ function updateCamera(dt){
 }
 
 function updateLights(){
-  const inCar = !!player.car;
-  const src = inCar ? player.car.pos : player.pos;
-  cityGlow.position.set(src.x, 26, src.z);
-
-  headlight.intensity = inCar ? 900 : 0;
-  torch.intensity = inCar ? 0 : 16;
-  // sit the fill light just off the camera's shoulder so the player isn't a silhouette
-  torch.position.set(src.x + Math.sin(player.camYaw) * 2.4, 2.8, src.z + Math.cos(player.camYaw) * 2.4);
-
-  if (inCar){
-    const c = player.car;
-    const fx = Math.sin(c.yaw), fz = Math.cos(c.yaw);
-    headlight.position.set(c.pos.x + fx * 1.9, 1.0, c.pos.z + fz * 1.9);
-    beamTarget.position.set(c.pos.x + fx * 34, 0.2, c.pos.z + fz * 34);
-    for (const h of c.mesh.userData.heads) h.material.color.setHex(0xfff4d6);
-  }
+  const src = player.car ? player.car.pos : player.pos;
+  // keep the shadow frustum centred a little ahead of the player
+  const ax = src.x + Math.sin(player.yaw) * 12, az = src.z + Math.cos(player.yaw) * 12;
+  sun.target.position.set(ax, 0, az);
+  sun.position.set(ax + sunDir.x * 220, sunDir.y * 220, az + sunDir.z * 220);
+  sun.target.updateMatrixWorld();
 }
 
 /* --------------------------------------------------------------------- HUD */
@@ -1092,8 +1089,8 @@ function drawMap(){
   const W = mapC.width, sc = W / CFG.WORLD;
   const M = v => (v + CFG.HALF) * sc;
 
-  mg.fillStyle = '#080b14'; mg.fillRect(0, 0, W, W);
-  mg.strokeStyle = '#1c2436'; mg.lineWidth = CFG.ROAD * sc;
+  mg.fillStyle = '#dfe5ea'; mg.fillRect(0, 0, W, W);
+  mg.strokeStyle = '#ffffff'; mg.lineWidth = CFG.ROAD * sc;
   for (let i = 0; i <= CFG.N; i++){
     const a = M(roadCenter(i));
     mg.beginPath(); mg.moveTo(a, 0); mg.lineTo(a, W); mg.stroke();
@@ -1107,15 +1104,15 @@ function drawMap(){
 
   // objectives
   for (const r of relays) dot(r.x, r.z, 4, r.held ? '#5dffa8' : '#' + r.color.toString(16).padStart(6, '0'));
-  dot(vaultPos.x, vaultPos.z, 4.5, mission.open >= 1 ? '#ffc861' : '#7a6330');
-  dot(vanX, vanZ, 5, S.hasLoot ? '#5dffa8' : '#2c6a49');
+  dot(vaultPos.x, vaultPos.z, 4.5, mission.open >= 1 ? '#e09a12' : '#9b8757');
+  dot(vanX, vanZ, 5, S.hasLoot ? '#12b57c' : '#5d8f77');
 
-  for (const e of liveEchoes) if (!e.gone) dot(e.pos.x, e.pos.z, 3, 'rgba(95,230,255,.85)');
-  for (const p of police) dot(p.car.pos.x, p.car.pos.z, 3, '#ff4455');
+  for (const e of liveEchoes) if (!e.gone) dot(e.pos.x, e.pos.z, 3, 'rgba(10,150,196,.95)');
+  for (const p of police) dot(p.car.pos.x, p.car.pos.z, 3, '#d32438');
 
   // player arrow
   const px = M(player.pos.x), pz = M(player.pos.z), a = player.yaw;
-  mg.fillStyle = '#ffffff';
+  mg.fillStyle = '#12161d';
   mg.beginPath();
   mg.moveTo(px + Math.sin(a) * 6, pz + Math.cos(a) * 6);
   mg.lineTo(px + Math.sin(a + 2.5) * 4.5, pz + Math.cos(a + 2.5) * 4.5);

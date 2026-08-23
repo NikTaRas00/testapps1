@@ -21,9 +21,9 @@ export function makeCar(opts = {}){
   const g = new THREE.Group();
   const mat = (c, extra = {}) => new THREE.MeshStandardMaterial(
     ghost
-      ? { color: c, roughness: .4, metalness: .1, transparent: true, opacity: .34,
-          emissive: 0x1d6f88, emissiveIntensity: .8, ...extra }
-      : { color: c, roughness: .38, metalness: .55, ...extra }
+      ? { color: 0x0aa8d6, roughness: .35, metalness: .1, transparent: true, opacity: .5,
+          emissive: 0x0a7fae, emissiveIntensity: .85, ...extra }
+      : { color: c, roughness: .28, metalness: .35, envMapIntensity: 1.15, ...extra }
   );
 
   const L = van ? 5.2 : 4.3, W = van ? 2.1 : 1.92, H = van ? 1.15 : .72;
@@ -40,8 +40,8 @@ export function makeCar(opts = {}){
   // glass band
   const glass = new THREE.Mesh(
     new THREE.BoxGeometry(W * .9, cabH * .5, L * (van ? .53 : .47)),
-    new THREE.MeshStandardMaterial({ color: 0x0a1420, roughness: .12, metalness: .9,
-      transparent: true, opacity: ghost ? .3 : .85 })
+    new THREE.MeshStandardMaterial({ color: 0x28323c, roughness: .06, metalness: .55,
+      envMapIntensity: 1.6, transparent: true, opacity: ghost ? .3 : .78 })
   );
   glass.position.copy(cab.position); glass.position.y += cabH * .12;
   g.add(glass);
@@ -86,6 +86,7 @@ export function makeCar(opts = {}){
     stripe.position.y = .62; g.add(stripe);
   }
 
+  if (!ghost) g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
   g.userData = { wheels, heads, tails, bar, L, W, ghost };
   return g;
 }
@@ -95,9 +96,9 @@ export function makePerson(opts = {}){
   const { shirt = 0x3a4a72, pants = 0x1b1f2c, ghost = false, cop = false } = opts;
   const g = new THREE.Group();
   const mat = c => new THREE.MeshStandardMaterial(
-    ghost ? { color: c, roughness: .5, transparent: true, opacity: .36,
-              emissive: 0x1d6f88, emissiveIntensity: .9 }
-          : { color: c, roughness: .8, metalness: .05 });
+    ghost ? { color: 0x0aa8d6, roughness: .45, transparent: true, opacity: .52,
+              emissive: 0x0a7fae, emissiveIntensity: .95 }
+          : { color: c, roughness: .88, metalness: .02, envMapIntensity: .8 });
 
   const torso = new THREE.Mesh(new THREE.BoxGeometry(.52, .68, .3), mat(cop ? 0x1e2a4d : shirt));
   torso.position.y = 0.98; g.add(torso);
@@ -122,6 +123,7 @@ export function makePerson(opts = {}){
     l.position.set(s * .14, .64, 0);
     g.add(l); legs.push(l);
   }
+  if (!ghost) g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
   g.userData = { arms, legs, phase: Math.random() * TAU, ghost };
   return g;
 }
@@ -394,7 +396,7 @@ export function makeRelay(color = 0x39e6ff){
   const g = new THREE.Group();
   const base = new THREE.Mesh(
     new THREE.CylinderGeometry(2.6, 3.0, .3, 20),
-    new THREE.MeshStandardMaterial({ color: 0x161b28, roughness: .6, metalness: .5 })
+    new THREE.MeshStandardMaterial({ color: 0x2b3038, roughness: .55, metalness: .6, envMapIntensity: 1 })
   );
   base.position.y = .16; g.add(base);
 
@@ -406,7 +408,7 @@ export function makeRelay(color = 0x39e6ff){
 
   const pylon = new THREE.Mesh(
     new THREE.CylinderGeometry(.28, .42, 4.4, 8),
-    new THREE.MeshStandardMaterial({ color: 0x222838, roughness: .5, metalness: .7 })
+    new THREE.MeshStandardMaterial({ color: 0x3a4149, roughness: .45, metalness: .75, envMapIntensity: 1 })
   );
   pylon.position.y = 2.4; g.add(pylon);
 
@@ -418,8 +420,8 @@ export function makeRelay(color = 0x39e6ff){
 
   const beam = new THREE.Mesh(
     new THREE.CylinderGeometry(2.3, 2.3, 22, 16, 1, true),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .07,
-      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .16,
+      side: THREE.FrontSide, depthWrite: false, toneMapped: false })
   );
   beam.position.y = 11; g.add(beam);
 
@@ -431,7 +433,7 @@ export function makeVault(){
   const g = new THREE.Group();
   const frame = new THREE.Mesh(
     new THREE.BoxGeometry(7.4, 6.4, .7),
-    new THREE.MeshStandardMaterial({ color: 0x2a3040, roughness: .4, metalness: .85 })
+    new THREE.MeshStandardMaterial({ color: 0x555c66, roughness: .38, metalness: .85, envMapIntensity: 1.1 })
   );
   frame.position.y = 3.2; g.add(frame);
 
@@ -483,15 +485,15 @@ export function makeMarker(color, radius = 3.4){
   const g = new THREE.Group();
   const disc = new THREE.Mesh(
     new THREE.CircleGeometry(radius, 26),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .2,
-      depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .34,
+      depthWrite: false, toneMapped: false })
   );
   disc.rotation.x = -Math.PI / 2; disc.position.y = .06;
   g.add(disc);
   const col = new THREE.Mesh(
     new THREE.CylinderGeometry(radius * .92, radius * .92, 26, 20, 1, true),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .075,
-      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .15,
+      side: THREE.FrontSide, depthWrite: false, toneMapped: false })
   );
   col.position.y = 13; g.add(col);
   g.userData = { disc, col };

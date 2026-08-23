@@ -77,9 +77,11 @@ You get six loops. Fail and the echoes keep repeating your mistakes forever.
 Everything is generated at runtime — no models, no textures, no audio files.
 
 - `world.js` — procedural city. The street network (asphalt, kerbs, lane dashes, crosswalks) is
-  painted into one 2048² canvas texture. Buildings are boxes whose UVs are scaled to their real
-  dimensions, so window rows never stretch, then merged into a **single draw call** for the
-  whole skyline. Colliders go into a uniform grid for broad-phase lookup.
+  painted into one 2048² canvas texture. A daytime sky is drawn to an equirectangular canvas and
+  run through `PMREMGenerator`, so it lights the scene and glass genuinely reflects it. Buildings
+  are boxes whose UVs are scaled to their real dimensions, so window rows never stretch, then
+  merged by material into a handful of draw calls. One sun casts real shadows from a small
+  frustum that follows the player. Colliders go into a uniform grid for broad-phase lookup.
 - `actors.js` — arcade car physics (longitudinal/lateral velocity split, so you can drift on the
   handbrake), plus box-built cars and people, traffic that navigates the road grid, pedestrians
   that flinch out of the way, and police that bias onto the street grid when pursuing from far off.
