@@ -33,6 +33,10 @@ python3 -m http.server 8000
 Any static host works too. Three.js is vendored in `vendor/`, so there is nothing to install
 and no network access required at runtime.
 
+**Deploying to Vercel:** the included `vercel.json` is only read when the Vercel project's
+Root Directory is set to `game-b`. If instead you deploy the whole repo, the game lives at
+`/game-b/` and that config file is ignored — which is fine, everything still works.
+
 ## Controls
 
 | Key | Action |
@@ -45,6 +49,12 @@ and no network access required at runtime.
 | `R` | rewind the loop early |
 | `Esc` | pause |
 | `M` | mute |
+
+On a phone or tablet the game switches to touch controls automatically: a virtual
+stick appears wherever you press on the left half (push it to the edge to sprint),
+drag anywhere on the right half to look around, and the buttons handle **BRAKE** /
+handbrake, **GET IN / GET OUT** and **REWIND**. The scene is also lightened a little
+and the camera widens for portrait framing.
 
 ## How the job works
 

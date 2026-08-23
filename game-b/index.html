@@ -6,6 +6,19 @@
 <meta name="theme-color" content="#05060c">
 <meta name="description" content="ECHO CITY — a 3D open-world heist game where your past selves run beside you. Built with Three.js.">
 <title>ECHO CITY</title>
+<script>
+/* If this page is served at /game-b with no trailing slash, the browser treats
+   "game-b" as a file and resolves ./game.js against the parent directory. Pin a
+   <base> so relative paths work either way. Must run before the module loads. */
+(function(){
+  var p = location.pathname;
+  if (p !== '/' && !/\/$/.test(p) && !/\.[a-z0-9]+$/i.test(p)){
+    var b = document.createElement('base');
+    b.href = p + '/';
+    document.head.appendChild(b);
+  }
+})();
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305060c'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%235fe6ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%23a97cff' stroke-width='1.5' opacity='.6'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -89,6 +102,42 @@
   #tlwrap .lbl{margin-bottom:6px}
   #tl{width:100%;height:auto;display:block}
 
+  /* ---------------- touch controls ---------------- */
+  #touch{position:absolute;inset:0;display:none;z-index:4;pointer-events:none}
+  body.touch #touch{display:block}
+  #stick{position:absolute;width:132px;height:132px;border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.16);background:rgba(10,14,24,.3);
+    opacity:0;transition:opacity .16s ease;pointer-events:none;
+    transform:translate(-50%,-50%);backdrop-filter:blur(2px)}
+  #stick.on{opacity:1}
+  #knob{position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;
+    transform:translate(-50%,-50%);background:rgba(95,230,255,.5);
+    border:1.5px solid rgba(95,230,255,.85);box-shadow:0 0 18px rgba(95,230,255,.45)}
+  #tbtns{position:absolute;right:calc(var(--pad) + 2px);bottom:calc(var(--pad) + 4px);
+    display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
+  .tb{pointer-events:auto;font:inherit;font-size:.56rem;font-weight:700;letter-spacing:.1em;
+    line-height:1.15;color:var(--ink);background:rgba(12,16,28,.66);border:1.5px solid var(--line);
+    border-radius:50%;width:74px;height:74px;backdrop-filter:blur(6px);
+    -webkit-user-select:none;user-select:none;touch-action:none;
+    display:flex;align-items:center;justify-content:center;text-align:center}
+  .tb.wide{border-radius:999px;width:96px;height:52px;font-size:.54rem}
+  .tb:active,.tb.held{background:rgba(95,230,255,.28);border-color:var(--cyan);color:#eaffff}
+  #tb-rew:active,#tb-rew.held{background:rgba(169,124,255,.3);border-color:var(--violet)}
+
+  /* ---------------- phone layout ---------------- */
+  body.touch #mapwrap{bottom:auto;top:calc(var(--pad) + 66px);width:clamp(84px,21vw,116px)}
+  body.touch #objs{top:calc(var(--pad) + 62px);max-width:min(58vw,240px);gap:4px}
+  body.touch .obj{font-size:.52rem;letter-spacing:0;line-height:1.3}
+  body.touch .obj .box{width:9px;height:9px}
+  /* timeline sits under the objectives, clear of the stick and the speed readout */
+  body.touch #tlwrap{top:calc(var(--pad) + 158px);bottom:auto;width:min(58vw,240px)}
+  body.touch .lbl{font-size:.5rem;letter-spacing:.16em}
+  body.touch #prompt{bottom:auto;top:calc(var(--pad) + 46px);left:50%;font-size:.6rem}
+  body.touch #speedo .val{font-size:1.3rem}
+  body.touch #toast{font-size:clamp(.82rem,4vw,1.1rem)}
+  body.touch .foot,body.touch #crosshair{display:none}
+  @media (max-width:560px) and (pointer:fine){ #objs{display:none} }
+
   /* minimap */
   #mapwrap{position:absolute;right:var(--pad);bottom:calc(var(--pad) + 6px);
     width:clamp(112px,17vmin,168px);aspect-ratio:1;border-radius:10px;overflow:hidden;
@@ -148,7 +197,6 @@
   .fail code{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:4px;
     padding:2px 6px;font-size:.9em;color:var(--cyan);white-space:nowrap}
   .fail .hint{margin-top:14px;font-size:.72rem;color:var(--dim)}
-  @media (max-width:560px){ #objs{display:none} }
 </style>
 </head>
 <body>
@@ -193,6 +241,16 @@
     </div>
     <div id="mapwrap"><canvas id="map" width="256" height="256"></canvas></div>
     <div id="prompt"></div>
+  </div>
+
+  <!-- touch controls (shown only on coarse-pointer devices) -->
+  <div id="touch">
+    <div id="stick"><div id="knob"></div></div>
+    <div id="tbtns">
+      <button class="tb wide" id="tb-brake">BRAKE</button>
+      <button class="tb" id="tb-car">GET<br>IN</button>
+      <button class="tb" id="tb-rew">RE<br>WIND</button>
+    </div>
   </div>
 
   <!-- Title -->

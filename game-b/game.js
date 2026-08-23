@@ -36,7 +36,12 @@ const KEYS = [
 
 /* ------------------------------------------------------------------- setup */
 
+/* Coarse pointer = phone/tablet: touch controls, lighter scene, no pointer lock. */
+const TOUCH = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+if (TOUCH) document.body.classList.add('touch');
+
 const canvas = document.getElementById('gl');
+const stage = document.getElementById('stage');
 
 let renderer;
 try {
@@ -49,7 +54,7 @@ try {
     'Check chrome://gpu (or about:support in Firefox).');
   throw err;
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, TOUCH ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.06;
@@ -101,7 +106,8 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
 
-canvas.addEventListener('click', () => { if (S.mode === 'play') canvas.requestPointerLock(); });
+const lockPointer = () => { if (!TOUCH && canvas.requestPointerLock) { try { canvas.requestPointerLock(); } catch {} } };
+canvas.addEventListener('click', () => { if (S.mode === 'play') lockPointer(); });
 document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === canvas; });
 addEventListener('mousemove', e => {
   if (!locked) return;
@@ -113,9 +119,85 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
+/* ---------------------------------------------------------- touch controls */
+
+
+const touch = { x: 0, y: 0, brake: false, active: false };
+const stickEl = document.getElementById('stick');
+const knobEl  = document.getElementById('knob');
+const STICK_R = 58;
+
+if (TOUCH){
+  let moveId = null, lookId = null, ox = 0, oy = 0, lx = 0, ly = 0;
+
+  const isBtn = t => t.target && t.target.closest && t.target.closest('.tb, .btn');
+
+  stage.addEventListener('touchstart', e => {
+    for (const t of e.changedTouches){
+      if (isBtn(t)) continue;
+      // left half drives, right half looks
+      if (t.clientX < innerWidth * .5 && moveId === null){
+        moveId = t.identifier; ox = t.clientX; oy = t.clientY;
+        stickEl.style.left = ox + 'px'; stickEl.style.top = oy + 'px';
+        stickEl.classList.add('on');
+        touch.active = true;
+      } else if (lookId === null){
+        lookId = t.identifier; lx = t.clientX; ly = t.clientY;
+      }
+    }
+    if (S.mode === 'play') e.preventDefault();
+  }, { passive: false });
+
+  stage.addEventListener('touchmove', e => {
+    for (const t of e.changedTouches){
+      if (t.identifier === moveId){
+        let dx = t.clientX - ox, dy = t.clientY - oy;
+        const d = Math.hypot(dx, dy);
+        if (d > STICK_R){ dx *= STICK_R / d; dy *= STICK_R / d; }
+        knobEl.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        touch.x =  dx / STICK_R;
+        touch.y = -dy / STICK_R;          // up on screen = forward
+      } else if (t.identifier === lookId){
+        mouseDX += (t.clientX - lx) * 2.1;
+        mouseDY += (t.clientY - ly) * 2.1;
+        lx = t.clientX; ly = t.clientY;
+      }
+    }
+    if (S.mode === 'play') e.preventDefault();
+  }, { passive: false });
+
+  const endTouch = e => {
+    for (const t of e.changedTouches){
+      if (t.identifier === moveId){
+        moveId = null; touch.x = touch.y = 0; touch.active = false;
+        stickEl.classList.remove('on');
+        knobEl.style.transform = 'translate(-50%,-50%)';
+      } else if (t.identifier === lookId) lookId = null;
+    }
+  };
+  stage.addEventListener('touchend', endTouch);
+  stage.addEventListener('touchcancel', endTouch);
+
+  const bind = (id, down, up) => {
+    const b = document.getElementById(id);
+    b.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); b.classList.add('held'); down(); }, { passive: false });
+    const off = e => { e.stopPropagation(); b.classList.remove('held'); up && up(); };
+    b.addEventListener('touchend', off);
+    b.addEventListener('touchcancel', off);
+  };
+  bind('tb-brake', () => { touch.brake = true; }, () => { touch.brake = false; });
+  bind('tb-car',   () => { if (S.mode === 'play') toggleVehicle(); });
+  bind('tb-rew',   () => { if (S.mode === 'play') endLoop('rewind'); });
+}
+
 const held = c => keys.has(c);
-const axisX = () => (held('KeyD') || held('ArrowRight') ? 1 : 0) - (held('KeyA') || held('ArrowLeft') ? 1 : 0);
-const axisY = () => (held('KeyW') || held('ArrowUp') ? 1 : 0) - (held('KeyS') || held('ArrowDown') ? 1 : 0);
+const dead = v => Math.abs(v) < .16 ? 0 : v;
+const axisX = () => dead(touch.x) ||
+  ((held('KeyD') || held('ArrowRight') ? 1 : 0) - (held('KeyA') || held('ArrowLeft') ? 1 : 0));
+const axisY = () => dead(touch.y) ||
+  ((held('KeyW') || held('ArrowUp') ? 1 : 0) - (held('KeyS') || held('ArrowDown') ? 1 : 0));
+const brakeHeld = () => touch.brake || held('Space');
+const handHeld  = () => touch.brake || held('ShiftLeft') || held('ShiftRight');
 
 /* ------------------------------------------------------------------- state */
 
@@ -160,8 +242,8 @@ const parked = [];      // Car instances sitting at the kerb, free to steal
 let rnd = mulberry(WORLD_SEED);
 
 const trafficBase = [];
-for (let i = 0; i < 22; i++) trafficBase.push(new Traffic(scene, mulberry(WORLD_SEED + i * 77)));
-for (let i = 0; i < 34; i++) peds.push(new Ped(scene, mulberry(WORLD_SEED + 5000 + i * 31)));
+for (let i = 0; i < (TOUCH ? 13 : 22); i++) trafficBase.push(new Traffic(scene, mulberry(WORLD_SEED + i * 77)));
+for (let i = 0; i < (TOUCH ? 18 : 34); i++) peds.push(new Ped(scene, mulberry(WORLD_SEED + 5000 + i * 31)));
 
 const parkedBase = [];
 for (let i = 0; i < 20; i++){
@@ -437,7 +519,7 @@ function startGame(){
   hud.classList.add('on');
   showScreen(null);
   sound.init(); sound.resume();
-  canvas.requestPointerLock();
+  lockPointer();
   toast('LOOP 1', 'Steal a car. Learn the route. The clock resets, you don\'t.');
 }
 
@@ -475,7 +557,7 @@ function endLoop(reason){
 
 function finish(won, reason){
   S.mode = 'end';
-  document.exitPointerLock?.();
+  if (!TOUCH) document.exitPointerLock?.();
   hud.classList.remove('on');
   el('end-title').textContent = won ? 'CLEAN GETAWAY' : (reason === 'busted' ? 'BUSTED' : 'OUT OF LOOPS');
   el('end-title').style.color = won ? 'var(--green)' : 'var(--red)';
@@ -501,14 +583,14 @@ function showScreen(id){
 function pause(){
   if (S.mode !== 'play') return;
   S.mode = 'paused';
-  document.exitPointerLock?.();
+  if (!TOUCH) document.exitPointerLock?.();
   showScreen('scr-pause');
 }
 function resume(){
   if (S.mode !== 'paused') return;
   S.mode = 'play';
   showScreen(null);
-  canvas.requestPointerLock();
+  lockPointer();
 }
 el('btn-start').onclick = startGame;
 el('btn-again').onclick = startGame;
@@ -668,9 +750,9 @@ function update(dt){
   if (inCar){
     const c = player.car;
     const input = {
-      throttle: (held('Space') ? -1 : axisY()),
+      throttle: brakeHeld() ? -1 : axisY(),
       steer: axisX(),
-      hand: held('ShiftLeft') || held('ShiftRight'),
+      hand: handHeld(),
     };
     const hit = c.step(dt, input, world);
     if (hit && c.crashImpulse > .18){
@@ -685,7 +767,7 @@ function update(dt){
     player.speed = c.speed;
   } else {
     const ax = axisX(), ay = axisY();
-    const sprint = held('ShiftLeft') || held('ShiftRight');
+    const sprint = held('ShiftLeft') || held('ShiftRight') || Math.hypot(touch.x, touch.y) > .92;
     const spd = sprint ? 7.6 : 4.3;
     if (ax || ay){
       const a = Math.atan2(ax, ay) + player.camYaw;
@@ -887,8 +969,10 @@ function updateCamera(dt){
     yaw = player.camYaw;
   }
 
-  const dist = inCar ? 9.2 + Math.min(4, player.speed * .12) : 6.0;
-  const height = inCar ? 3.5 : 3.0;
+  const tall = camera.aspect < 1;
+  const back = tall ? 1.28 : 1;
+  const dist = (inCar ? 9.2 + Math.min(4, player.speed * .12) : 6.0) * back;
+  const height = (inCar ? 3.5 : 3.0) * (tall ? 1.15 : 1);
   const pitch = player.camPitch;
 
   tmp.set(
@@ -925,7 +1009,7 @@ function updateCamera(dt){
   camLook.lerp(tmp.set(target.x, target.y + (inCar ? 1.6 : 1.5), target.z), Math.min(1, dt * 14));
   camera.lookAt(camLook);
 
-  const wantFov = 62 + Math.min(24, player.speed * .72);
+  const wantFov = (camera.aspect < 1 ? 78 : 62) + Math.min(24, player.speed * .72);
   camera.fov += (wantFov - camera.fov) * Math.min(1, dt * 3);
   camera.updateProjectionMatrix();
 }
@@ -991,6 +1075,10 @@ function updateHUD(heldCount, nearestCop){
       msg = `Taking the case… ${Math.round(mission.lootTimer / LOOT_HOLD * 100)}%`;
   } else {
     msg = '<b>F</b> to get out';
+  }
+  if (TOUCH){
+    const cb = document.getElementById('tb-car');
+    cb.innerHTML = player.car ? 'GET<br>OUT' : 'GET<br>IN';
   }
   if (heldCount === 3 && mission.open < 1) msg = `Cracking the vault… ${Math.round(mission.open * 100)}%`;
   pr.innerHTML = msg;
