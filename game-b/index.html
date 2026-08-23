@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05060c">
+<meta name="description" content="ECHO CITY — a 3D open-world heist game where your past selves run beside you. Built with Three.js.">
+<title>ECHO CITY</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305060c'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%235fe6ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%23a97cff' stroke-width='1.5' opacity='.6'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#eaf0ff; --dim:#8891ad; --line:rgba(255,255,255,.13);
+    --cyan:#5fe6ff; --violet:#a97cff; --amber:#ffc861; --red:#ff5566; --green:#5dffa8;
+    --pad:clamp(12px,2.2vmin,20px);
+    --micro:.58rem;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:#05060c;overflow:hidden}
+  body{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;
+  }
+  #stage{position:fixed;inset:0;overflow:hidden}
+  canvas#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  #vig{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 48%,transparent 42%,rgba(0,0,0,.66) 100%)}
+  #grain{position:absolute;inset:0;pointer-events:none;opacity:.13;
+    background:repeating-linear-gradient(to bottom,rgba(255,255,255,.05) 0 1px,transparent 1px 3px)}
+  #dmg{position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at 50% 50%,rgba(255,60,80,0) 34%,rgba(255,60,80,.5) 100%);
+    transition:opacity .12s linear}
+  #dmg.on{opacity:1;transition:none}
+  #rewindfx{position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at 50% 50%,rgba(95,230,255,.05) 20%,rgba(95,230,255,.42) 100%);
+    transition:opacity .5s ease}
+  #rewindfx.on{opacity:1;transition:none}
+
+  /* ---------------- HUD ---------------- */
+  #hud{position:absolute;inset:0;pointer-events:none;padding:var(--pad);
+    display:grid;grid-template-rows:auto 1fr auto;opacity:0;transition:opacity .3s ease}
+  #hud.on{opacity:1}
+  .row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+  .lbl{font-size:var(--micro);letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+  .val{font-size:clamp(1.15rem,3.9vmin,1.9rem);font-weight:600;letter-spacing:.02em;
+    font-variant-numeric:tabular-nums;line-height:1.06}
+  .val.sm{font-size:clamp(.8rem,2.3vmin,1rem);color:var(--dim);font-weight:500}
+  .right{text-align:right}
+
+  #timer.warn{color:var(--amber)}
+  #timer.crit{color:var(--red);animation:pulse .6s infinite}
+  @keyframes pulse{50%{opacity:.42}}
+
+  #stars{display:flex;gap:4px;justify-content:flex-end;margin-top:3px;height:18px}
+  .star{width:14px;height:14px;opacity:.16;
+    background:var(--amber);
+    clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+    transition:opacity .2s ease}
+  .star.on{opacity:1;filter:drop-shadow(0 0 6px rgba(255,200,97,.85))}
+
+  #echobar{display:flex;gap:5px;margin-top:5px}
+  .pip{width:26px;height:5px;border-radius:3px;background:rgba(255,255,255,.13)}
+  .pip.on{background:var(--cyan);box-shadow:0 0 9px rgba(95,230,255,.8)}
+
+  #mid{display:grid;place-items:center;pointer-events:none;position:relative}
+  #toast{font-size:clamp(.95rem,3vmin,1.4rem);font-weight:600;letter-spacing:.06em;
+    text-align:center;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;
+    text-shadow:0 2px 22px rgba(0,0,0,.9);max-width:min(660px,84vw)}
+  #toast.on{opacity:1;transform:translateY(0)}
+  #toast small{display:block;margin-top:6px;font-size:.62em;color:var(--dim);letter-spacing:.14em;font-weight:400}
+  #crosshair{position:absolute;width:5px;height:5px;border-radius:50%;
+    background:rgba(255,255,255,.5);box-shadow:0 0 0 1px rgba(0,0,0,.5);opacity:0;transition:opacity .2s}
+  #crosshair.on{opacity:1}
+
+  /* objectives panel */
+  #objs{position:absolute;left:var(--pad);top:calc(var(--pad) + 74px);
+    display:flex;flex-direction:column;gap:7px;max-width:min(300px,44vw)}
+  .obj{display:flex;align-items:center;gap:9px;font-size:.68rem;letter-spacing:.06em;color:var(--dim);
+    transition:color .25s}
+  .obj .box{width:11px;height:11px;border:1.5px solid currentColor;border-radius:2px;flex:none;
+    position:relative;transition:background .25s}
+  .obj.live{color:var(--cyan)}
+  .obj.live .box{box-shadow:0 0 9px rgba(95,230,255,.7)}
+  .obj.done{color:var(--green)}
+  .obj.done .box{background:var(--green);box-shadow:0 0 9px rgba(93,255,168,.7)}
+
+  /* echo timeline */
+  #tlwrap{position:absolute;left:var(--pad);top:calc(var(--pad) + 196px);width:min(240px,44vw);opacity:.95}
+  #tlwrap .lbl{margin-bottom:6px}
+  #tl{width:100%;height:auto;display:block}
+
+  /* minimap */
+  #mapwrap{position:absolute;right:var(--pad);bottom:calc(var(--pad) + 6px);
+    width:clamp(112px,17vmin,168px);aspect-ratio:1;border-radius:10px;overflow:hidden;
+    border:1px solid var(--line);background:rgba(6,8,16,.72);backdrop-filter:blur(7px);
+    box-shadow:0 10px 34px rgba(0,0,0,.5)}
+  #map{width:100%;height:100%;display:block}
+
+  #speedo{display:flex;align-items:baseline;gap:6px}
+  #speedo .u{font-size:.6rem;color:var(--dim);letter-spacing:.18em}
+
+  #prompt{position:absolute;left:50%;bottom:calc(var(--pad) + 76px);transform:translateX(-50%);
+    font-size:.7rem;letter-spacing:.14em;color:var(--ink);background:rgba(8,10,20,.72);
+    border:1px solid var(--line);border-radius:999px;padding:7px 15px;opacity:0;
+    transition:opacity .2s ease;white-space:nowrap;backdrop-filter:blur(7px)}
+  #prompt.on{opacity:1}
+  #prompt b{color:var(--cyan);font-weight:600}
+
+  /* ---------------- Screens ---------------- */
+  .screen{position:absolute;inset:0;display:none;place-items:center;padding:var(--pad);
+    background:linear-gradient(102deg,rgba(4,6,13,.96) 0%,rgba(5,8,17,.93) 42%,
+      rgba(6,9,19,.72) 74%,rgba(6,9,19,.46) 100%);
+    backdrop-filter:blur(2px);z-index:5}
+  .screen.on{display:grid}
+  .card{width:min(720px,94vw);max-height:88vh;overflow:auto;text-align:left}
+  .card::-webkit-scrollbar{width:5px}
+  .card::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+  h1{font-size:clamp(2.4rem,11vmin,5.2rem);font-weight:800;letter-spacing:-.03em;line-height:.92}
+  h1 .a{color:var(--cyan);text-shadow:0 0 46px rgba(95,230,255,.55)}
+  h1 .b{color:var(--violet);text-shadow:0 0 46px rgba(169,124,255,.5)}
+  .tag{margin-top:10px;font-size:.72rem;letter-spacing:.3em;color:var(--dim);text-transform:uppercase}
+  .lede{margin-top:20px;font-size:clamp(.82rem,2.5vmin,.98rem);line-height:1.75;color:#c3ccdf;max-width:60ch}
+  .lede em{color:var(--cyan);font-style:normal;font-weight:600}
+  .lede b{color:var(--amber);font-weight:600}
+  hr{border:0;border-top:1px solid var(--line);margin:22px 0}
+  .keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:9px 18px;margin-top:6px}
+  .k{display:flex;align-items:center;gap:9px;font-size:.68rem;color:var(--dim);letter-spacing:.04em}
+  .k kbd{font:inherit;font-size:.63rem;background:rgba(255,255,255,.07);border:1px solid var(--line);
+    border-bottom-width:2px;border-radius:5px;padding:3px 7px;color:var(--ink);min-width:26px;text-align:center}
+  .btn{margin-top:26px;display:inline-flex;align-items:center;gap:11px;cursor:pointer;
+    pointer-events:auto;background:var(--cyan);color:#04121a;border:0;border-radius:999px;
+    padding:13px 30px;font:inherit;font-size:.8rem;font-weight:700;letter-spacing:.15em;
+    text-transform:uppercase;transition:transform .15s ease,box-shadow .15s ease;
+    box-shadow:0 0 0 rgba(95,230,255,0)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 34px rgba(95,230,255,.35)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);margin-left:10px}
+  .btn.ghost:hover{box-shadow:none;background:rgba(255,255,255,.06)}
+  .foot{margin-top:20px;font-size:.6rem;letter-spacing:.2em;color:#565f78;text-transform:uppercase}
+  .stat{display:flex;gap:26px;margin-top:20px;flex-wrap:wrap}
+  .stat div .n{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat div .l{font-size:.58rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-top:3px}
+  .loading{position:absolute;inset:0;display:grid;place-items:center;background:#05060c;z-index:9;
+    font-size:.68rem;letter-spacing:.32em;color:var(--dim);text-transform:uppercase}
+  .loading.off{display:none}
+  @media (max-width:560px){ #objs{display:none} }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <div id="vig"></div>
+  <div id="grain"></div>
+  <div id="dmg"></div>
+  <div id="rewindfx"></div>
+
+  <div id="hud">
+    <div class="row">
+      <div>
+        <div class="lbl">Loop <span id="loopn">1</span> / <span id="loopmax">6</span></div>
+        <div class="val" id="timer">1:15</div>
+        <div id="echobar"></div>
+      </div>
+      <div class="right">
+        <div class="lbl">Wanted</div>
+        <div id="stars"></div>
+        <div class="val sm" id="heatnote">clear</div>
+      </div>
+    </div>
+
+    <div id="mid">
+      <div id="crosshair"></div>
+      <div id="toast"></div>
+    </div>
+
+    <div class="row">
+      <div>
+        <div class="lbl">Velocity</div>
+        <div id="speedo"><span class="val" id="kph">0</span><span class="u">km/h</span></div>
+      </div>
+      <div></div>
+    </div>
+
+    <div id="objs"></div>
+    <div id="tlwrap">
+      <div class="lbl">Echo timeline · relay coverage</div>
+      <canvas id="tl" width="280" height="58"></canvas>
+    </div>
+    <div id="mapwrap"><canvas id="map" width="256" height="256"></canvas></div>
+    <div id="prompt"></div>
+  </div>
+
+  <!-- Title -->
+  <div class="screen on" id="scr-title">
+    <div class="card">
+      <h1><span class="a">ECHO</span> <span class="b">CITY</span></h1>
+      <div class="tag">Open world · Time loop · Three.js</div>
+      <p class="lede">
+        Nakamura Plaza. 01:00. The vault under the tower holds everything you'll ever need,
+        and it takes <b>four people</b> to crack it — three on the pressure plates, one at the door.
+        <br><br>
+        You don't have four people. You have <em>four passes at the same eighty seconds</em>.
+        Every loop, the city snaps back to how it was — but <em>you</em> don't. Your last run walks
+        the streets beside you as a solid echo, repeating every step, every turn, every mistake.
+        Drive with them. Work around them. The cops chase them too.
+      </p>
+      <hr>
+      <div class="keys" id="keylist"></div>
+      <button class="btn" id="btn-start">Start the job</button>
+      <div class="foot">Best with sound · Click to lock the mouse</div>
+    </div>
+  </div>
+
+  <!-- Pause -->
+  <div class="screen" id="scr-pause">
+    <div class="card">
+      <h1 style="font-size:clamp(1.8rem,7vmin,3rem)">PAUSED</h1>
+      <div class="tag">The loop is holding</div>
+      <div class="keys" id="keylist2" style="margin-top:24px"></div>
+      <button class="btn" id="btn-resume">Resume</button>
+      <button class="btn ghost" id="btn-quit">Abandon job</button>
+    </div>
+  </div>
+
+  <!-- End -->
+  <div class="screen" id="scr-end">
+    <div class="card">
+      <h1 id="end-title" style="font-size:clamp(2rem,8vmin,3.6rem)">BUSTED</h1>
+      <div class="tag" id="end-tag">The loop closes</div>
+      <p class="lede" id="end-body"></p>
+      <div class="stat" id="end-stats"></div>
+      <button class="btn" id="btn-again">Run it again</button>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">Building the city…</div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
