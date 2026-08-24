@@ -261,6 +261,11 @@ export class Car {
 
   get speed(){ return this.vel.length(); }
 
+  /* Sideways slip in m/s — how hard the tyres are being dragged across the road. */
+  get slip(){
+    return Math.abs(this.vel.x * Math.cos(this.yaw) - this.vel.y * Math.sin(this.yaw));
+  }
+
   /* input: {throttle -1..1, steer -1..1, hand: bool} */
   step(dt, input, world){
     const t = this.t;
@@ -308,7 +313,14 @@ export class Car {
       }
     }
 
-    this.spin += vLong * dt * 2.6;
+    // weight transfer, smoothed so it reads as suspension not jitter
+    const aLong = (vLong - (this.prevLong ?? vLong)) / Math.max(dt, .001);
+    this.prevLong = vLong;
+    this.pitch = THREE.MathUtils.lerp(this.pitch || 0,
+      THREE.MathUtils.clamp(-aLong * .0055, -.075, .055), Math.min(1, dt * 7));
+    this.lat = vLat;
+
+    this.spin += vLong * dt / 0.35;      // match tyre radius, so wheels don't skate
     this.applyToMesh(dt, input);
     return hit;
   }
@@ -316,7 +328,9 @@ export class Car {
   applyToMesh(dt, input = {}){
     const m = this.mesh;
     m.position.copy(this.pos);
+    m.rotation.order = 'YXZ';            // yaw, then pitch, then roll
     m.rotation.y = this.yaw;
+    m.rotation.x = this.pitch || 0;
 
     const u = m.userData;
     if (u.wheels){
@@ -327,10 +341,22 @@ export class Car {
     }
     // body roll + squat
     const lat = this.vel.x * Math.cos(this.yaw) - this.vel.y * Math.sin(this.yaw);
-    m.rotation.z = THREE.MathUtils.lerp(m.rotation.z, -lat * .022, Math.min(1, dt * 8));
+    m.rotation.z = THREE.MathUtils.lerp(m.rotation.z, -lat * .026, Math.min(1, dt * 7));
     if (u.tails){
-      const on = (input.throttle || 0) < 0 || input.hand;
-      for (const t of u.tails) t.material.color.setHex(on ? 0xff5566 : 0x8c1522);
+      const vLong = this.vel.x * Math.sin(this.yaw) + this.vel.y * Math.cos(this.yaw);
+      const braking = ((input.throttle || 0) < 0 && vLong > .3) || input.hand;
+      const reversing = vLong < -.4;
+      for (const t of u.tails){
+        if (reversing){
+          t.material.color.setHex(0xf2f0e6);
+          t.material.emissive.setHex(0xf2f0e6);
+          t.material.emissiveIntensity = 1.5;
+        } else {
+          t.material.color.setHex(braking ? 0xff2233 : 0x8c1522);
+          t.material.emissive.setHex(0xff1524);
+          t.material.emissiveIntensity = braking ? 2.4 : .18;
+        }
+      }
     }
   }
 }
@@ -352,23 +378,35 @@ export class Traffic {
   }
   placeRandom(rnd){
     const i = (rnd() * (CFG.N + 1)) | 0, j = (rnd() * (CFG.N + 1)) | 0;
-    this.car.pos.set(roadCenter(i), 0, roadCenter(j));
     this.dir = (rnd() * 4) | 0;
+    const [lx, lz] = this.laneShift();
+    const along = (rnd() - .5) * CFG.CELL * .7;
+    const d = [[0, 1], [1, 0], [0, -1], [-1, 0]][this.dir];
+    this.car.pos.set(roadCenter(i) + lx + d[0] * along, 0, roadCenter(j) + lz + d[1] * along);
     this.car.yaw = this.dir * Math.PI / 2;
     this.pickTarget();
   }
+  /* Offset from the centre line into the correct lane for the heading. */
+  laneShift(){
+    const L = CFG.ROAD * .25;
+    return [[L, 0], [0, -L], [-L, 0], [0, L]][this.dir];
+  }
   pickTarget(){
     const d = [[0, 1], [1, 0], [0, -1], [-1, 0]][this.dir];
-    const nx = snapToRoad(this.car.pos.x) + d[0] * CFG.CELL;
-    const nz = snapToRoad(this.car.pos.z) + d[1] * CFG.CELL;
+    const [lx, lz] = this.laneShift();
+    const nx = snapToRoad(this.car.pos.x) + d[0] * CFG.CELL + lx;
+    const nz = snapToRoad(this.car.pos.z) + d[1] * CFG.CELL + lz;
     const lim = CFG.HALF - 4;
     if (Math.abs(nx) > lim || Math.abs(nz) > lim){
       this.dir = (this.dir + 2) % 4;
       return this.pickTarget();
     }
     this.target.set(nx, nz);
+    // where this approach must stop if the light is against us
+    this.stopX = snapToRoad(nx) - d[0] * (CFG.ROAD * .5 + 2.5);
+    this.stopZ = snapToRoad(nz) - d[1] * (CFG.ROAD * .5 + 2.5);
   }
-  step(dt, world, avoid){
+  step(dt, world, avoid, signals){
     const c = this.car;
     if (this.stunned > 0){ this.stunned -= dt; }
     const dx = this.target.x - c.pos.x, dz = this.target.y - c.pos.z;
@@ -383,6 +421,21 @@ export class Traffic {
 
     // brake for whatever is directly ahead
     let throttle = this.stunned > 0 ? 0 : .62;
+
+    // Approach the stop line like a driver: coast, then brake exactly as hard
+    // as is needed to stop on the line, rather than stamping on it early.
+    if (signals){
+      const go = (this.dir === 0 || this.dir === 2) ? signals.nsGo : signals.ewGo;
+      const fx = Math.sin(c.yaw), fz = Math.cos(c.yaw);
+      const toStop = (this.stopX - c.pos.x) * fx + (this.stopZ - c.pos.z) * fz;
+      if (!go && toStop > -1.0 && toStop < 32){
+        const v = Math.max(0, c.vel.x * fx + c.vel.y * fz);
+        const need = (v * v) / (2 * Math.max(.5, toStop - .8));   // required decel
+        if (toStop < 1.6)      throttle = -1;                     // hold on the line
+        else if (need > 2.5)   throttle = -Math.min(1, need / 18);
+        else                   throttle = Math.min(throttle, .22);
+      }
+    }
     if (avoid){
       const fx = Math.sin(c.yaw), fz = Math.cos(c.yaw);
       const ax = avoid.x - c.pos.x, az = avoid.z - c.pos.z;

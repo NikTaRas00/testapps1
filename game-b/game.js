@@ -312,6 +312,84 @@ scene.add(vaultZone);
 
 const mission = { open: 0, cracking: 0, lootTimer: 0, alarm: false };
 
+/* ------------------------------------------------------------- signals */
+/* Driven off the loop clock, so the lights repeat exactly every loop —
+   which means a junction you caught on green stays green for your echo. */
+const SIG_CYCLE = 16;
+const traffic$ = { nsGo: true, ewGo: false, nsStop: true, ewStop: true };
+
+function updateSignals(t){
+  const p = t % SIG_CYCLE;
+  // 0..6.5 NS green | 6.5..8 NS amber | 8..14.5 EW green | 14.5..16 EW amber
+  const nsAspect = p < 6.5 ? 2 : p < 8 ? 1 : 0;
+  const ewAspect = p < 8 ? 0 : p < 14.5 ? 2 : 1;
+  for (const [axis, aspect] of [['ns', nsAspect], ['ew', ewAspect]]){
+    const mats = world.signals[axis];
+    for (let k = 0; k < 3; k++){
+      const on = k === aspect;
+      // has to out-punch full daylight through ACES, so this is deliberately high
+      mats[k].emissiveIntensity = on ? 5.0 : 0.0;
+      mats[k].color.setHex(on ? [0xff4040, 0xffbe3a, 0x46ee7e][k]
+                              : [0x341010, 0x342810, 0x0f2c18][k]);
+    }
+  }
+  traffic$.nsGo = nsAspect === 2;
+  traffic$.ewGo = ewAspect === 2;
+}
+
+/* ------------------------------------------------------------- skid marks */
+
+/* Pooled instanced quads. Because the city resets every loop, the rubber
+   resets too — so marks are a record of THIS run, not accumulated mush. */
+const SKID_MAX = TOUCH ? 260 : 520;
+const skidGeo = new THREE.PlaneGeometry(1, 1);
+skidGeo.rotateX(-Math.PI / 2);
+const skids = new THREE.InstancedMesh(
+  skidGeo,
+  new THREE.MeshBasicMaterial({ color: 0x1a1a1c, transparent: true, opacity: .38,
+    depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }),
+  SKID_MAX
+);
+skids.frustumCulled = false;
+skids.count = 0;
+scene.add(skids);
+let skidN = 0;
+const skidM = new THREE.Matrix4(), skidQ = new THREE.Quaternion(),
+      skidP = new THREE.Vector3(), skidS = new THREE.Vector3();
+
+const UP = new THREE.Vector3(0, 1, 0);
+let lastSkid = null;
+
+function layRubber(car, dt){
+  const hard = car.slip > 3.4 || (car.speed > 6 && Math.abs(car.pitch || 0) > .055);
+  if (!hard){ lastSkid = null; return; }
+
+  const fx = Math.sin(car.yaw), fz = Math.cos(car.yaw);
+  const ax = car.pos.x - fx * 1.4, az = car.pos.z - fz * 1.4;   // rear axle
+  if (!lastSkid){ lastSkid = { x: ax, z: az }; return; }
+
+  // Stretch each mark to exactly bridge the gap since the last one, so the
+  // trail is continuous whether we're running at 20fps or 144.
+  const dx = ax - lastSkid.x, dz = az - lastSkid.z;
+  const gap = Math.hypot(dx, dz);
+  if (gap < .35) return;
+  if (gap > 8){ lastSkid = { x: ax, z: az }; return; }   // teleport or huge dt
+
+  const mx = (ax + lastSkid.x) / 2, mz = (az + lastSkid.z) / 2;
+  const rx = Math.cos(car.yaw), rz = -Math.sin(car.yaw);
+  skidQ.setFromAxisAngle(UP, Math.atan2(dx, dz));
+  for (const side of [-1, 1]){
+    if (skidN >= SKID_MAX) skidN = 0;
+    skidP.set(mx + rx * side * .82, 0.012, mz + rz * side * .82);
+    skidS.set(.30, 1, gap + .12);
+    skidM.compose(skidP, skidQ, skidS);
+    skids.setMatrixAt(skidN++, skidM);
+  }
+  skids.count = Math.max(skids.count, skidN);
+  skids.instanceMatrix.needsUpdate = true;
+  lastSkid = { x: ax, z: az };
+}
+
 /* ------------------------------------------------------------------ echoes */
 
 class Echo {
@@ -428,6 +506,7 @@ function resetLoop(){
   S.bust = 0;
   S.hasLoot = false;
 
+  skids.count = 0; skidN = 0; lastSkid = null;
   mission.open = 0; mission.cracking = 0; mission.lootTimer = 0; mission.alarm = false;
   loot.visible = false;
   for (const r of relays){ r.held = false; r.everHeld = false; }
@@ -760,6 +839,7 @@ function drift(dt){
   camera.fov = 60; camera.updateProjectionMatrix();
   camera.lookAt(P.x, 40, P.z);
   animateProps(dt, performance.now() / 1000);
+  updateSignals(performance.now() / 1000);
   if (toastT > 0){ toastT -= dt; if (toastT <= 0) toastEl.classList.remove('on'); }
 }
 
@@ -783,6 +863,9 @@ function animateProps(dt, t){
     const on = relays[i].held;
     vu.lights[i].material.color.setHex(on ? 0x5dffa8 : 0x551119);
   }
+  // the sky is a real cubemap-lit background; drifting it sells "outdoors"
+  scene.backgroundRotation.y = (scene.backgroundRotation.y + dt * 0.0035) % (Math.PI * 2);
+
   loot.rotation.y += dt * 1.6;
   loot.position.y = 1.4 + Math.sin(t * 2.2) * .16;
   loot.userData.halo.scale.setScalar(1 + Math.sin(t * 3) * .08);
@@ -817,6 +900,7 @@ function update(dt){
       crashFlash = Math.min(.6, .25 + c.crashImpulse * .5);
       c.crashImpulse = 0;
     }
+    layRubber(c, dt);
     player.pos.copy(c.pos);
     player.yaw = c.yaw;
     player.speed = c.speed;
@@ -856,7 +940,8 @@ function update(dt){
 
   /* ---- traffic, pedestrians ---- */
   const threat = player.car && player.speed > 6 ? player.car.pos : null;
-  for (const tr of traffic) tr.step(dt, world, player.car ? player.car.pos : null);
+  updateSignals(t);
+  for (const tr of traffic) tr.step(dt, world, player.car ? player.car.pos : null, traffic$);
   for (const p of peds){
     p.step(dt, world, threat);
     if (p.knocked <= 0 && player.car && player.speed > 5){
@@ -1002,8 +1087,18 @@ function update(dt){
   animateProps(dt, t);
 
   /* ---- audio ---- */
+  // Engine note follows a gearbox: revs climb through a ratio, drop on the
+  // shift, climb again. A single speed-proportional whine reads as a vacuum.
+  let rpm = 0;
+  if (player.car){
+    const GEARS = [0, 8.5, 16, 24, 32, 46];
+    let gi = 0;
+    while (gi < GEARS.length - 2 && player.speed > GEARS[gi + 1]) gi++;
+    const lo = GEARS[gi], hi = GEARS[gi + 1];
+    rpm = .28 + .72 * THREE.MathUtils.clamp((player.speed - lo) / (hi - lo), 0, 1);
+  }
   sound.drive(dt, {
-    rpm: player.car ? Math.min(1, player.speed / 30) : 0,
+    rpm,
     load: player.car ? Math.abs(axisY()) * .6 : 0,
     scrub: player.car ? Math.min(1, Math.abs(player.car.vel.x * Math.cos(player.car.yaw) - player.car.vel.y * Math.sin(player.car.yaw)) / 9) : 0,
     siren: sirenLevel,
@@ -1185,5 +1280,10 @@ requestAnimationFrame(frame);
 /* Dev hook — only when you ask for it with #debug in the URL. */
 if (location.hash === '#debug'){
   window.__echo = { S, player, relays, mission, vaultPos, vanX, vanZ, resetLoop, Echo,
-                    get liveEchoes(){ return liveEchoes }, LOOP_LEN, REC_HZ };
+                    get liveEchoes(){ return liveEchoes }, LOOP_LEN, REC_HZ,
+                    traffic$, world, traffic,
+                    get aspects(){
+                      const rd = a => world.signals[a].map(m => +(m.emissiveIntensity > .5));
+                      return { ns: rd('ns'), ew: rd('ew') };   // [red, amber, green]
+                    } };
 }

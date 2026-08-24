@@ -70,6 +70,80 @@ function noiseCanvas(S, base, spots){
   return { c, g };
 }
 
+
+/* ---------------------------------------------- derived surface maps
+
+   A colour map alone makes every surface look like printed paper: aggregate,
+   slab joints and window reveals don't catch the sun because the shading has
+   no idea they have relief. These derive a tangent-space normal map and a
+   roughness map from the albedo's own luminance, treating it as a height
+   field. Sampling wraps, so tiling stays seamless.                        */
+
+function lumaField(canvas, S){
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.drawImage(canvas, 0, 0, S, S);
+  const d = g.getImageData(0, 0, S, S).data;
+  const h = new Float32Array(S * S);
+  for (let i = 0; i < S * S; i++){
+    h[i] = (d[i * 4] * .299 + d[i * 4 + 1] * .587 + d[i * 4 + 2] * .114) / 255;
+  }
+  return { c, g, h };
+}
+
+function normalMap(canvas, strength = 2.2, S = 512){
+  const { c, g, h } = lumaField(canvas, S);
+  const out = g.createImageData(S, S);
+  const o = out.data;
+  // Precomputed wrap tables: the modulo in the inner loop dominated the cost.
+  const xm = new Int32Array(S), xp = new Int32Array(S);
+  const ym = new Int32Array(S), yp = new Int32Array(S);
+  for (let i = 0; i < S; i++){
+    xm[i] = i === 0 ? S - 1 : i - 1;  xp[i] = i === S - 1 ? 0 : i + 1;
+    ym[i] = (i === 0 ? S - 1 : i - 1) * S;
+    yp[i] = (i === S - 1 ? 0 : i + 1) * S;
+  }
+  for (let y = 0; y < S; y++){
+    const rowC = y * S, rowU = ym[y], rowD = yp[y];
+    for (let x = 0; x < S; x++){
+      const xl = xm[x], xr = xp[x];
+      // Sobel over the height field
+      const dx = (h[rowU + xr] + 2 * h[rowC + xr] + h[rowD + xr]
+                - h[rowU + xl] - 2 * h[rowC + xl] - h[rowD + xl]) * strength;
+      const dy = (h[rowD + xl] + 2 * h[rowD + x] + h[rowD + xr]
+                - h[rowU + xl] - 2 * h[rowU + x] - h[rowU + xr]) * strength;
+      const inv = 1 / Math.sqrt(dx * dx + dy * dy + 1);
+      const i = (rowC + x) * 4;
+      o[i]     = (-dx * inv * .5 + .5) * 255;
+      o[i + 1] = (-dy * inv * .5 + .5) * 255;
+      o[i + 2] = (inv * .5 + .5) * 255;
+      o[i + 3] = 255;
+    }
+  }
+  g.putImageData(out, 0, 0);
+  const t = new THREE.CanvasTexture(c);   // normals stay linear: no colorSpace
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 8;
+  return t;
+}
+
+/* Darker, pitted areas read as rougher; polished/bright areas as smoother. */
+function roughnessMap(canvas, lo = .55, hi = 1.0, S = 256){
+  const { c, g, h } = lumaField(canvas, S);
+  const out = g.createImageData(S, S);
+  const o = out.data;
+  for (let i = 0; i < S * S; i++){
+    const v = Math.round((hi - (hi - lo) * h[i]) * 255);
+    o[i * 4] = o[i * 4 + 1] = o[i * 4 + 2] = v;
+    o[i * 4 + 3] = 255;
+  }
+  g.putImageData(out, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
 /* Asphalt: one 8m tile at 512px = 64 px/m. Wraps seamlessly. */
 function asphaltTexture(){
   const S = 512;
@@ -249,62 +323,119 @@ function facadeTexture(kind){
   return t;
 }
 
-/* Ground-floor storefronts: full-height glass, awnings, signage bands. */
+/* Ground-floor storefronts. One 1024px tile spans 9m, so three units of ~3m —
+   real shopfront width. Buildings sample this at a random U offset, so
+   neighbours never line up into a repeating ribbon. */
 function storefrontTexture(){
   const S = 1024, c = document.createElement('canvas');
   c.width = c.height = S;
   const g = c.getContext('2d');
   const rnd = mulberry(404);
 
-  g.fillStyle = '#8f8a82'; g.fillRect(0, 0, S, S);
-  const units = 4, uw = S / units;
-  const signs = ['#b8442f', '#2e6ea8', '#3f7f52', '#8a6a1f', '#6a3f7a', '#a85a2a'];
+  // pier / structure behind everything
+  g.fillStyle = '#a9a49b'; g.fillRect(0, 0, S, S);
+  for (let n = 0; n < 14000; n++){
+    g.fillStyle = rnd() > .5 ? 'rgba(255,255,255,.04)' : 'rgba(84,80,74,.05)';
+    g.fillRect(rnd() * S, rnd() * S, 2, 2);
+  }
+
+  const units = 3, uw = S / units;
+  // muted, believable retail colours rather than primaries
+  const signs = ['#7d4a3a', '#3c5a72', '#4a6b52', '#7a6a3c', '#5a4a63', '#8a6a52', '#4f5a63'];
+
+  const GLASS_TOP = S * .30, GLASS_BOT = S * .90;
 
   for (let u = 0; u < units; u++){
     const x = u * uw;
-    // shopfront glass
-    const gl = g.createLinearGradient(x, S * .28, x, S);
-    gl.addColorStop(0, '#3d4c58');
-    gl.addColorStop(.45, '#6d8494');
-    gl.addColorStop(.7, '#8fa6b4');
-    gl.addColorStop(1, '#5a6b76');
-    g.fillStyle = gl;
-    g.fillRect(x + 10, S * .28, uw - 20, S * .70);
+    const kind = rnd();
 
-    // vertical mullions
-    g.strokeStyle = 'rgba(40,42,44,.8)'; g.lineWidth = 5;
-    for (let m = 1; m < 4; m++){
-      const mx = x + 10 + (uw - 20) * m / 4;
-      g.beginPath(); g.moveTo(mx, S * .28); g.lineTo(mx, S * .98); g.stroke();
+    // pilasters framing the unit
+    g.fillStyle = '#9b968d';
+    g.fillRect(x, 0, 14, S);
+    g.fillRect(x + uw - 14, 0, 14, S);
+
+    if (kind < .12){
+      // occasional blank / service bay, so the street isn't wall-to-wall retail
+      g.fillStyle = '#9d9890';
+      g.fillRect(x + 14, GLASS_TOP * .6, uw - 28, S - GLASS_TOP * .6);
+      g.fillStyle = '#6a635a';
+      g.fillRect(x + uw * .3, S * .55, uw * .4, S * .40);   // roller shutter
+      for (let r = 0; r < 14; r++){
+        g.fillStyle = r % 2 ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.10)';
+        g.fillRect(x + uw * .3, S * .55 + r * (S * .40 / 14), uw * .4, S * .40 / 28);
+      }
+      continue;
     }
-    g.strokeRect(x + 10, S * .28, uw - 20, S * .70);
 
-    // fascia + sign
+    // ---- glazing, with a lit interior receding behind it
+    const interior = g.createLinearGradient(0, GLASS_TOP, 0, GLASS_BOT);
+    interior.addColorStop(0, '#6f7d86');
+    interior.addColorStop(.30, '#b9bcb8');     // back wall catching daylight
+    interior.addColorStop(.62, '#8e948f');
+    interior.addColorStop(1, '#59616a');
+    g.fillStyle = interior;
+    g.fillRect(x + 16, GLASS_TOP, uw - 32, GLASS_BOT - GLASS_TOP);
+
+    // hints of stock/fittings inside
+    for (let n = 0; n < 5; n++){
+      g.fillStyle = `rgba(${60 + rnd() * 90 | 0},${60 + rnd() * 90 | 0},${60 + rnd() * 90 | 0},.35)`;
+      const bw = uw * (.08 + rnd() * .16), bh = (GLASS_BOT - GLASS_TOP) * (.1 + rnd() * .3);
+      g.fillRect(x + 20 + rnd() * (uw - 40 - bw), GLASS_BOT - bh - 10, bw, bh);
+    }
+    // sky reflection across the upper glass
+    const refl = g.createLinearGradient(x, GLASS_TOP, x + uw, GLASS_TOP + 200);
+    refl.addColorStop(0, 'rgba(226,238,248,.55)');
+    refl.addColorStop(.45, 'rgba(210,226,240,.12)');
+    refl.addColorStop(1, 'rgba(226,238,248,.30)');
+    g.fillStyle = refl;
+    g.fillRect(x + 16, GLASS_TOP, uw - 32, (GLASS_BOT - GLASS_TOP) * .55);
+
+    // slim frames: two mullions, one transom
+    g.strokeStyle = 'rgba(56,58,60,.85)';
+    g.lineWidth = 5;
+    g.strokeRect(x + 16, GLASS_TOP, uw - 32, GLASS_BOT - GLASS_TOP);
+    g.lineWidth = 3.5;
+    for (let m = 1; m < 3; m++){
+      const mx = x + 16 + (uw - 32) * m / 3;
+      g.beginPath(); g.moveTo(mx, GLASS_TOP); g.lineTo(mx, GLASS_BOT); g.stroke();
+    }
+    g.beginPath();
+    g.moveTo(x + 16, GLASS_TOP + 70); g.lineTo(x + uw - 16, GLASS_TOP + 70); g.stroke();
+
+    // entrance door in one bay
+    const dx = x + 16 + (uw - 32) * ((rnd() * 3) | 0) / 3;
+    g.fillStyle = 'rgba(70,76,82,.5)';
+    g.fillRect(dx + 6, GLASS_TOP + 80, (uw - 32) / 3 - 12, GLASS_BOT - GLASS_TOP - 80);
+    g.fillStyle = 'rgba(210,215,220,.7)';
+    g.fillRect(dx + (uw - 32) / 3 - 26, GLASS_TOP + 300, 5, 60);   // pull handle
+
+    // stall riser below the glass
+    g.fillStyle = '#8b857c';
+    g.fillRect(x + 14, GLASS_BOT, uw - 28, S - GLASS_BOT);
+
+    // ---- fascia and signage
     const col = signs[(rnd() * signs.length) | 0];
     g.fillStyle = col;
-    g.fillRect(x + 6, S * .10, uw - 12, S * .17);
-    g.fillStyle = 'rgba(255,255,255,.9)';
-    const bw = (uw - 40) * (.35 + rnd() * .4);
-    g.fillRect(x + 20, S * .165, bw, S * .045);
-    g.fillRect(x + 20, S * .225, bw * .55, S * .022);
+    g.fillRect(x + 14, S * .09, uw - 28, GLASS_TOP - S * .09 - 8);
+    g.fillStyle = 'rgba(0,0,0,.18)';
+    g.fillRect(x + 14, GLASS_TOP - 14, uw - 28, 6);
+    // lettering, sized and placed like a real sign
+    g.fillStyle = 'rgba(240,238,232,.92)';
+    const lw = (uw - 60) * (.3 + rnd() * .35);
+    g.fillRect(x + 30, S * .145, lw, 26);
+    g.fillStyle = 'rgba(240,238,232,.5)';
+    g.fillRect(x + 30, S * .19, lw * .5, 12);
 
     // awning on some units
-    if (rnd() > .5){
-      g.fillStyle = 'rgba(30,30,32,.35)';
-      g.fillRect(x + 6, S * .27, uw - 12, S * .05);
-      g.fillStyle = col;
-      for (let s = 0; s < 6; s++){
-        g.globalAlpha = s % 2 ? .95 : .7;
-        g.fillRect(x + 8 + s * (uw - 16) / 6, S * .27, (uw - 16) / 6, S * .045);
+    if (rnd() > .62){
+      g.fillStyle = 'rgba(24,24,26,.30)';
+      g.fillRect(x + 10, GLASS_TOP, uw - 20, 26);
+      for (let sN = 0; sN < 7; sN++){
+        g.fillStyle = sN % 2 ? col : 'rgba(226,222,214,.92)';
+        g.fillRect(x + 12 + sN * (uw - 24) / 7, GLASS_TOP - 4, (uw - 24) / 7, 30);
       }
-      g.globalAlpha = 1;
     }
-    // door
-    g.fillStyle = 'rgba(28,32,36,.55)';
-    g.fillRect(x + uw * .42, S * .58, uw * .18, S * .40);
   }
-  // plinth
-  g.fillStyle = '#6f6a63'; g.fillRect(0, S * .96, S, S * .04);
 
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -364,7 +495,7 @@ function skyTexture(){
 
 /* ------------------------------------------------- geometry helpers */
 
-function boxWithWorldUV(w, h, d, unitU, unitV = unitU){
+function boxWithWorldUV(w, h, d, unitU, unitV = unitU, uOff = 0){
   const geo = new THREE.BoxGeometry(w, h, d).toNonIndexed();
   const uv = geo.attributes.uv;
   const size = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
@@ -372,7 +503,7 @@ function boxWithWorldUV(w, h, d, unitU, unitV = unitU){
     const [su, sv] = size[f];
     for (let i = 0; i < 6; i++){
       const idx = f * 6 + i;
-      uv.setXY(idx, uv.getX(idx) * su / unitU, uv.getY(idx) * sv / unitV);
+      uv.setXY(idx, uv.getX(idx) * su / unitU + uOff, uv.getY(idx) * sv / unitV);
     }
   }
   return geo;
@@ -423,9 +554,9 @@ function canopyGeo(r, rnd){
   const v = new THREE.Vector3();
   for (let i = 0; i < p.count; i++){
     v.fromBufferAttribute(p, i);
-    const n = .74 + rnd() * .48;
+    const n = .86 + rnd() * .26;
     v.multiplyScalar(n);
-    v.y *= .82;
+    v.y *= .84;
     p.setXYZ(i, v.x, v.y, v.z);
   }
   g.computeVertexNormals();
@@ -461,11 +592,23 @@ export function buildCity(scene, renderer){
 
   /* --- materials -------------------------------------------------------- */
   const FACADES = 4;
-  const facadeMats = Array.from({ length: FACADES }, (_, k) => new THREE.MeshStandardMaterial({
-    map: facadeTexture(k), roughness: .78, metalness: .05, envMapIntensity: .5,
-  }));
+  const facadeMats = Array.from({ length: FACADES }, (_, k) => {
+    const map = facadeTexture(k);
+    return new THREE.MeshStandardMaterial({
+      map,
+      normalMap: normalMap(map.image, 2.6, 512),
+      normalScale: new THREE.Vector2(1.15, 1.15),
+      roughnessMap: roughnessMap(map.image, .48, .95, 256),
+      roughness: 1, metalness: .06, envMapIntensity: .55,
+    });
+  });
+  const storeTex = storefrontTexture();
   const storeMat = new THREE.MeshStandardMaterial({
-    map: storefrontTexture(), roughness: .5, metalness: .2, envMapIntensity: .9,
+    map: storeTex,
+    normalMap: normalMap(storeTex.image, 2.2, 512),
+    normalScale: new THREE.Vector2(1.0, 1.0),
+    roughnessMap: roughnessMap(storeTex.image, .22, .9, 256),
+    roughness: 1, metalness: .25, envMapIntensity: 1.0,
   });
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0x93aec2, roughness: .07, metalness: .95, envMapIntensity: 1.5,
@@ -481,20 +624,34 @@ export function buildCity(scene, renderer){
   const paintYellow = paintMat.clone(); paintYellow.color.setHex(0xd8b53f);
 
   /* --- ground: tarmac everywhere, then raised blocks on top ------------- */
+  const asphaltTex = asphaltTexture();
   const tarmac = new THREE.Mesh(
     tiledQuad(0, 0, CFG.WORLD, CFG.WORLD, 0, 8),
-    new THREE.MeshStandardMaterial({ map: asphaltTexture(), roughness: .93, metalness: .02,
-                                     envMapIntensity: .25 })
+    new THREE.MeshStandardMaterial({
+      map: asphaltTex,
+      normalMap: normalMap(asphaltTex.image, 1.5, 512),
+      normalScale: new THREE.Vector2(.85, .85),
+      roughnessMap: roughnessMap(asphaltTex.image, .62, 1.0, 256),
+      roughness: 1, metalness: .04, envMapIntensity: .32,
+    })
   );
   tarmac.receiveShadow = true;
   scene.add(tarmac);
 
   const pavementTex = pavementTexture();
   const grassTex = grassTexture();
-  const pavementMat = new THREE.MeshStandardMaterial({ map: pavementTex, roughness: .88, metalness: .02,
-                                                       envMapIntensity: .3 });
+  const pavementMat = new THREE.MeshStandardMaterial({
+    map: pavementTex,
+    normalMap: normalMap(pavementTex.image, 2.8, 512),
+    normalScale: new THREE.Vector2(1.1, 1.1),
+    roughnessMap: roughnessMap(pavementTex.image, .55, .98, 256),
+    roughness: 1, metalness: .02, envMapIntensity: .32 });
   const kerbMat = new THREE.MeshStandardMaterial({ color: 0x9d9a93, roughness: .8, metalness: .03 });
-  const grassMat = new THREE.MeshStandardMaterial({ map: grassTex, roughness: .96, metalness: 0 });
+  const grassMat = new THREE.MeshStandardMaterial({
+    map: grassTex,
+    normalMap: normalMap(grassTex.image, 1.6, 256),
+    normalScale: new THREE.Vector2(.8, .8),
+    roughness: .97, metalness: 0 });
 
   const pavementGeo = bucket(nChunks), kerbGeo = bucket(nChunks), grassGeo = bucket(nChunks);
   const markGeo = bucket(nChunks), markYGeo = bucket(nChunks);
@@ -643,7 +800,7 @@ export function buildCity(scene, renderer){
         const kind = (rnd() * FACADES) | 0;
 
         // ground floor: storefront band
-        const base = boxWithWorldUV(w + .35, STORE_H, d + .35, 9, STORE_H);
+        const base = boxWithWorldUV(w + .35, STORE_H, d + .35, 9, STORE_H, rnd());
         base.translate(cx, CFG.KERB + STORE_H / 2, cz);
         storeGeo[ch].push(base);
 
@@ -680,12 +837,76 @@ export function buildCity(scene, renderer){
     }
   }
 
+  /* --- traffic signals --------------------------------------------------
+     Every light on one axis shows the same aspect, so the lenses merge into
+     six meshes (2 axes x 3 colours) and the whole city's signals animate by
+     touching six materials. */
+  const lens = { ns: [[], [], []], ew: [[], [], []] };   // [red, amber, green]
+  const signalBody = bucket(nChunks);
+
+  function addSignal(x, z, rot, axis){
+    const ch = chunkOf(x, z);
+    const H = 6.0;
+    const pole = new THREE.CylinderGeometry(.10, .15, H, 8).toNonIndexed();
+    pole.translate(x, CFG.KERB + H / 2, z);
+    signalBody[ch].push(pole);
+
+    // mast arm reaching over the stop line, plus the housing
+    const arm = new THREE.BoxGeometry(.12, .12, 2.6).toNonIndexed();
+    arm.translate(0, H - .3, 1.3); arm.rotateY(rot); arm.translate(x, CFG.KERB, z);
+    signalBody[ch].push(arm);
+
+    const box = new THREE.BoxGeometry(.56, 1.42, .34).toNonIndexed();
+    box.translate(0, H - 1.05, 2.5); box.rotateY(rot); box.translate(x, CFG.KERB, z);
+    signalBody[ch].push(box);
+
+    const visor = new THREE.BoxGeometry(.5, .06, .42).toNonIndexed();
+    visor.translate(0, H - .45, 2.52); visor.rotateY(rot); visor.translate(x, CFG.KERB, z);
+    signalBody[ch].push(visor);
+
+    for (let k = 0; k < 3; k++){
+      const l = new THREE.SphereGeometry(.19, 12, 10).toNonIndexed();
+      l.translate(0, H - .62 - k * .44, 2.70);
+      l.rotateY(rot);
+      l.translate(x, CFG.KERB, z);
+      lens[axis][k].push(l);
+    }
+  }
+
+  for (let i = 0; i <= CFG.N; i++){
+    for (let j = 0; j <= CFG.N; j++){
+      const cx = roadCenter(i), cz = roadCenter(j);
+      if (Math.abs(cx) > CFG.HALF - 6 || Math.abs(cz) > CFG.HALF - 6) continue;
+      const off = halfRoad + 1.7;
+      // heads face back down the approach they control
+      addSignal(cx + off, cz - off, 0,             'ns');
+      addSignal(cx - off, cz + off, Math.PI,       'ns');
+      addSignal(cx - off, cz - off, -Math.PI / 2,  'ew');
+      addSignal(cx + off, cz + off, Math.PI / 2,   'ew');
+    }
+  }
+
+  const LENS_BASE = [0xff2b2b, 0xffb020, 0x2ee06a];
+  const signals = { ns: [], ew: [] };
+  for (const axis of ['ns', 'ew']){
+    for (let k = 0; k < 3; k++){
+      const mat = new THREE.MeshStandardMaterial({
+        color: LENS_BASE[k], emissive: LENS_BASE[k], emissiveIntensity: 0,
+        roughness: .3, metalness: .1,
+      });
+      const m = new THREE.Mesh(mergeAll(lens[axis][k]), mat);
+      m.frustumCulled = false;
+      scene.add(m);
+      signals[axis].push(mat);
+    }
+  }
+
   /* --- street furniture ------------------------------------------------- */
   const tr = mulberry(5150);
   for (let i = 0; i <= CFG.N; i++){
     for (const side of [-1, 1]){
-      const lane = roadCenter(i) + side * (halfRoad + 2.4);
-      for (let t = -CFG.HALF + 16; t < CFG.HALF - 16; t += 16 + tr() * 10){
+      const lane = roadCenter(i) + side * (halfRoad + 3.6);
+      for (let t = -CFG.HALF + 16; t < CFG.HALF - 16; t += 23 + tr() * 13){
         for (const [px, pz] of [[lane, t], [t, lane]]){
           if (Math.abs(px) > CFG.HALF - 8 || Math.abs(pz) > CFG.HALF - 8) continue;
           const ch = chunkOf(px, pz);
@@ -698,10 +919,10 @@ export function buildCity(scene, renderer){
             const trunk = new THREE.CylinderGeometry(.17, .30, th, 7).toNonIndexed();
             trunk.translate(px, CFG.KERB + th / 2, pz);
             trunkGeo[ch].push(trunk);
-            for (let b = 0, n = 3 + (tr() * 2 | 0); b < n; b++){
-              const r2 = 1.9 + tr() * 1.3;
+            for (let b = 0, n = 2 + (tr() * 2 | 0); b < n; b++){
+              const r2 = 1.45 + tr() * .85;
               const leaf = canopyGeo(r2, tr);
-              leaf.translate(px + (tr() - .5) * 2.0, CFG.KERB + th + .7 + tr() * 1.6, pz + (tr() - .5) * 2.0);
+              leaf.translate(px + (tr() - .5) * 1.5, CFG.KERB + th + .6 + tr() * 1.2, pz + (tr() - .5) * 1.5);
               leafGeo[ch].push(leaf);
             }
           } else {
@@ -743,9 +964,10 @@ export function buildCity(scene, renderer){
   addChunked(roofGeo, concreteMat, true, true);
   addChunked(plantGeo, plantMat, true, true);
   addChunked(poleGeo, metalMat, true, false);
+  addChunked(signalBody, metalMat, true, false);
   addChunked(trunkGeo, new THREE.MeshStandardMaterial({ color: 0x6d5a44, roughness: .95 }), true, true);
-  addChunked(leafGeo, new THREE.MeshStandardMaterial({ color: 0x5d8a45, roughness: .93,
-                                                       flatShading: true }), true, true);
+  addChunked(leafGeo, new THREE.MeshStandardMaterial({ color: 0x4e7a3c, roughness: .95,
+                                                       metalness: 0, envMapIntensity: .5 }), true, true);
 
   /* --- plaza: Nakamura Tower + the vault ------------------------------- */
   const px = blockMid(PLAZA.i), pz = blockMid(PLAZA.j);
@@ -776,6 +998,37 @@ export function buildCity(scene, renderer){
   house.castShadow = true; house.receiveShadow = true;
   scene.add(house);
   addCollider(px, vaultZ, 7.5, 5);
+
+  /* --- horizon: the city keeps going past the playable edge -------------
+     Without this the world visibly stops at a hard line. These are silhouettes
+     only — no shadows, no collision, deep in the haze. */
+  const farGeo = [];
+  const fr = mulberry(8123);
+  for (let ring = 0; ring < 3; ring++){
+    const radius = CFG.HALF + 90 + ring * 190;
+    const count = 90 + ring * 40;
+    for (let k = 0; k < count; k++){
+      const a = (k / count) * Math.PI * 2 + fr() * .05;
+      const jitter = 1 + (fr() - .5) * .22;
+      const x = Math.cos(a) * radius * jitter;
+      const z = Math.sin(a) * radius * jitter;
+      // keep the ring clear of the playable square
+      if (Math.abs(x) < CFG.HALF + 30 && Math.abs(z) < CFG.HALF + 30) continue;
+      const w = 22 + fr() * 46, d = 22 + fr() * 46;
+      const h = 24 + fr() * (ring === 0 ? 110 : 78);
+      const b = new THREE.BoxGeometry(w, h, d).toNonIndexed();
+      b.translate(x, h / 2, z);
+      farGeo.push(b);
+    }
+  }
+  if (farGeo.length){
+    const far = new THREE.Mesh(mergeAll(farGeo), new THREE.MeshStandardMaterial({
+      color: 0xa8b4c2, roughness: .95, metalness: .02, envMapIntensity: .4,
+    }));
+    far.castShadow = false; far.receiveShadow = false;
+    far.frustumCulled = false;
+    scene.add(far);
+  }
 
   /* --- collision broadphase -------------------------------------------- */
   const GRID = CFG.CELL;
@@ -824,6 +1077,7 @@ export function buildCity(scene, renderer){
   return {
     colliders, resolve, near,
     plaza: { x: px, z: pz, vaultZ, towerH },
+    signals,
     materials: { facadeMats, glassMat },
     sky,
   };
